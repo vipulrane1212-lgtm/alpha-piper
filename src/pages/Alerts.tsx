@@ -2,20 +2,9 @@ import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
-// Mock alerts data
-const allAlerts = [
-  { id: "1", token: "DOGE420", tier: 1, timestamp: "2 min ago", marketCap: "$75K", contract: "7xKX...3mP9" },
-  { id: "2", token: "MOONCAT", tier: 2, timestamp: "15 min ago", marketCap: "$120K", contract: "9aRT...5nQ2" },
-  { id: "3", token: "SOLAPE", tier: 1, timestamp: "32 min ago", marketCap: "$45K", contract: "4dFG...8kL1" },
-  { id: "4", token: "PEPEKING", tier: 3, timestamp: "1 hour ago", marketCap: "$200K", contract: "2bNM...6pR4" },
-  { id: "5", token: "BONKINU", tier: 2, timestamp: "1.5 hours ago", marketCap: "$85K", contract: "5cDE...9qS3" },
-  { id: "6", token: "MEMESOL", tier: 1, timestamp: "2 hours ago", marketCap: "$60K", contract: "8fGH...2rT6" },
-  { id: "7", token: "CATKING", tier: 3, timestamp: "3 hours ago", marketCap: "$150K", contract: "1aBC...7uV8" },
-  { id: "8", token: "SHIBAINU", tier: 2, timestamp: "4 hours ago", marketCap: "$95K", contract: "3dEF...1wX2" },
-  { id: "9", token: "DOGWIF", tier: 1, timestamp: "5 hours ago", marketCap: "$180K", contract: "6gHI...4yZ5" },
-  { id: "10", token: "PEPEMOON", tier: 3, timestamp: "6 hours ago", marketCap: "$70K", contract: "9jKL...8aB1" },
-];
+import { useAlerts } from "@/hooks/useData";
+import { formatTimeAgo, truncateContract } from "@/lib/formatters";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const tierColors: Record<number, string> = {
   1: "bg-tier-1/20 text-tier-1 border-tier-1/30",
@@ -25,8 +14,11 @@ const tierColors: Record<number, string> = {
 
 const Alerts = () => {
   const [filter, setFilter] = useState<number | null>(null);
+  const { data: allAlerts, isLoading } = useAlerts();
 
-  const filteredAlerts = filter ? allAlerts.filter((a) => a.tier === filter) : allAlerts;
+  const filteredAlerts = filter 
+    ? allAlerts?.filter((a) => a.tier === filter) 
+    : allAlerts;
 
   return (
     <Layout>
@@ -70,37 +62,50 @@ const Alerts = () => {
 
           {/* Alerts Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {filteredAlerts.map((alert, index) => (
-              <div
-                key={alert.id}
-                className="bg-card rounded-lg p-6 border border-border hover:border-primary/50 transition-all duration-300 animate-fade-in"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xl font-bold text-foreground">{alert.token}</span>
-                  <Badge variant="outline" className={tierColors[alert.tier]}>
-                    TIER {alert.tier}
-                  </Badge>
+            {isLoading ? (
+              [...Array(6)].map((_, index) => (
+                <div key={index} className="bg-card rounded-lg p-6 border border-border">
+                  <div className="flex items-center justify-between mb-4">
+                    <Skeleton className="h-7 w-24" />
+                    <Skeleton className="h-6 w-16" />
+                  </div>
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-3/4" />
                 </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Market Cap:</span>
-                    <span className="text-foreground">{alert.marketCap}</span>
+              ))
+            ) : (
+              filteredAlerts?.map((alert, index) => (
+                <div
+                  key={alert.id}
+                  className="bg-card rounded-lg p-6 border border-border hover:border-primary/50 transition-all duration-300 animate-fade-in hover:scale-[1.02] hover:-translate-y-1"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xl font-bold text-foreground">{alert.token}</span>
+                    <Badge variant="outline" className={tierColors[alert.tier]}>
+                      TIER {alert.tier}
+                    </Badge>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Time:</span>
-                    <span className="text-foreground">{alert.timestamp}</span>
-                  </div>
-                  <div className="pt-2 border-t border-border">
-                    <span className="text-muted-foreground text-xs">Contract: </span>
-                    <span className="font-mono text-xs text-foreground">{alert.contract}</span>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Market Cap:</span>
+                      <span className="text-foreground">{alert.market_cap || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Time:</span>
+                      <span className="text-foreground">{formatTimeAgo(alert.created_at)}</span>
+                    </div>
+                    <div className="pt-2 border-t border-border">
+                      <span className="text-muted-foreground text-xs">Contract: </span>
+                      <span className="font-mono text-xs text-foreground">{truncateContract(alert.contract)}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
-          {filteredAlerts.length === 0 && (
+          {!isLoading && filteredAlerts?.length === 0 && (
             <div className="text-center text-muted-foreground py-12">
               No alerts found for this tier.
             </div>

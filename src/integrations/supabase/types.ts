@@ -14,7 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      alerts: {
+        Row: {
+          contract: string
+          created_at: string
+          id: string
+          market_cap: string | null
+          tier: number
+          token: string
+        }
+        Insert: {
+          contract: string
+          created_at?: string
+          id?: string
+          market_cap?: string | null
+          tier: number
+          token: string
+        }
+        Update: {
+          contract?: string
+          created_at?: string
+          id?: string
+          market_cap?: string | null
+          tier?: number
+          token?: string
+        }
+        Relationships: []
+      }
+      stats: {
+        Row: {
+          id: string
+          tier1_alerts: number
+          tier2_alerts: number
+          tier3_alerts: number
+          total_alerts: number
+          total_subscribers: number
+          updated_at: string
+          win_rate: number
+        }
+        Insert: {
+          id?: string
+          tier1_alerts?: number
+          tier2_alerts?: number
+          tier3_alerts?: number
+          total_alerts?: number
+          total_subscribers?: number
+          updated_at?: string
+          win_rate?: number
+        }
+        Update: {
+          id?: string
+          tier1_alerts?: number
+          tier2_alerts?: number
+          tier3_alerts?: number
+          total_alerts?: number
+          total_subscribers?: number
+          updated_at?: string
+          win_rate?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
