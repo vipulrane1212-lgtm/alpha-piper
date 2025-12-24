@@ -8,6 +8,7 @@ import Stats from "./pages/Stats";
 import About from "./pages/About";
 import FAQ from "./pages/FAQ";
 import Alerts from "./pages/Alerts";
+import Pipeline from "./pages/Pipeline";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/about" element={<About />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/alerts" element={<Alerts />} />
+          <Route path="/pipeline" element={<Pipeline />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
