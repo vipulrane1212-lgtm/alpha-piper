@@ -58,8 +58,16 @@ export function RecentAlerts() {
                     <span className="text-foreground ml-2">{formatTimeAgo(alert.timestamp)}</span>
                   </div>
                 </div>
-                <div className="mt-3 text-sm text-muted-foreground">
-                  Contract: <span className="font-mono">{truncateContract(alert.contract)}</span>
+                <div className="mt-3 text-sm">
+                  <span className="text-muted-foreground">Contract: </span>
+                  <a 
+                    href={`https://dexscreener.com/solana/${alert.contract}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-primary hover:underline break-all"
+                  >
+                    {alert.contract}
+                  </a>
                 </div>
               </AnimatedCard>
             ))
