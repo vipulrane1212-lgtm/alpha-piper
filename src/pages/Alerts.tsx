@@ -88,12 +88,12 @@ const Alerts = () => {
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Market Cap:</span>
-                      <span className="text-foreground">{alert.market_cap || "N/A"}</span>
+                      <span className="text-muted-foreground">Liquidity:</span>
+                      <span className="text-foreground">${alert.liquidity?.toLocaleString() || "N/A"}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Time:</span>
-                      <span className="text-foreground">{formatTimeAgo(alert.created_at)}</span>
+                      <span className="text-foreground">{formatTimeAgo(alert.timestamp)}</span>
                     </div>
                     <div className="pt-2 border-t border-border">
                       <span className="text-muted-foreground text-xs">Contract: </span>
