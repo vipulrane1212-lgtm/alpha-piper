@@ -36,12 +36,6 @@ export function useStats() {
   return useQuery({
     queryKey: ["stats"],
     queryFn: async (): Promise<Stats | null> => {
-      const { data, error } = await supabase.functions.invoke("solboy-api", {
-        body: null,
-        method: "GET",
-      });
-
-      // Parse endpoint from URL workaround - use fetch directly
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/solboy-api?endpoint=stats`,
         {
@@ -58,7 +52,7 @@ export function useStats() {
 
       return response.json();
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 30000,
   });
 }
 
