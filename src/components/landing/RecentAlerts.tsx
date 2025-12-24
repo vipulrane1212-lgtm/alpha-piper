@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { AnimatedSection, AnimatedCard } from "@/components/ui/animated-section";
 
 // Mock alerts data
 const recentAlerts = [
@@ -46,23 +47,23 @@ export function RecentAlerts() {
   return (
     <section className="py-20 bg-secondary">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+        <AnimatedSection className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Recent Alerts
           </h2>
           <p className="text-xl text-muted-foreground">Latest signals from our system</p>
-        </div>
+        </AnimatedSection>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {recentAlerts.map((alert, index) => (
-            <div
+            <AnimatedCard
               key={alert.id}
-              className="bg-card rounded-lg p-6 border border-border hover:border-primary/50 transition-all duration-300 animate-fade-in"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              delay={index * 100}
+              className="bg-card rounded-lg p-6 border border-border hover:border-primary/50"
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xl font-bold text-foreground">{alert.token}</span>
-                <Badge variant="outline" className={tierColors[alert.tier]}>
+                <Badge variant="outline" className={`${tierColors[alert.tier]} transition-all duration-300 hover:scale-105`}>
                   TIER {alert.tier}
                 </Badge>
               </div>
@@ -79,7 +80,7 @@ export function RecentAlerts() {
               <div className="mt-3 text-sm text-muted-foreground">
                 Contract: <span className="font-mono">{alert.contract}</span>
               </div>
-            </div>
+            </AnimatedCard>
           ))}
         </div>
       </div>

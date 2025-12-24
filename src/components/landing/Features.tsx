@@ -1,4 +1,5 @@
 import { CheckCircle2, Zap, TrendingUp, Shield, Clock, BarChart3 } from "lucide-react";
+import { AnimatedSection, AnimatedCard } from "@/components/ui/animated-section";
 
 const features = [
   {
@@ -49,30 +50,30 @@ export function Features() {
   return (
     <section className="py-20 bg-secondary">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
+        <AnimatedSection className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Why Choose SolBoy Alerts?
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Built by someone who's been in the Solana memecoin space since day one
           </p>
-        </div>
+        </AnimatedSection>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <div
+              <AnimatedCard
                 key={feature.title}
-                className="bg-card rounded-lg p-6 border border-border hover:border-primary/50 transition-all duration-300 animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                delay={index * 100}
+                className="bg-card rounded-lg p-6 border border-border hover:border-primary/50"
               >
-                <div className={`${feature.bgClass} w-12 h-12 rounded-lg flex items-center justify-center mb-4`}>
+                <div className={`${feature.bgClass} w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110`}>
                   <Icon className={`w-6 h-6 ${feature.colorClass}`} />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
-              </div>
+              </AnimatedCard>
             );
           })}
         </div>
