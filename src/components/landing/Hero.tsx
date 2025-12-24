@@ -37,6 +37,27 @@ export function Hero() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
       </div>
 
+      {/* To The Moon rocket animation - left side */}
+      <div className="absolute left-4 md:left-12 bottom-20 pointer-events-none z-20">
+        <div className="relative animate-rocket-launch">
+          <div className="animate-rocket-shake">
+            <span className="text-5xl md:text-6xl">🚀</span>
+          </div>
+          {/* Smoke trail */}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
+            <div className="w-3 h-3 bg-tier-1/60 rounded-full animate-smoke-trail" style={{ animationDelay: "0s" }} />
+            <div className="w-4 h-4 bg-tier-2/50 rounded-full animate-smoke-trail" style={{ animationDelay: "0.1s" }} />
+            <div className="w-5 h-5 bg-muted/40 rounded-full animate-smoke-trail" style={{ animationDelay: "0.2s" }} />
+          </div>
+        </div>
+        {/* "To The Moon!" text */}
+        <div className="absolute -right-4 top-0 -rotate-12">
+          <span className="text-xs md:text-sm font-bold text-tier-1 whitespace-nowrap bg-background/50 px-2 py-1 rounded-full backdrop-blur-sm">
+            To The Moon! 🌙
+          </span>
+        </div>
+      </div>
+
       {/* Floating tokens */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {floatingTokens.map((token, index) => (

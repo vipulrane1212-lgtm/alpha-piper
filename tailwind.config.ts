@@ -95,6 +95,20 @@ export default {
           "90%": { opacity: "0.8" },
           "100%": { transform: "translateY(-100px) rotate(360deg)", opacity: "0" },
         },
+        "rocket-launch": {
+          "0%": { transform: "translateY(0) rotate(-45deg)", opacity: "1" },
+          "50%": { transform: "translateY(-40vh) rotate(-45deg)", opacity: "1" },
+          "100%": { transform: "translateY(-80vh) rotate(-45deg)", opacity: "0" },
+        },
+        "rocket-shake": {
+          "0%, 100%": { transform: "translateX(0)" },
+          "25%": { transform: "translateX(-2px)" },
+          "75%": { transform: "translateX(2px)" },
+        },
+        "smoke-trail": {
+          "0%": { opacity: "0.8", transform: "scale(1)" },
+          "100%": { opacity: "0", transform: "scale(2) translateY(20px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -102,6 +116,9 @@ export default {
         "fade-in": "fade-in 0.5s ease-out forwards",
         "pulse-glow": "pulse-glow 3s ease-in-out infinite",
         "float": "float linear infinite",
+        "rocket-launch": "rocket-launch 4s ease-in-out infinite",
+        "rocket-shake": "rocket-shake 0.1s ease-in-out infinite",
+        "smoke-trail": "smoke-trail 0.8s ease-out infinite",
       },
     },
   },
