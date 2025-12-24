@@ -1,41 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { AnimatedSection, AnimatedCard } from "@/components/ui/animated-section";
-
-// Mock alerts data
-const recentAlerts = [
-  {
-    id: "1",
-    token: "DOGE420",
-    tier: 1,
-    timestamp: "2 min ago",
-    marketCap: "$75K",
-    contract: "7xKX...3mP9",
-  },
-  {
-    id: "2",
-    token: "MOONCAT",
-    tier: 2,
-    timestamp: "15 min ago",
-    marketCap: "$120K",
-    contract: "9aRT...5nQ2",
-  },
-  {
-    id: "3",
-    token: "SOLAPE",
-    tier: 1,
-    timestamp: "32 min ago",
-    marketCap: "$45K",
-    contract: "4dFG...8kL1",
-  },
-  {
-    id: "4",
-    token: "PEPEKING",
-    tier: 3,
-    timestamp: "1 hour ago",
-    marketCap: "$200K",
-    contract: "2bNM...6pR4",
-  },
-];
+import { useAlerts } from "@/hooks/useData";
+import { formatTimeAgo, truncateContract } from "@/lib/formatters";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const tierColors: Record<number, string> = {
   1: "bg-tier-1/20 text-tier-1 border-tier-1/30",
@@ -44,6 +11,8 @@ const tierColors: Record<number, string> = {
 };
 
 export function RecentAlerts() {
+  const { data: alerts, isLoading } = useAlerts(4);
+
   return (
     <section className="py-20 bg-secondary">
       <div className="container mx-auto px-4">
@@ -55,33 +24,46 @@ export function RecentAlerts() {
         </AnimatedSection>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {recentAlerts.map((alert, index) => (
-            <AnimatedCard
-              key={alert.id}
-              delay={index * 100}
-              className="bg-card rounded-lg p-6 border border-border hover:border-primary/50"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xl font-bold text-foreground">{alert.token}</span>
-                <Badge variant="outline" className={`${tierColors[alert.tier]} transition-all duration-300 hover:scale-105`}>
-                  TIER {alert.tier}
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Market Cap:</span>
-                  <span className="text-foreground ml-2">{alert.marketCap}</span>
+          {isLoading ? (
+            [...Array(4)].map((_, index) => (
+              <div key={index} className="bg-card rounded-lg p-6 border border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <Skeleton className="h-7 w-24" />
+                  <Skeleton className="h-6 w-16" />
                 </div>
-                <div>
-                  <span className="text-muted-foreground">Time:</span>
-                  <span className="text-foreground ml-2">{alert.timestamp}</span>
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            ))
+          ) : (
+            alerts?.map((alert, index) => (
+              <AnimatedCard
+                key={alert.id}
+                delay={index * 100}
+                className="bg-card rounded-lg p-6 border border-border hover:border-primary/50"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xl font-bold text-foreground">{alert.token}</span>
+                  <Badge variant="outline" className={`${tierColors[alert.tier]} transition-all duration-300 hover:scale-105`}>
+                    TIER {alert.tier}
+                  </Badge>
                 </div>
-              </div>
-              <div className="mt-3 text-sm text-muted-foreground">
-                Contract: <span className="font-mono">{alert.contract}</span>
-              </div>
-            </AnimatedCard>
-          ))}
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Market Cap:</span>
+                    <span className="text-foreground ml-2">{alert.market_cap || "N/A"}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Time:</span>
+                    <span className="text-foreground ml-2">{formatTimeAgo(alert.created_at)}</span>
+                  </div>
+                </div>
+                <div className="mt-3 text-sm text-muted-foreground">
+                  Contract: <span className="font-mono">{truncateContract(alert.contract)}</span>
+                </div>
+              </AnimatedCard>
+            ))
+          )}
         </div>
       </div>
     </section>
