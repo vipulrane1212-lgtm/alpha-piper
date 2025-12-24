@@ -12,6 +12,12 @@ const tierColors: Record<number, string> = {
   3: "bg-primary/20 text-primary border-primary/30",
 };
 
+const tierEmojis: Record<number, string> = {
+  1: "🚀",
+  2: "🔥",
+  3: "⚡",
+};
+
 const Alerts = () => {
   const [filter, setFilter] = useState<number | null>(null);
   const { data: allAlerts, isLoading } = useAlerts();
@@ -81,18 +87,21 @@ const Alerts = () => {
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-xl font-bold text-foreground">{alert.token}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl animate-pulse">{tierEmojis[alert.tier]}</span>
+                      <span className="text-xl font-bold text-foreground">{alert.token}</span>
+                    </div>
                     <Badge variant="outline" className={tierColors[alert.tier]}>
                       TIER {alert.tier}
                     </Badge>
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Liquidity:</span>
+                      <span className="text-muted-foreground">💧 Liquidity:</span>
                       <span className="text-foreground">${alert.liquidity?.toLocaleString() || "N/A"}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Time:</span>
+                      <span className="text-muted-foreground">⏰ Time:</span>
                       <span className="text-foreground">{formatTimeAgo(alert.timestamp)}</span>
                     </div>
                     <div className="pt-2 border-t border-border">

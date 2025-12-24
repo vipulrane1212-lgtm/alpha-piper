@@ -10,6 +10,12 @@ const tierColors: Record<number, string> = {
   3: "bg-primary/20 text-primary border-primary/30",
 };
 
+const tierEmojis: Record<number, string> = {
+  1: "🚀",
+  2: "🔥",
+  3: "⚡",
+};
+
 export function RecentAlerts() {
   const { data: alerts, isLoading } = useAlerts(4);
 
@@ -43,18 +49,21 @@ export function RecentAlerts() {
                 className="bg-card rounded-lg p-6 border border-border hover:border-primary/50"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-xl font-bold text-foreground">{alert.token}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl animate-pulse">{tierEmojis[alert.tier]}</span>
+                    <span className="text-xl font-bold text-foreground">{alert.token}</span>
+                  </div>
                   <Badge variant="outline" className={`${tierColors[alert.tier]} transition-all duration-300 hover:scale-105`}>
                     TIER {alert.tier}
                   </Badge>
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Liquidity:</span>
+                    <span className="text-muted-foreground">💧 Liquidity:</span>
                     <span className="text-foreground ml-2">${alert.liquidity?.toLocaleString() || "N/A"}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Time:</span>
+                    <span className="text-muted-foreground">⏰ Time:</span>
                     <span className="text-foreground ml-2">{formatTimeAgo(alert.timestamp)}</span>
                   </div>
                 </div>
