@@ -104,6 +104,14 @@ const Alerts = () => {
                       <span className="text-muted-foreground">⏰ Time:</span>
                       <span className="text-foreground">{formatTimeAgo(alert.timestamp)}</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">📢 Callers:</span>
+                      <span className="text-foreground">{alert.callers || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">👥 Subs:</span>
+                      <span className="text-foreground">{alert.subs || 0}</span>
+                    </div>
                     <div className="pt-2 border-t border-border">
                       <span className="text-muted-foreground text-xs">Contract: </span>
                       <a 
