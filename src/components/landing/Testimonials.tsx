@@ -1,4 +1,5 @@
 import { Star } from "lucide-react";
+import { AnimatedSection, AnimatedCard } from "@/components/ui/animated-section";
 
 const testimonials = [
   {
@@ -25,23 +26,23 @@ export function Testimonials() {
   return (
     <section className="py-20">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+        <AnimatedSection className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             What Traders Say
           </h2>
           <p className="text-xl text-muted-foreground">Join thousands of satisfied traders</p>
-        </div>
+        </AnimatedSection>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {testimonials.map((testimonial, index) => (
-            <div
+            <AnimatedCard
               key={testimonial.name}
-              className="bg-card rounded-lg p-6 border border-border animate-fade-in"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              delay={index * 150}
+              className="bg-card rounded-lg p-6 border border-border hover:border-tier-1/50"
             >
               <div className="flex gap-1 mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-tier-1 text-tier-1" />
+                  <Star key={i} className="w-5 h-5 fill-tier-1 text-tier-1 transition-transform duration-300 hover:scale-125" />
                 ))}
               </div>
               <p className="text-foreground mb-4">"{testimonial.content}"</p>
@@ -49,7 +50,7 @@ export function Testimonials() {
                 <div className="font-semibold text-foreground">{testimonial.name}</div>
                 <div className="text-sm text-muted-foreground">{testimonial.role}</div>
               </div>
-            </div>
+            </AnimatedCard>
           ))}
         </div>
       </div>

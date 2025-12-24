@@ -1,4 +1,5 @@
 import { Users, Bell, TrendingUp, Target } from "lucide-react";
+import { AnimatedSection, AnimatedCard } from "@/components/ui/animated-section";
 
 // Mock stats data
 const stats = {
@@ -41,50 +42,50 @@ export function StatsPreview() {
   return (
     <section className="py-20">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+        <AnimatedSection className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Real-Time Statistics
           </h2>
           <p className="text-xl text-muted-foreground">Live data from our alert system</p>
-        </div>
+        </AnimatedSection>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {statCards.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div
+              <AnimatedCard
                 key={stat.label}
-                className="bg-card rounded-lg p-6 border border-border hover:border-primary/50 transition-all duration-300 animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                delay={index * 100}
+                className="bg-card rounded-lg p-6 border border-border hover:border-primary/50"
               >
-                <Icon className={`w-8 h-8 ${stat.colorClass} mb-4`} />
+                <Icon className={`w-8 h-8 ${stat.colorClass} mb-4 transition-transform duration-300 hover:scale-110`} />
                 <div className="text-3xl font-bold text-foreground mb-2">{stat.value}</div>
                 <div className="text-muted-foreground text-sm">{stat.label}</div>
-              </div>
+              </AnimatedCard>
             );
           })}
         </div>
 
         {/* Tier Breakdown */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-card rounded-lg p-6 border border-border">
+          <AnimatedCard delay={0} className="bg-card rounded-lg p-6 border border-border hover:border-tier-1/50">
             <div className="text-tier-1 text-2xl font-bold mb-2">
               {stats.tier1Alerts.toLocaleString()}
             </div>
             <div className="text-muted-foreground">TIER 1 ULTRA</div>
-          </div>
-          <div className="bg-card rounded-lg p-6 border border-border">
+          </AnimatedCard>
+          <AnimatedCard delay={100} className="bg-card rounded-lg p-6 border border-border hover:border-tier-2/50">
             <div className="text-tier-2 text-2xl font-bold mb-2">
               {stats.tier2Alerts.toLocaleString()}
             </div>
             <div className="text-muted-foreground">TIER 2 HIGH</div>
-          </div>
-          <div className="bg-card rounded-lg p-6 border border-border">
+          </AnimatedCard>
+          <AnimatedCard delay={200} className="bg-card rounded-lg p-6 border border-border hover:border-primary/50">
             <div className="text-primary text-2xl font-bold mb-2">
               {stats.tier3Alerts.toLocaleString()}
             </div>
             <div className="text-muted-foreground">TIER 3 MEDIUM</div>
-          </div>
+          </AnimatedCard>
         </div>
       </div>
     </section>
