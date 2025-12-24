@@ -2,66 +2,88 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Stats {
-  id: string;
-  total_subscribers: number;
-  total_alerts: number;
-  tier1_alerts: number;
-  tier2_alerts: number;
-  tier3_alerts: number;
-  win_rate: number;
-  updated_at: string;
+  totalSubscribers: number;
+  userSubscribers: number;
+  groupSubscribers: number;
+  totalAlerts: number;
+  tier1Alerts: number;
+  tier2Alerts: number;
+  tier3Alerts: number;
+  winRate: number;
+  recentAlerts24h: number;
+  recentAlerts7d: number;
+  truePositives: number;
+  falsePositives: number;
+  lastUpdated: string;
 }
 
 export interface Alert {
   id: string;
   token: string;
   tier: number;
-  market_cap: string | null;
+  level: string;
+  timestamp: string;
   contract: string;
-  created_at: string;
+  score: number;
+  liquidity: number;
+  callers: number;
+  subs: number;
+  matchedSignals: string[];
+  tags: string[];
 }
 
 export function useStats() {
   return useQuery({
     queryKey: ["stats"],
     queryFn: async (): Promise<Stats | null> => {
-      const { data, error } = await supabase
-        .from("stats")
-        .select("*")
-        .limit(1)
-        .maybeSingle();
+      const { data, error } = await supabase.functions.invoke("solboy-api", {
+        body: null,
+        method: "GET",
+      });
 
-      if (error) {
-        console.error("Error fetching stats:", error);
-        throw error;
+      // Parse endpoint from URL workaround - use fetch directly
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/solboy-api?endpoint=stats`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error("Error fetching stats:", response.statusText);
+        throw new Error(response.statusText);
       }
 
-      return data;
+      return response.json();
     },
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
 }
 
-export function useAlerts(limit?: number) {
+export function useAlerts(limit?: number, tier?: number) {
   return useQuery({
-    queryKey: ["alerts", limit],
+    queryKey: ["alerts", limit, tier],
     queryFn: async (): Promise<Alert[]> => {
-      let query = supabase
-        .from("alerts")
-        .select("*")
-        .order("created_at", { ascending: false });
+      let url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/solboy-api?endpoint=alerts`;
+      if (limit) url += `&limit=${limit}`;
+      if (tier) url += `&tier=${tier}`;
 
-      if (limit) {
-        query = query.limit(limit);
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        console.error("Error fetching alerts:", response.statusText);
+        throw new Error(response.statusText);
       }
 
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("Error fetching alerts:", error);
-        throw error;
-      }
-
-      return data || [];
+      const data = await response.json();
+      return data.alerts || [];
     },
+    refetchInterval: 10000, // Refetch every 10 seconds for live updates
   });
 }

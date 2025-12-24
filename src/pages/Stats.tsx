@@ -10,25 +10,25 @@ const Stats = () => {
     {
       icon: Users,
       label: "Active Subscribers",
-      value: stats?.total_subscribers?.toLocaleString() || "0",
+      value: stats?.totalSubscribers?.toLocaleString() || "0",
       colorClass: "text-primary",
     },
     {
       icon: Bell,
       label: "Total Alerts Sent",
-      value: stats?.total_alerts?.toLocaleString() || "0",
+      value: stats?.totalAlerts?.toLocaleString() || "0",
       colorClass: "text-tier-2",
     },
     {
       icon: TrendingUp,
       label: "TIER 1 Alerts",
-      value: stats?.tier1_alerts?.toLocaleString() || "0",
+      value: stats?.tier1Alerts?.toLocaleString() || "0",
       colorClass: "text-tier-1",
     },
     {
       icon: Target,
       label: "Success Rate",
-      value: `${stats?.win_rate || 0}%`,
+      value: `${stats?.winRate || 0}%`,
       colorClass: "text-success",
     },
   ];
@@ -77,14 +77,14 @@ const Stats = () => {
                   <Skeleton className="h-12 w-24 mx-auto mb-2" />
                 ) : (
                   <div className="text-5xl font-bold text-tier-1 mb-2">
-                    {stats?.tier1_alerts?.toLocaleString() || "0"}
+                    {stats?.tier1Alerts?.toLocaleString() || "0"}
                   </div>
                 )}
                 <div className="text-muted-foreground mb-2">TIER 1 ULTRA</div>
                 <div className="w-full bg-muted rounded-full h-3">
                   <div
                     className="bg-tier-1 h-3 rounded-full transition-all duration-500"
-                    style={{ width: stats ? `${((stats.tier1_alerts || 0) / (stats.total_alerts || 1)) * 100}%` : "0%" }}
+                    style={{ width: stats ? `${((stats.tier1Alerts || 0) / (stats.totalAlerts || 1)) * 100}%` : "0%" }}
                   />
                 </div>
               </div>
@@ -93,14 +93,14 @@ const Stats = () => {
                   <Skeleton className="h-12 w-24 mx-auto mb-2" />
                 ) : (
                   <div className="text-5xl font-bold text-tier-2 mb-2">
-                    {stats?.tier2_alerts?.toLocaleString() || "0"}
+                    {stats?.tier2Alerts?.toLocaleString() || "0"}
                   </div>
                 )}
                 <div className="text-muted-foreground mb-2">TIER 2 HIGH</div>
                 <div className="w-full bg-muted rounded-full h-3">
                   <div
                     className="bg-tier-2 h-3 rounded-full transition-all duration-500"
-                    style={{ width: stats ? `${((stats.tier2_alerts || 0) / (stats.total_alerts || 1)) * 100}%` : "0%" }}
+                    style={{ width: stats ? `${((stats.tier2Alerts || 0) / (stats.totalAlerts || 1)) * 100}%` : "0%" }}
                   />
                 </div>
               </div>
@@ -109,14 +109,14 @@ const Stats = () => {
                   <Skeleton className="h-12 w-24 mx-auto mb-2" />
                 ) : (
                   <div className="text-5xl font-bold text-primary mb-2">
-                    {stats?.tier3_alerts?.toLocaleString() || "0"}
+                    {stats?.tier3Alerts?.toLocaleString() || "0"}
                   </div>
                 )}
                 <div className="text-muted-foreground mb-2">TIER 3 MEDIUM</div>
                 <div className="w-full bg-muted rounded-full h-3">
                   <div
                     className="bg-primary h-3 rounded-full transition-all duration-500"
-                    style={{ width: stats ? `${((stats.tier3_alerts || 0) / (stats.total_alerts || 1)) * 100}%` : "0%" }}
+                    style={{ width: stats ? `${((stats.tier3Alerts || 0) / (stats.totalAlerts || 1)) * 100}%` : "0%" }}
                   />
                 </div>
               </div>

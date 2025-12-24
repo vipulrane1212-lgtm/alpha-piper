@@ -50,12 +50,12 @@ export function RecentAlerts() {
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Market Cap:</span>
-                    <span className="text-foreground ml-2">{alert.market_cap || "N/A"}</span>
+                    <span className="text-muted-foreground">Liquidity:</span>
+                    <span className="text-foreground ml-2">${alert.liquidity?.toLocaleString() || "N/A"}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Time:</span>
-                    <span className="text-foreground ml-2">{formatTimeAgo(alert.created_at)}</span>
+                    <span className="text-foreground ml-2">{formatTimeAgo(alert.timestamp)}</span>
                   </div>
                 </div>
                 <div className="mt-3 text-sm text-muted-foreground">

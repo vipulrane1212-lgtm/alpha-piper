@@ -10,25 +10,25 @@ export function StatsPreview() {
     {
       icon: Users,
       label: "Active Subscribers",
-      value: stats?.total_subscribers?.toLocaleString() || "0",
+      value: stats?.totalSubscribers?.toLocaleString() || "0",
       colorClass: "text-primary",
     },
     {
       icon: Bell,
       label: "Total Alerts Sent",
-      value: stats?.total_alerts?.toLocaleString() || "0",
+      value: stats?.totalAlerts?.toLocaleString() || "0",
       colorClass: "text-tier-2",
     },
     {
       icon: TrendingUp,
       label: "TIER 1 Alerts",
-      value: stats?.tier1_alerts?.toLocaleString() || "0",
+      value: stats?.tier1Alerts?.toLocaleString() || "0",
       colorClass: "text-tier-1",
     },
     {
       icon: Target,
       label: "Success Rate",
-      value: `${stats?.win_rate || 0}%`,
+      value: `${stats?.winRate || 0}%`,
       colorClass: "text-success",
     },
   ];
@@ -71,7 +71,7 @@ export function StatsPreview() {
               <Skeleton className="h-8 w-20 mb-2" />
             ) : (
               <div className="text-tier-1 text-2xl font-bold mb-2">
-                {stats?.tier1_alerts?.toLocaleString() || "0"}
+                {stats?.tier1Alerts?.toLocaleString() || "0"}
               </div>
             )}
             <div className="text-muted-foreground">TIER 1 ULTRA</div>
@@ -81,7 +81,7 @@ export function StatsPreview() {
               <Skeleton className="h-8 w-20 mb-2" />
             ) : (
               <div className="text-tier-2 text-2xl font-bold mb-2">
-                {stats?.tier2_alerts?.toLocaleString() || "0"}
+                {stats?.tier2Alerts?.toLocaleString() || "0"}
               </div>
             )}
             <div className="text-muted-foreground">TIER 2 HIGH</div>
@@ -91,7 +91,7 @@ export function StatsPreview() {
               <Skeleton className="h-8 w-20 mb-2" />
             ) : (
               <div className="text-primary text-2xl font-bold mb-2">
-                {stats?.tier3_alerts?.toLocaleString() || "0"}
+                {stats?.tier3Alerts?.toLocaleString() || "0"}
               </div>
             )}
             <div className="text-muted-foreground">TIER 3 MEDIUM</div>
