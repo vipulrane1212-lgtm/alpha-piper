@@ -59,8 +59,8 @@ export function RecentAlerts() {
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">💧 Liquidity:</span>
-                    <span className="text-foreground ml-2">${alert.liquidity?.toLocaleString() || "N/A"}</span>
+                    <span className="text-muted-foreground">💰 MCap:</span>
+                    <span className="text-foreground ml-2">{alert.market_cap || "N/A"}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">⏰ Time:</span>
