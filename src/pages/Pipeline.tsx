@@ -59,7 +59,6 @@ const Pipeline = () => {
                 { icon: Clock, text: "Real-Time Monitoring — 12+ Telegram sources tracked 24/7" },
                 { icon: Shield, text: "Selective Alerts — Quality over quantity, only high-probability setups" },
                 { icon: Zap, text: "Themed Intro Paragraphs — 40 unique templates dynamically selected" },
-                { icon: TrendingUp, text: "Twitter Integration — TIER 1 alerts posted automatically" },
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <item.icon className="w-5 h-5 text-primary mt-0.5 shrink-0" />
@@ -80,7 +79,7 @@ const Pipeline = () => {
                 "Entry MC validation (30K-150K range)",
                 "Tier assignment based on criteria",
                 "Alert formatted with themed intro",
-                "Alert sent to subscribers + Twitter (TIER 1 only)",
+                "Alert sent to subscribers",
               ].map((step, i) => (
                 <div key={i} className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm shrink-0">
@@ -119,7 +118,6 @@ const Pipeline = () => {
                   <li>⚡ Entry: As soon as alert received</li>
                   <li>💰 Position Size: 3-5% of capital</li>
                   <li>🎯 Target: 5x-10x+</li>
-                  <li>🛡️ Stop Loss: 30-40% below entry</li>
                 </ul>
               </div>
             </div>
@@ -149,7 +147,6 @@ const Pipeline = () => {
                   <li>⚡ Entry: Within 2-3 minutes of alert</li>
                   <li>💰 Position Size: 2-3% of capital</li>
                   <li>🎯 Target: 4x-7x</li>
-                  <li>🛡️ Stop Loss: 35-45% below entry</li>
                 </ul>
               </div>
             </div>
@@ -178,7 +175,6 @@ const Pipeline = () => {
                   <li>⚡ Entry: Within 3-5 minutes of alert</li>
                   <li>💰 Position Size: 1-2% of capital</li>
                   <li>🎯 Target: 3x-5x</li>
-                  <li>🛡️ Stop Loss: 40-50% below entry</li>
                 </ul>
               </div>
             </div>
@@ -278,7 +274,7 @@ const Pipeline = () => {
                 <li>❌ FOMO Entry — Don't chase if already 3x+ from entry</li>
                 <li>❌ No Rugcheck — Always verify before buying</li>
                 <li>❌ Oversizing — Stick to position sizing rules</li>
-                <li>❌ No Stop Loss — Have an exit plan</li>
+                <li>❌ No Exit Plan — Always have an exit strategy</li>
               </ul>
             </div>
           </div>
