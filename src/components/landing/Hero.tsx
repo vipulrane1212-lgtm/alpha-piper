@@ -2,20 +2,13 @@ import { ArrowRight, Zap, TrendingUp, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import solboyBanner from "@/assets/solboy-banner.jpg";
 
-// Floating token data
-const floatingTokens = [
-  { emoji: "🐕", delay: 0, duration: 15, left: "5%", size: 40 },
-  { emoji: "🚀", delay: 2, duration: 18, left: "15%", size: 32 },
-  { emoji: "🌙", delay: 4, duration: 12, left: "25%", size: 36 },
-  { emoji: "💎", delay: 1, duration: 20, left: "35%", size: 28 },
-  { emoji: "🐸", delay: 3, duration: 14, left: "55%", size: 38 },
-  { emoji: "🔥", delay: 5, duration: 16, left: "65%", size: 30 },
-  { emoji: "⚡", delay: 2.5, duration: 13, left: "75%", size: 34 },
-  { emoji: "🎯", delay: 0.5, duration: 17, left: "85%", size: 32 },
-  { emoji: "💰", delay: 3.5, duration: 19, left: "92%", size: 36 },
-  { emoji: "🐶", delay: 1.5, duration: 15, left: "10%", size: 30 },
-  { emoji: "🦊", delay: 4.5, duration: 14, left: "45%", size: 34 },
-  { emoji: "🌟", delay: 6, duration: 16, left: "70%", size: 28 },
+// Solana token logos with low density
+const solanaTokens = [
+  { logo: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png", delay: 0, duration: 25, left: "8%", size: 32 },
+  { logo: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png", delay: 4, duration: 28, left: "25%", size: 28 },
+  { logo: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.png", delay: 2, duration: 22, left: "50%", size: 30 },
+  { logo: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263/logo.png", delay: 6, duration: 26, left: "72%", size: 26 },
+  { logo: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr/logo.png", delay: 3, duration: 30, left: "90%", size: 28 },
 ];
 
 export function Hero() {
@@ -58,20 +51,25 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Floating tokens */}
+      {/* Floating Solana tokens */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {floatingTokens.map((token, index) => (
+        {solanaTokens.map((token, index) => (
           <div
             key={index}
-            className="absolute animate-float"
+            className="absolute animate-float opacity-40"
             style={{
               left: token.left,
-              fontSize: token.size,
+              width: token.size,
+              height: token.size,
               animationDuration: `${token.duration}s`,
               animationDelay: `${token.delay}s`,
             }}
           >
-            {token.emoji}
+            <img 
+              src={token.logo} 
+              alt="Solana token" 
+              className="w-full h-full rounded-full"
+            />
           </div>
         ))}
       </div>
