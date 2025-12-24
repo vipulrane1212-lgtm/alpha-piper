@@ -97,7 +97,14 @@ const Alerts = () => {
                     </div>
                     <div className="pt-2 border-t border-border">
                       <span className="text-muted-foreground text-xs">Contract: </span>
-                      <span className="font-mono text-xs text-foreground">{truncateContract(alert.contract)}</span>
+                      <a 
+                        href={`https://dexscreener.com/solana/${alert.contract}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-xs text-primary hover:underline break-all"
+                      >
+                        {alert.contract}
+                      </a>
                     </div>
                   </div>
                 </div>
