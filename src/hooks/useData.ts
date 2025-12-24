@@ -24,7 +24,7 @@ export interface Alert {
   timestamp: string;
   contract: string;
   score: number;
-  liquidity: number;
+  market_cap: string;
   callers: number;
   subs: number;
   matchedSignals: string[];

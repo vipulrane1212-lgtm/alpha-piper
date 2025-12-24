@@ -97,8 +97,8 @@ const Alerts = () => {
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">💧 Liquidity:</span>
-                      <span className="text-foreground">${alert.liquidity?.toLocaleString() || "N/A"}</span>
+                      <span className="text-muted-foreground">💰 MCap:</span>
+                      <span className="text-foreground">{alert.market_cap || "N/A"}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">⏰ Time:</span>
