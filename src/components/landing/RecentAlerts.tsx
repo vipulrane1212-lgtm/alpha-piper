@@ -66,6 +66,14 @@ export function RecentAlerts() {
                     <span className="text-muted-foreground">⏰ Time:</span>
                     <span className="text-foreground ml-2">{formatTimeAgo(alert.timestamp)}</span>
                   </div>
+                  <div>
+                    <span className="text-muted-foreground">📢 Callers:</span>
+                    <span className="text-foreground ml-2">{alert.callers || 0}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">👥 Subs:</span>
+                    <span className="text-foreground ml-2">{alert.subs || 0}</span>
+                  </div>
                 </div>
                 <div className="mt-3 text-sm">
                   <span className="text-muted-foreground">Contract: </span>

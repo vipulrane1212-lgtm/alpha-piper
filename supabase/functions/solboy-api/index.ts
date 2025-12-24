@@ -7,6 +7,54 @@ const corsHeaders = {
 
 const API_BASE_URL = Deno.env.get('SOLBOY_API_URL') || 'http://localhost:5000';
 
+// Fetch market cap from DexScreener API
+async function enrichWithDexScreener(alerts: any[]): Promise<any[]> {
+  const enrichedAlerts = await Promise.all(
+    alerts.map(async (alert) => {
+      try {
+        const dexRes = await fetch(
+          `https://api.dexscreener.com/tokens/v1/solana/${alert.contract}`,
+          { headers: { 'Accept': 'application/json' } }
+        );
+        
+        if (!dexRes.ok) {
+          console.log(`[DexScreener] Failed for ${alert.contract}: ${dexRes.status}`);
+          return alert;
+        }
+        
+        const dexData = await dexRes.json();
+        const pairs = Array.isArray(dexData) ? dexData : dexData.pairs;
+        const pair = pairs?.[0];
+        
+        if (pair?.marketCap) {
+          const mcap = pair.marketCap;
+          let formattedMcap: string;
+          
+          if (mcap >= 1_000_000) {
+            formattedMcap = `$${(mcap / 1_000_000).toFixed(2)}M`;
+          } else if (mcap >= 1_000) {
+            formattedMcap = `$${(mcap / 1_000).toFixed(1)}K`;
+          } else {
+            formattedMcap = `$${mcap.toFixed(0)}`;
+          }
+          
+          return {
+            ...alert,
+            market_cap: formattedMcap,
+          };
+        }
+        
+        return alert;
+      } catch (error) {
+        console.log(`[DexScreener] Error for ${alert.contract}:`, error);
+        return alert;
+      }
+    })
+  );
+  
+  return enrichedAlerts;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -55,7 +103,14 @@ serve(async (req) => {
       throw new Error(`API responded with ${response.status}`);
     }
 
-    const data = await response.json();
+    let data = await response.json();
+    
+    // Enrich alerts with DexScreener market cap data
+    if (endpoint === 'alerts' && data.alerts && Array.isArray(data.alerts)) {
+      console.log(`[solboy-api] Enriching ${data.alerts.length} alerts with DexScreener data`);
+      data.alerts = await enrichWithDexScreener(data.alerts);
+    }
+    
     console.log(`[solboy-api] Success, returning data`);
 
     return new Response(JSON.stringify(data), {
