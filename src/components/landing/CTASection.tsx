@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { GlassButton } from "@/components/ui/glass-tabs";
 import { AnimatedSection } from "@/components/ui/animated-section";
 
 export function CTASection() {
@@ -13,26 +13,26 @@ export function CTASection() {
           <p className="text-xl text-muted-foreground mb-8">
             Join SolBoy Alerts and get multi-source confirmed trading signals delivered straight to your Telegram.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="group text-lg px-8 shadow-lg shadow-primary/30 transition-all duration-300 hover:shadow-xl hover:shadow-primary/50 hover:scale-105" asChild>
-              <a
-                href="https://t.me/solboy_calls"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <a
+              href="https://t.me/solboy_calls"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <GlassButton variant="primary" size="lg" className="group">
                 Start Trading Now
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </a>
-            </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 transition-all duration-300 hover:scale-105" asChild>
-              <a
-                href="https://telegra.ph/Solboy-Alert-Pipeline--Complete-Trading-Guide-12-23"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+                <ArrowRight className="w-5 h-5 ml-2 inline-block group-hover:translate-x-1 transition-transform" />
+              </GlassButton>
+            </a>
+            <a
+              href="https://telegra.ph/Solboy-Alert-Pipeline--Complete-Trading-Guide-12-23"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <GlassButton variant="secondary" size="lg">
                 Read Trading Guide
-              </a>
-            </Button>
+              </GlassButton>
+            </a>
           </div>
         </AnimatedSection>
       </div>

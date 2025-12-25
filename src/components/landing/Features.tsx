@@ -1,5 +1,6 @@
 import { CheckCircle2, Zap, TrendingUp, Shield, Clock, BarChart3 } from "lucide-react";
-import { AnimatedSection, AnimatedCard } from "@/components/ui/animated-section";
+import { AnimatedSection } from "@/components/ui/animated-section";
+import { GlassCard } from "@/components/ui/glass-tabs";
 
 const features = [
   {
@@ -62,18 +63,23 @@ export function Features() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => {
             const Icon = feature.icon;
+            const cardVariant = feature.colorClass.includes("tier-1") ? "tier1" 
+              : feature.colorClass.includes("tier-2") ? "tier2" 
+              : feature.colorClass.includes("success") ? "primary"
+              : "primary";
             return (
-              <AnimatedCard
+              <GlassCard
                 key={feature.title}
-                delay={index * 100}
-                className="bg-card rounded-lg p-6 border border-border hover:border-primary/50"
+                variant={cardVariant}
+                className="p-6 animate-fade-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className={`${feature.bgClass} w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110`}>
                   <Icon className={`w-6 h-6 ${feature.colorClass}`} />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
-              </AnimatedCard>
+              </GlassCard>
             );
           })}
         </div>

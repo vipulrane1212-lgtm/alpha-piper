@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { GlassButton, GlassCard } from "@/components/ui/glass-tabs";
 
 const faqs = [
   {
@@ -72,14 +72,16 @@ const FAQ = () => {
 
           <div className="space-y-4">
             {faqs.map((faq, index) => (
-              <div
+              <GlassCard
                 key={index}
-                className="bg-card rounded-lg border border-border overflow-hidden animate-fade-in"
+                variant="default"
+                hover={false}
+                className="overflow-hidden animate-fade-in"
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
                 <button
                   onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-muted/50 transition-colors"
+                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-muted/30 transition-colors"
                 >
                   <span className="text-foreground font-semibold text-lg">{faq.question}</span>
                   <ChevronDown
@@ -89,21 +91,21 @@ const FAQ = () => {
                   />
                 </button>
                 {openIndex === index && (
-                  <div className="px-6 py-4 text-muted-foreground border-t border-border">
+                  <div className="px-6 py-4 text-muted-foreground border-t border-border/50">
                     {faq.answer}
                   </div>
                 )}
-              </div>
+              </GlassCard>
             ))}
           </div>
 
           <div className="mt-12 text-center">
             <p className="text-muted-foreground mb-4">Still have questions?</p>
-            <Button asChild>
-              <a href="https://t.me/solboy_calls" target="_blank" rel="noopener noreferrer">
+            <a href="https://t.me/solboy_calls" target="_blank" rel="noopener noreferrer">
+              <GlassButton variant="primary" size="md">
                 Contact Us on Telegram
-              </a>
-            </Button>
+              </GlassButton>
+            </a>
           </div>
         </div>
       </section>
