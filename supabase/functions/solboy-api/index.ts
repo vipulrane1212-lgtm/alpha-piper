@@ -98,9 +98,38 @@ serve(async (req) => {
       headers: { 'Content-Type': 'application/json' },
     });
 
+    // Handle API being offline - return empty data instead of error
     if (!response.ok) {
-      console.error(`[solboy-api] API error: ${response.status} ${response.statusText}`);
-      throw new Error(`API responded with ${response.status}`);
+      console.warn(`[solboy-api] API unavailable (${response.status}), returning empty data`);
+      
+      // Return appropriate empty response based on endpoint
+      if (endpoint === 'stats') {
+        return new Response(JSON.stringify({
+          totalSubscribers: 0,
+          totalAlerts: 0,
+          tier1Alerts: 0,
+          tier2Alerts: 0,
+          tier3Alerts: 0,
+          winRate: 0,
+          lastUpdated: new Date().toISOString(),
+          apiOffline: true
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      if (endpoint === 'alerts') {
+        return new Response(JSON.stringify({ 
+          alerts: [], 
+          apiOffline: true 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      return new Response(JSON.stringify({ data: [], apiOffline: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     let data = await response.json();
@@ -118,9 +147,14 @@ serve(async (req) => {
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[solboy-api] Error:', errorMessage);
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
+    console.warn('[solboy-api] API connection error, returning empty data:', errorMessage);
+    
+    // Return empty data on connection errors too
+    return new Response(JSON.stringify({ 
+      alerts: [], 
+      apiOffline: true,
+      error: errorMessage 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
