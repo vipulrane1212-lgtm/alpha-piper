@@ -25,8 +25,9 @@ export interface Alert {
   timestamp: string;
   contract: string;
   score: number;
-  market_cap: string; // Current mcap from DexScreener
+  market_cap: string; // Current mcap from DexScreener (formatted)
   entry_mcap: string; // Mcap when alert was called
+  currentMcap: number; // Current mcap raw number
   callers: number;
   subs: number;
   matchedSignals: string[];
