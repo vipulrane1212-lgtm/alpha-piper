@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { GlassTab, GlassTabsContainer } from "@/components/ui/glass-tabs";
 import { useAlerts } from "@/hooks/useData";
 import { formatTimeAgo, truncateContract } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -42,36 +42,37 @@ const Alerts = () => {
             <p className="text-xl text-muted-foreground">Latest trading signals from SolBoy</p>
           </div>
 
-          {/* Filter Buttons */}
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            <Button
-              variant={filter === null ? "default" : "outline"}
+          {/* Filter Tabs - Glassmorphism */}
+          <GlassTabsContainer className="mb-12 max-w-fit mx-auto">
+            <GlassTab
+              active={filter === null}
               onClick={() => setFilter(null)}
+              variant="primary"
             >
               All Tiers
-            </Button>
-            <Button
-              variant={filter === 1 ? "default" : "outline"}
+            </GlassTab>
+            <GlassTab
+              active={filter === 1}
               onClick={() => setFilter(1)}
-              className={filter === 1 ? "" : "border-tier-1/50 text-tier-1 hover:bg-tier-1/10"}
+              variant="tier1"
             >
               TIER 1
-            </Button>
-            <Button
-              variant={filter === 2 ? "default" : "outline"}
+            </GlassTab>
+            <GlassTab
+              active={filter === 2}
               onClick={() => setFilter(2)}
-              className={filter === 2 ? "" : "border-tier-2/50 text-tier-2 hover:bg-tier-2/10"}
+              variant="tier2"
             >
               TIER 2
-            </Button>
-            <Button
-              variant={filter === 3 ? "default" : "outline"}
+            </GlassTab>
+            <GlassTab
+              active={filter === 3}
               onClick={() => setFilter(3)}
-              className={filter === 3 ? "" : "border-primary/50 text-primary hover:bg-primary/10"}
+              variant="tier3"
             >
               TIER 3
-            </Button>
-          </div>
+            </GlassTab>
+          </GlassTabsContainer>
 
           {/* Alerts Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
