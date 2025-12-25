@@ -3,6 +3,7 @@ import { AnimatedSection, AnimatedCard } from "@/components/ui/animated-section"
 import { useAlerts } from "@/hooks/useData";
 import { formatTimeAgo, truncateContract } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AnimatedHeading } from "@/components/ui/animated-text";
 
 const tierColors: Record<number, string> = {
   1: "bg-tier-1/20 text-tier-1 border-tier-1/30",
@@ -23,10 +24,10 @@ export function RecentAlerts() {
     <section className="py-20 bg-secondary">
       <div className="container mx-auto px-4">
         <AnimatedSection className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+          <AnimatedHeading level={2} className="text-4xl md:text-5xl mb-4">
             Recent Alerts
-          </h2>
-          <p className="text-xl text-muted-foreground">Latest signals from our system</p>
+          </AnimatedHeading>
+          <p className="text-xl text-foreground/80">Latest signals from our system</p>
         </AnimatedSection>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">

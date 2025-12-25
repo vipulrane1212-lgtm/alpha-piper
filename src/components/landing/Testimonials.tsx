@@ -1,5 +1,6 @@
 import { Star } from "lucide-react";
 import { AnimatedSection, AnimatedCard } from "@/components/ui/animated-section";
+import { AnimatedHeading } from "@/components/ui/animated-text";
 
 const testimonials = [
   {
@@ -27,10 +28,10 @@ export function Testimonials() {
     <section className="py-20">
       <div className="container mx-auto px-4">
         <AnimatedSection className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+          <AnimatedHeading level={2} className="text-4xl md:text-5xl mb-4">
             What Traders Say
-          </h2>
-          <p className="text-xl text-muted-foreground">Join thousands of satisfied traders</p>
+          </AnimatedHeading>
+          <p className="text-xl text-foreground/80">Join thousands of satisfied traders</p>
         </AnimatedSection>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -45,10 +46,10 @@ export function Testimonials() {
                   <Star key={i} className="w-5 h-5 fill-tier-1 text-tier-1 transition-transform duration-300 hover:scale-125" />
                 ))}
               </div>
-              <p className="text-foreground mb-4">"{testimonial.content}"</p>
+              <p className="text-foreground/90 mb-4">"{testimonial.content}"</p>
               <div>
                 <div className="font-semibold text-foreground">{testimonial.name}</div>
-                <div className="text-sm text-muted-foreground">{testimonial.role}</div>
+                <div className="text-sm text-foreground/60">{testimonial.role}</div>
               </div>
             </AnimatedCard>
           ))}

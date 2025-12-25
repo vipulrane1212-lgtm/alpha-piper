@@ -1,15 +1,7 @@
 import { ArrowRight, Zap, TrendingUp, Shield } from "lucide-react";
 import { GlassButton, GlassCard } from "@/components/ui/glass-tabs";
+import { AnimatedHeading } from "@/components/ui/animated-text";
 import solboyBanner from "@/assets/solboy-banner.jpg";
-
-// Solana token logos with low density
-const solanaTokens = [
-  { logo: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png", delay: 0, duration: 25, left: "8%", size: 32 },
-  { logo: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png", delay: 4, duration: 28, left: "25%", size: 28 },
-  { logo: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.png", delay: 2, duration: 22, left: "50%", size: 30 },
-  { logo: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263/logo.png", delay: 6, duration: 26, left: "72%", size: 26 },
-  { logo: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr/logo.png", delay: 3, duration: 30, left: "90%", size: 28 },
-];
 
 export function Hero() {
   return (
@@ -30,30 +22,6 @@ export function Hero() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
       </div>
 
-
-      {/* Floating Solana tokens */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {solanaTokens.map((token, index) => (
-          <div
-            key={index}
-            className="absolute animate-float opacity-40"
-            style={{
-              left: token.left,
-              width: token.size,
-              height: token.size,
-              animationDuration: `${token.duration}s`,
-              animationDelay: `${token.delay}s`,
-            }}
-          >
-            <img 
-              src={token.logo} 
-              alt="Solana token" 
-              className="w-full h-full rounded-full"
-            />
-          </div>
-        ))}
-      </div>
-
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
           <div className="inline-block mb-6 animate-fade-in" style={{ animationDelay: "0.1s" }}>
@@ -62,10 +30,11 @@ export function Hero() {
             </span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-            <span className="text-primary">SolBoy</span>{" "}
-            <span className="text-foreground">Alerts</span>
-          </h1>
+          <div className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            <AnimatedHeading level={1} className="text-5xl md:text-7xl mb-6">
+              SolBoy Alerts
+            </AnimatedHeading>
+          </div>
 
           <p className="text-xl md:text-2xl text-foreground mb-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
             Multi-Source Confirmed Trading Signals
