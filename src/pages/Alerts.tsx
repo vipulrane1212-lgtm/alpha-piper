@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Badge } from "@/components/ui/badge";
 import { GlassTab, GlassTabsContainer } from "@/components/ui/glass-tabs";
+import { ElectricBorderCard } from "@/components/ui/electric-border";
 import { useAlerts } from "@/hooks/useData";
 import { formatTimeAgo, truncateContract } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -89,12 +90,16 @@ const Alerts = () => {
                 </div>
               ))
             ) : (
-              filteredAlerts?.map((alert, index) => (
-                <div
+              filteredAlerts?.map((alert, index) => {
+                const cardVariant = alert.tier === 1 ? "tier1" : alert.tier === 2 ? "tier2" : "tier3";
+                return (
+                <ElectricBorderCard
                   key={alert.id}
-                  className="bg-card rounded-lg p-6 border border-border hover:border-primary/50 transition-all duration-300 animate-fade-in hover:scale-[1.02] hover:-translate-y-1"
+                  variant={cardVariant}
+                  className="animate-fade-in hover:scale-[1.02] hover:-translate-y-1 transition-transform duration-300"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
+                  <div className="p-6">
                   {/* Header */}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -189,8 +194,9 @@ const Alerts = () => {
                       {alert.contract}
                     </a>
                   </div>
-                </div>
-              ))
+                  </div>
+                </ElectricBorderCard>
+              )})
             )}
           </div>
 
