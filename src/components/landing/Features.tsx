@@ -2,6 +2,7 @@ import { CheckCircle2, Zap, TrendingUp, Shield, Clock, BarChart3 } from "lucide-
 import { AnimatedSection } from "@/components/ui/animated-section";
 import { GlassCard } from "@/components/ui/glass-tabs";
 import { BlockchainAnimation } from "@/components/animations/BlockchainAnimation";
+import { AnimatedHeading } from "@/components/ui/animated-text";
 
 const features = [
   {
@@ -67,10 +68,10 @@ export function Features() {
 
       <div className="container mx-auto px-4 relative z-10">
         <AnimatedSection className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+          <AnimatedHeading level={2} className="text-4xl md:text-5xl mb-4">
             Why Choose SolBoy Alerts?
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          </AnimatedHeading>
+          <p className="text-xl text-foreground/80 max-w-2xl mx-auto">
             Built by someone who's been in the Solana memecoin space since day one
           </p>
         </AnimatedSection>
@@ -104,7 +105,7 @@ export function Features() {
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-foreground mb-1">{feature.title}</h3>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                        <p className="text-sm text-foreground/70 leading-relaxed">{feature.description}</p>
                       </div>
                     </div>
                   </GlassCard>

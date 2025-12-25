@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Users, Bell, TrendingUp, Target } from "lucide-react";
 import { useStats } from "@/hooks/useData";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AnimatedHeading } from "@/components/ui/animated-text";
 
 const Stats = () => {
   const { data: stats, isLoading } = useStats();
@@ -38,10 +39,10 @@ const Stats = () => {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-4">
-              Live Statistics
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <AnimatedHeading level={1} className="text-5xl md:text-6xl mb-4">
+              Real-Time Statistics
+            </AnimatedHeading>
+            <p className="text-xl text-foreground/80 max-w-2xl mx-auto">
               Real-time data from SolBoy Alerts system
             </p>
           </div>
