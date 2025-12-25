@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Zap } from "lucide-react";
+import { Menu, X, Zap, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useStats } from "@/hooks/useData";
+import { cn } from "@/lib/utils";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -12,6 +14,41 @@ const navLinks = [
   { href: "/faq", label: "FAQ" },
 ];
 
+function ApiStatusBadge() {
+  const { data, isLoading, isError } = useStats();
+  
+  const isOffline = isError || data?.apiOffline;
+  const isConnected = !isLoading && !isOffline && data;
+  
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors",
+        isLoading && "bg-muted text-muted-foreground",
+        isConnected && "bg-primary/10 text-primary",
+        isOffline && "bg-destructive/10 text-destructive"
+      )}
+    >
+      {isLoading ? (
+        <>
+          <div className="w-2 h-2 rounded-full bg-muted-foreground animate-pulse" />
+          <span className="hidden sm:inline">Connecting...</span>
+        </>
+      ) : isConnected ? (
+        <>
+          <Wifi className="w-3 h-3" />
+          <span className="hidden sm:inline">Live</span>
+        </>
+      ) : (
+        <>
+          <WifiOff className="w-3 h-3" />
+          <span className="hidden sm:inline">Offline</span>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -20,10 +57,13 @@ export function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
-            <Zap className="w-6 h-6 text-primary" />
-            <span className="text-xl font-bold text-foreground">SolBoy Alerts</span>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-2">
+              <Zap className="w-6 h-6 text-primary" />
+              <span className="text-xl font-bold text-foreground">SolBoy Alerts</span>
+            </Link>
+            <ApiStatusBadge />
+          </div>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-6">

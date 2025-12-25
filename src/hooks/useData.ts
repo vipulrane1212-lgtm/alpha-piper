@@ -14,6 +14,7 @@ export interface Stats {
   truePositives: number;
   falsePositives: number;
   lastUpdated: string;
+  apiOffline?: boolean;
 }
 
 export interface Alert {
