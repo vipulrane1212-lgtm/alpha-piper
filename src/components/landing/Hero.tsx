@@ -1,5 +1,5 @@
 import { ArrowRight, Zap, TrendingUp, Shield } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { GlassButton, GlassCard } from "@/components/ui/glass-tabs";
 import solboyBanner from "@/assets/solboy-banner.jpg";
 
 // Solana token logos with low density
@@ -75,39 +75,41 @@ export function Hero() {
             Quality over quantity — only the best opportunities.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 animate-fade-in" style={{ animationDelay: "0.5s" }}>
-            <Button size="lg" className="group text-lg px-8 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all duration-300 hover:scale-105" asChild>
-              <a
-                href="https://t.me/solboy_calls"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16 animate-fade-in" style={{ animationDelay: "0.5s" }}>
+            <a
+              href="https://t.me/solboy_calls"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <GlassButton variant="primary" size="lg" className="group">
                 Start Trading Now
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </a>
-            </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 backdrop-blur-sm transition-all duration-300 hover:scale-105" asChild>
-              <a href="/about">Learn More</a>
-            </Button>
+                <ArrowRight className="w-5 h-5 ml-2 inline-block group-hover:translate-x-1 transition-transform" />
+              </GlassButton>
+            </a>
+            <a href="/about">
+              <GlassButton variant="secondary" size="lg">
+                Learn More
+              </GlassButton>
+            </a>
           </div>
 
           {/* Quick stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-            <div className="bg-card/50 backdrop-blur-sm rounded-lg p-6 border border-border animate-fade-in hover:scale-105 transition-transform duration-300" style={{ animationDelay: "0.6s" }}>
+            <GlassCard variant="tier1" className="p-6 text-center animate-fade-in" style={{ animationDelay: "0.6s" }}>
               <Zap className="w-8 h-8 text-tier-1 mb-2 mx-auto" />
               <div className="text-3xl font-bold text-foreground mb-1">3 Tiers</div>
               <div className="text-muted-foreground text-sm">Confidence Levels</div>
-            </div>
-            <div className="bg-card/50 backdrop-blur-sm rounded-lg p-6 border border-border animate-fade-in hover:scale-105 transition-transform duration-300" style={{ animationDelay: "0.7s" }}>
+            </GlassCard>
+            <GlassCard variant="primary" className="p-6 text-center animate-fade-in" style={{ animationDelay: "0.7s" }}>
               <TrendingUp className="w-8 h-8 text-primary mb-2 mx-auto" />
               <div className="text-3xl font-bold text-foreground mb-1">12+ Sources</div>
               <div className="text-muted-foreground text-sm">Monitored 24/7</div>
-            </div>
-            <div className="bg-card/50 backdrop-blur-sm rounded-lg p-6 border border-border animate-fade-in hover:scale-105 transition-transform duration-300" style={{ animationDelay: "0.8s" }}>
+            </GlassCard>
+            <GlassCard variant="tier2" className="p-6 text-center animate-fade-in" style={{ animationDelay: "0.8s" }}>
               <Shield className="w-8 h-8 text-tier-2 mb-2 mx-auto" />
               <div className="text-3xl font-bold text-foreground mb-1">32%</div>
               <div className="text-muted-foreground text-sm">Quality Filter</div>
-            </div>
+            </GlassCard>
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Zap, Wifi, WifiOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { GlassButton, GlassNavLink } from "@/components/ui/glass-tabs";
 import { useStats } from "@/hooks/useData";
 import { cn } from "@/lib/utils";
 
@@ -66,29 +66,24 @@ export function Navbar() {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                className={`transition-colors ${
-                  location.pathname === link.href
-                    ? "text-primary font-medium"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {link.label}
+              <Link key={link.href} to={link.href}>
+                <GlassNavLink active={location.pathname === link.href}>
+                  {link.label}
+                </GlassNavLink>
               </Link>
             ))}
-            <Button asChild>
-              <a
-                href="https://t.me/solboy_calls"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+            <a
+              href="https://t.me/solboy_calls"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-2"
+            >
+              <GlassButton variant="primary" size="sm">
                 Get Started
-              </a>
-            </Button>
+              </GlassButton>
+            </a>
           </div>
 
           {/* Mobile Menu Button */}
@@ -119,16 +114,17 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <Button asChild className="w-full">
-              <a
-                href="https://t.me/solboy_calls"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setMobileMenuOpen(false)}
-              >
+            <a
+              href="https://t.me/solboy_calls"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block"
+            >
+              <GlassButton variant="primary" size="md" className="w-full">
                 Get Started
-              </a>
-            </Button>
+              </GlassButton>
+            </a>
           </div>
         </div>
       )}
