@@ -8,9 +8,23 @@ const corsHeaders = {
 const API_BASE_URL = Deno.env.get('SOLBOY_API_URL') || 'http://localhost:5000';
 
 // Fetch market cap from DexScreener API
+// Format mcap number to readable string
+function formatMcap(mcap: number): string {
+  if (mcap >= 1_000_000) {
+    return `$${(mcap / 1_000_000).toFixed(2)}M`;
+  } else if (mcap >= 1_000) {
+    return `$${(mcap / 1_000).toFixed(1)}K`;
+  } else {
+    return `$${mcap.toFixed(0)}`;
+  }
+}
+
 async function enrichWithDexScreener(alerts: any[]): Promise<any[]> {
   const enrichedAlerts = await Promise.all(
     alerts.map(async (alert) => {
+      // Format entry mcap from API (currentMcap field is actually entry mcap)
+      const entryMcap = alert.currentMcap ? formatMcap(alert.currentMcap) : 'N/A';
+      
       try {
         const dexRes = await fetch(
           `https://api.dexscreener.com/tokens/v1/solana/${alert.contract}`,
@@ -19,7 +33,11 @@ async function enrichWithDexScreener(alerts: any[]): Promise<any[]> {
         
         if (!dexRes.ok) {
           console.log(`[DexScreener] Failed for ${alert.contract}: ${dexRes.status}`);
-          return alert;
+          return {
+            ...alert,
+            entry_mcap: entryMcap,
+            market_cap: 'N/A',
+          };
         }
         
         const dexData = await dexRes.json();
@@ -27,27 +45,25 @@ async function enrichWithDexScreener(alerts: any[]): Promise<any[]> {
         const pair = pairs?.[0];
         
         if (pair?.marketCap) {
-          const mcap = pair.marketCap;
-          let formattedMcap: string;
-          
-          if (mcap >= 1_000_000) {
-            formattedMcap = `$${(mcap / 1_000_000).toFixed(2)}M`;
-          } else if (mcap >= 1_000) {
-            formattedMcap = `$${(mcap / 1_000).toFixed(1)}K`;
-          } else {
-            formattedMcap = `$${mcap.toFixed(0)}`;
-          }
-          
           return {
             ...alert,
-            market_cap: formattedMcap,
+            entry_mcap: entryMcap,
+            market_cap: formatMcap(pair.marketCap),
           };
         }
         
-        return alert;
+        return {
+          ...alert,
+          entry_mcap: entryMcap,
+          market_cap: 'N/A',
+        };
       } catch (error) {
         console.log(`[DexScreener] Error for ${alert.contract}:`, error);
-        return alert;
+        return {
+          ...alert,
+          entry_mcap: entryMcap,
+          market_cap: 'N/A',
+        };
       }
     })
   );
