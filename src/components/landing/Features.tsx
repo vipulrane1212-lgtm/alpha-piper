@@ -1,6 +1,7 @@
 import { CheckCircle2, Zap, TrendingUp, Shield, Clock, BarChart3 } from "lucide-react";
 import { AnimatedSection } from "@/components/ui/animated-section";
 import { GlassCard } from "@/components/ui/glass-tabs";
+import { BlockchainAnimation } from "@/components/animations/BlockchainAnimation";
 
 const features = [
   {
@@ -49,8 +50,22 @@ const features = [
 
 export function Features() {
   return (
-    <section className="py-20 bg-secondary">
-      <div className="container mx-auto px-4">
+    <section className="py-20 relative overflow-hidden">
+      {/* Background with gradient and pattern */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-secondary to-background" />
+      <div 
+        className="absolute inset-0 opacity-5"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--primary)) 1px, transparent 0)`,
+          backgroundSize: "40px 40px",
+        }}
+      />
+      
+      {/* Glowing orbs */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-tier-1/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+
+      <div className="container mx-auto px-4 relative z-10">
         <AnimatedSection className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Why Choose SolBoy Alerts?
@@ -60,28 +75,48 @@ export function Features() {
           </p>
         </AnimatedSection>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            const cardVariant = feature.colorClass.includes("tier-1") ? "tier1" 
-              : feature.colorClass.includes("tier-2") ? "tier2" 
-              : feature.colorClass.includes("success") ? "primary"
-              : "primary";
-            return (
-              <GlassCard
-                key={feature.title}
-                variant={cardVariant}
-                className="p-6 animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className={`${feature.bgClass} w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110`}>
-                  <Icon className={`w-6 h-6 ${feature.colorClass}`} />
-                </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
-              </GlassCard>
-            );
-          })}
+        {/* Two column layout: Animation on left, Content on right */}
+        <div className="flex flex-col lg:flex-row gap-12 items-center">
+          {/* Left side - Animation */}
+          <div className="w-full lg:w-2/5 hidden lg:block">
+            <BlockchainAnimation />
+          </div>
+
+          {/* Right side - Feature cards */}
+          <div className="w-full lg:w-3/5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {features.map((feature, index) => {
+                const Icon = feature.icon;
+                const cardVariant = feature.colorClass.includes("tier-1") ? "tier1" 
+                  : feature.colorClass.includes("tier-2") ? "tier2" 
+                  : feature.colorClass.includes("success") ? "primary"
+                  : "primary";
+                return (
+                  <GlassCard
+                    key={feature.title}
+                    variant={cardVariant}
+                    className="p-5 animate-fade-in group"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`${feature.bgClass} w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3`}>
+                        <Icon className={`w-6 h-6 ${feature.colorClass}`} />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground mb-1">{feature.title}</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                      </div>
+                    </div>
+                  </GlassCard>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile animation - shown only on smaller screens */}
+        <div className="lg:hidden mt-12 max-w-sm mx-auto">
+          <BlockchainAnimation />
         </div>
       </div>
     </section>
