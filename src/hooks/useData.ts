@@ -25,11 +25,14 @@ export interface Alert {
   timestamp: string;
   contract: string;
   score: number;
-  market_cap: string;
+  market_cap: string; // Current mcap from DexScreener
+  entry_mcap: string; // Mcap when alert was called
   callers: number;
   subs: number;
   matchedSignals: string[];
   tags: string[];
+  hotlist: string; // "Yes" or "No"
+  description: string;
 }
 
 export function useStats() {
