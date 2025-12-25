@@ -183,9 +183,9 @@ const Alerts = () => {
                       href={`https://dexscreener.com/solana/${alert.contract}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-mono text-xs text-primary hover:text-primary/80 transition-colors break-all"
+                      className="font-mono text-[10px] text-primary hover:text-primary/80 transition-colors break-all leading-relaxed"
                     >
-                      {truncateContract(alert.contract, 8)}
+                      {alert.contract}
                     </a>
                   </div>
                 </div>
