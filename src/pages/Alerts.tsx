@@ -7,7 +7,7 @@ import { ElectricBorderCard } from "@/components/ui/electric-border";
 import { useAlerts } from "@/hooks/useData";
 import { formatTimeAgo, truncateContract } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, X, ExternalLink, Copy, RefreshCw } from "lucide-react";
+import { Check, X, ExternalLink, Copy, RefreshCw, Shield, AlertTriangle, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -21,6 +21,13 @@ const tierEmojis: Record<number, string> = {
   1: "🚀",
   2: "🔥",
   3: "⚡",
+};
+
+const riskColors: Record<string, string> = {
+  low: "bg-green-500/20 text-green-400 border-green-500/30",
+  medium: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  high: "bg-destructive/20 text-destructive border-destructive/30",
+  unknown: "bg-muted/30 text-muted-foreground border-border",
 };
 
 const Alerts = () => {
@@ -38,7 +45,7 @@ const Alerts = () => {
     toast.success("Contract copied to clipboard!");
   };
 
-  const refreshPeakData = async () => {
+  const refreshATHData = async () => {
     setIsRefreshing(true);
     try {
       const response = await fetch(
@@ -47,22 +54,21 @@ const Alerts = () => {
       );
       
       if (!response.ok) {
-        throw new Error("Failed to refresh peak data");
+        throw new Error("Failed to refresh ATH data");
       }
       
       const result = await response.json();
       
       if (result.updated > 0) {
-        toast.success(`Updated peak data for ${result.updated} alerts`);
-        // Invalidate alerts query to refetch with new data
+        toast.success(`Updated ATH data for ${result.updated} alerts`);
         queryClient.invalidateQueries({ queryKey: ["alerts"] });
       } else if (result.processed === 0) {
-        toast.info("All alerts already have peak data cached");
+        toast.info("All alerts already have ATH data cached");
       } else {
-        toast.info(`Processed ${result.processed} alerts - OHLCV data not yet available for these tokens`);
+        toast.info(`Processed ${result.processed} alerts - ATH data not yet available`);
       }
     } catch (error) {
-      toast.error("Failed to refresh peak data");
+      toast.error("Failed to refresh ATH data");
       console.error(error);
     } finally {
       setIsRefreshing(false);
@@ -77,13 +83,13 @@ const Alerts = () => {
             <h1 className="text-5xl font-bold text-foreground mb-4">Recent Alerts</h1>
             <p className="text-xl text-muted-foreground mb-6">Latest trading signals from SolBoy</p>
             <Button
-              onClick={refreshPeakData}
+              onClick={refreshATHData}
               disabled={isRefreshing}
               variant="outline"
               className="gap-2"
             >
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
-              {isRefreshing ? "Updating Peak Data..." : "Refresh Peak Data"}
+              {isRefreshing ? "Updating ATH Data..." : "Refresh ATH Data"}
             </Button>
           </div>
 
@@ -173,6 +179,37 @@ const Alerts = () => {
                     </div>
                   </div>
 
+                  {/* Risk Score & Holder Concentration Row */}
+                  <div className="flex items-center gap-2 mb-3">
+                    {/* Risk Score Badge */}
+                    <div 
+                      className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border ${riskColors[alert.risk_level || 'unknown']}`}
+                      title={`Risk Score: ${alert.risk_score || 0}/10`}
+                    >
+                      {alert.risk_level === 'high' ? (
+                        <AlertTriangle className="w-3 h-3" />
+                      ) : (
+                        <Shield className="w-3 h-3" />
+                      )}
+                      <span className="capitalize">{alert.risk_level || 'N/A'} Risk</span>
+                    </div>
+                    
+                    {/* Top 10 Holder Concentration */}
+                    <div 
+                      className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border ${
+                        alert.top10_holders > 50 
+                          ? "bg-destructive/20 text-destructive border-destructive/30" 
+                          : alert.top10_holders > 30
+                            ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                            : "bg-green-500/20 text-green-400 border-green-500/30"
+                      }`}
+                      title="Top 10 holders concentration"
+                    >
+                      <Users className="w-3 h-3" />
+                      <span>Top10: {alert.top10_holders || 0}%</span>
+                    </div>
+                  </div>
+
                   {/* Description */}
                   {alert.description && (
                     <p className="text-xs text-muted-foreground mb-4 line-clamp-2 italic">
@@ -180,7 +217,7 @@ const Alerts = () => {
                     </p>
                   )}
 
-                  {/* Stats Grid with Peak X */}
+                  {/* Stats Grid with ATH X */}
                   <div className="grid grid-cols-3 gap-2 text-sm mb-3">
                     <div className="bg-muted/30 rounded-md p-2">
                       <span className="text-muted-foreground text-xs">📍 Entry</span>
@@ -191,15 +228,15 @@ const Alerts = () => {
                       <p className="text-primary font-semibold text-sm">{alert.market_cap || "N/A"}</p>
                     </div>
                     <div className="bg-gradient-to-r from-tier-1/20 to-tier-2/20 rounded-md p-2 border border-tier-1/30">
-                      <span className="text-muted-foreground text-xs">🏔️ Peak X</span>
+                      <span className="text-muted-foreground text-xs">🏔️ ATH X</span>
                       <p className={`font-bold text-sm ${
-                        alert.peak_x && alert.peak_x !== '—' && parseFloat(alert.peak_x) >= 2 
+                        alert.ath_x && alert.ath_x !== '—' && parseFloat(alert.ath_x) >= 2 
                           ? "text-tier-1" 
-                          : alert.peak_x && alert.peak_x !== '—' && parseFloat(alert.peak_x) >= 1.5 
+                          : alert.ath_x && alert.ath_x !== '—' && parseFloat(alert.ath_x) >= 1.5 
                             ? "text-tier-2" 
                             : "text-foreground"
                       }`}>
-                        {alert.peak_x || "—"}
+                        {alert.ath_x || "—"}
                       </p>
                     </div>
                   </div>

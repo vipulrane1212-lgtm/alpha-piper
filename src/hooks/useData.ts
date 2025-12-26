@@ -28,8 +28,14 @@ export interface Alert {
   market_cap: string; // Current mcap from DexScreener (formatted)
   entry_mcap: string; // Mcap when alert was called
   currentMcap: number; // Current mcap raw number
-  peak_mcap: string; // Peak mcap achieved (from Solana Tracker OHLCV)
-  peak_x: string; // Peak multiplier (peak_mcap / entry_mcap) e.g. "3.2x"
+  // ATH data from Solana Tracker
+  ath_mcap: string; // All-time high market cap
+  ath_x: string; // ATH multiplier (ath_mcap / entry_mcap) e.g. "3.6x"
+  // Risk data from Solana Tracker
+  risk_score: number; // 0-10 risk score
+  risk_level: string; // "low", "medium", "high"
+  top10_holders: number; // Top 10 holder concentration %
+  // Other data
   callers: number;
   subs: number;
   matchedSignals: string[];
