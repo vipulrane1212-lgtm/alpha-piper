@@ -25,12 +25,8 @@ export interface Alert {
   timestamp: string;
   contract: string;
   score: number;
-  market_cap: string; // Live current mcap from DexScreener (formatted)
-  entry_mcap: string; // Formatted entry mcap display
-  entryMc: number; // Raw entry mcap number from API
-  currentMcap: number; // Current mcap from API (Telegram post value)
-  currentMcapDisplay: string; // Formatted current mcap from API
-  // Other data
+  entry_mcap: string; // Formatted entry mcap display (fallback)
+  entryMc: number | null; // Entry mcap from Telegram post
   callers: number;
   subs: number;
   matchedSignals: string[];
