@@ -136,16 +136,32 @@ const Alerts = () => {
                     </p>
                   )}
 
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 gap-2 text-sm mb-4">
+                  {/* Stats Grid with Peak X */}
+                  <div className="grid grid-cols-3 gap-2 text-sm mb-3">
                     <div className="bg-muted/30 rounded-md p-2">
-                      <span className="text-muted-foreground text-xs">📍 Called At</span>
-                      <p className="text-foreground font-semibold">{alert.entry_mcap || "N/A"}</p>
+                      <span className="text-muted-foreground text-xs">📍 Entry</span>
+                      <p className="text-foreground font-semibold text-sm">{alert.entry_mcap || "N/A"}</p>
                     </div>
                     <div className="bg-muted/30 rounded-md p-2">
                       <span className="text-muted-foreground text-xs">💰 Current</span>
-                      <p className="text-primary font-semibold">{alert.market_cap || "N/A"}</p>
+                      <p className="text-primary font-semibold text-sm">{alert.market_cap || "N/A"}</p>
                     </div>
+                    <div className="bg-gradient-to-r from-tier-1/20 to-tier-2/20 rounded-md p-2 border border-tier-1/30">
+                      <span className="text-muted-foreground text-xs">🏔️ Peak X</span>
+                      <p className={`font-bold text-sm ${
+                        alert.peak_x && alert.peak_x !== '—' && parseFloat(alert.peak_x) >= 2 
+                          ? "text-tier-1" 
+                          : alert.peak_x && alert.peak_x !== '—' && parseFloat(alert.peak_x) >= 1.5 
+                            ? "text-tier-2" 
+                            : "text-foreground"
+                      }`}>
+                        {alert.peak_x || "—"}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Secondary Stats */}
+                  <div className="grid grid-cols-2 gap-2 text-sm mb-4">
                     <div className="bg-muted/30 rounded-md p-2">
                       <span className="text-muted-foreground text-xs">📢 Callers</span>
                       <p className="text-foreground font-semibold">{alert.callers || 0}</p>

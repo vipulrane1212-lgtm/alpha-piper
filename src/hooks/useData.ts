@@ -28,6 +28,8 @@ export interface Alert {
   market_cap: string; // Current mcap from DexScreener (formatted)
   entry_mcap: string; // Mcap when alert was called
   currentMcap: number; // Current mcap raw number
+  peak_mcap: string; // Peak mcap achieved (from Solana Tracker OHLCV)
+  peak_x: string; // Peak multiplier (peak_mcap / entry_mcap) e.g. "3.2x"
   callers: number;
   subs: number;
   matchedSignals: string[];
