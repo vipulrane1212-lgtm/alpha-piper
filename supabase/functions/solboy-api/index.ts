@@ -38,8 +38,8 @@ function parseMcap(str: string): number | null {
   return value;
 }
 
-// Check cache for peak data
-async function getCachedPeakData(contract: string): Promise<{ peak_mcap: string; peak_x: string } | null> {
+// Check cache for ATH data (repurposed peak_cache table)
+async function getCachedATHData(contract: string): Promise<{ ath_mcap: string; ath_x: string } | null> {
   try {
     const { data, error } = await supabase
       .from('peak_cache')
@@ -50,48 +50,43 @@ async function getCachedPeakData(contract: string): Promise<{ peak_mcap: string;
     if (error || !data) return null;
     
     return {
-      peak_mcap: data.peak_mcap ? formatMcap(Number(data.peak_mcap)) : 'N/A',
-      peak_x: data.peak_x || '—',
+      ath_mcap: data.peak_mcap ? formatMcap(Number(data.peak_mcap)) : 'N/A',
+      ath_x: data.peak_x || '—',
     };
   } catch {
     return null;
   }
 }
 
-// Save peak data to cache
-async function cachePeakData(contract: string, entryMcap: number, peakMcap: number, peakX: string, alertTimestamp: string): Promise<void> {
+// Save ATH data to cache
+async function cacheATHData(contract: string, entryMcap: number, athMcap: number, athX: string, alertTimestamp: string): Promise<void> {
   try {
     await supabase
       .from('peak_cache')
       .upsert({
         contract,
         entry_mcap: entryMcap,
-        peak_mcap: peakMcap,
-        peak_x: peakX,
+        peak_mcap: athMcap,
+        peak_x: athX,
         alert_timestamp: alertTimestamp,
         last_updated: new Date().toISOString(),
       }, { onConflict: 'contract' });
   } catch (error) {
-    console.log(`[Cache] Failed to save for ${contract.substring(0, 8)}:`, error);
+    console.log(`[Cache] Failed to save ATH for ${contract.substring(0, 8)}:`, error);
   }
 }
 
-// Fetch peak mcap from Solana Tracker OHLCV API
-async function fetchPeakMcap(contract: string, alertTimestamp: string, entryMcapNum: number): Promise<{ peak_mcap: string; peak_x: string; raw_peak: number } | null> {
+// Fetch ATH (All-Time High) from Solana Tracker
+async function fetchATH(contract: string, entryMcapNum: number): Promise<{ ath_mcap: string; ath_x: string; raw_ath: number } | null> {
   if (!SOLANATRACKER_API_KEY) {
     console.log('[SolanaTracker] No API key configured');
     return null;
   }
 
   try {
-    // Convert alert timestamp to unix seconds
-    const alertTime = Math.floor(new Date(alertTimestamp).getTime() / 1000);
-    const now = Math.floor(Date.now() / 1000);
+    const url = `https://data.solanatracker.io/tokens/${contract}/ath`;
     
-    // Fetch hourly OHLCV data with marketCap enabled
-    const url = `https://data.solanatracker.io/chart/${contract}?type=1h&time_from=${alertTime}&time_to=${now}&marketCap=true&removeOutliers=true`;
-    
-    console.log(`[SolanaTracker] Fetching OHLCV for ${contract.substring(0, 8)}...`);
+    console.log(`[SolanaTracker] Fetching ATH for ${contract.substring(0, 8)}...`);
     
     const response = await fetch(url, {
       headers: {
@@ -101,94 +96,154 @@ async function fetchPeakMcap(contract: string, alertTimestamp: string, entryMcap
     });
 
     if (!response.ok) {
-      console.log(`[SolanaTracker] Failed for ${contract.substring(0, 8)}: ${response.status}`);
+      console.log(`[SolanaTracker] ATH failed for ${contract.substring(0, 8)}: ${response.status}`);
       return null;
     }
 
     const data = await response.json();
-    const candles = data.oclhv || data.ohlcv || [];
+    const athMcap = data.highest_market_cap;
     
-    if (!candles || candles.length === 0) {
-      console.log(`[SolanaTracker] No candle data for ${contract.substring(0, 8)}`);
+    if (!athMcap || athMcap === 0) {
+      console.log(`[SolanaTracker] No ATH data for ${contract.substring(0, 8)}`);
       return null;
     }
 
-    // Find the maximum "high" value (peak mcap)
-    let peakMcap = 0;
-    for (const candle of candles) {
-      if (candle.high && candle.high > peakMcap) {
-        peakMcap = candle.high;
-      }
-    }
-
-    if (peakMcap === 0) {
-      return null;
-    }
-
-    // Calculate multiplier (peak / entry)
-    const multiplier = entryMcapNum > 0 ? peakMcap / entryMcapNum : 0;
-    const peakX = multiplier >= 1 ? `${multiplier.toFixed(1)}x` : `${multiplier.toFixed(2)}x`;
+    // Calculate multiplier (ATH / entry)
+    const multiplier = entryMcapNum > 0 ? athMcap / entryMcapNum : 0;
+    const athX = multiplier >= 1 ? `${multiplier.toFixed(1)}x` : `${multiplier.toFixed(2)}x`;
     
-    console.log(`[SolanaTracker] ${contract.substring(0, 8)}: peak=${formatMcap(peakMcap)}, entry=${formatMcap(entryMcapNum)}, multiplier=${peakX}`);
+    console.log(`[SolanaTracker] ${contract.substring(0, 8)}: ATH=${formatMcap(athMcap)}, entry=${formatMcap(entryMcapNum)}, multiplier=${athX}`);
 
     return {
-      peak_mcap: formatMcap(peakMcap),
-      peak_x: peakX,
-      raw_peak: peakMcap,
+      ath_mcap: formatMcap(athMcap),
+      ath_x: athX,
+      raw_ath: athMcap,
     };
   } catch (error) {
-    console.log(`[SolanaTracker] Error for ${contract.substring(0, 8)}:`, error);
+    console.log(`[SolanaTracker] ATH error for ${contract.substring(0, 8)}:`, error);
     return null;
   }
 }
 
-// Enrich alerts with cached or fresh peak data
-async function enrichWithPeakData(alerts: any[]): Promise<any[]> {
-  const DELAY_MS = 600; // Conservative delay for free tier
+// Fetch token risk data from Solana Tracker
+async function fetchTokenRisk(contract: string): Promise<{ risk_score: number; risk_level: string; top10_holders: number } | null> {
+  if (!SOLANATRACKER_API_KEY) {
+    return null;
+  }
+
+  try {
+    const url = `https://data.solanatracker.io/tokens/${contract}`;
+    
+    const response = await fetch(url, {
+      headers: {
+        'x-api-key': SOLANATRACKER_API_KEY,
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    const risk = data.risk;
+    
+    if (!risk) {
+      return null;
+    }
+
+    // Calculate risk score (0-10) based on risk factors
+    let riskScore = 0;
+    if (risk.freezeAuthority) riskScore += 3;
+    if (risk.mintAuthority) riskScore += 2;
+    if (risk.rugged) riskScore += 5;
+    
+    // Adjust based on known factors
+    const sniperPercent = risk.sniperCount ? Math.min(risk.sniperCount / 10, 2) : 0;
+    const insiderPercent = risk.insiderPercentage ? Math.min(risk.insiderPercentage / 20, 2) : 0;
+    riskScore += sniperPercent + insiderPercent;
+    
+    riskScore = Math.min(Math.round(riskScore), 10);
+    
+    // Determine risk level
+    let riskLevel = 'low';
+    if (riskScore >= 7) riskLevel = 'high';
+    else if (riskScore >= 4) riskLevel = 'medium';
+
+    // Get top 10 holder concentration
+    const top10Holders = data.top10HoldingPercent || 0;
+
+    console.log(`[SolanaTracker] ${contract.substring(0, 8)}: risk=${riskScore} (${riskLevel}), top10=${top10Holders}%`);
+
+    return {
+      risk_score: riskScore,
+      risk_level: riskLevel,
+      top10_holders: Math.round(top10Holders),
+    };
+  } catch (error) {
+    console.log(`[SolanaTracker] Risk error for ${contract.substring(0, 8)}:`, error);
+    return null;
+  }
+}
+
+// Enrich alerts with ATH and Risk data
+async function enrichWithSolanaTracker(alerts: any[]): Promise<any[]> {
+  const DELAY_MS = 400; // Delay between API requests
   const enrichedAlerts: any[] = [];
 
   for (let i = 0; i < alerts.length; i++) {
     const alert = alerts[i];
     const entryMcapNum = alert.currentMcap || parseMcap(alert.entry_mcap) || 0;
     
-    if (entryMcapNum === 0) {
-      enrichedAlerts.push({ ...alert, peak_mcap: 'N/A', peak_x: '—' });
-      continue;
+    let athData = { ath_mcap: 'N/A', ath_x: '—' };
+    let riskData = { risk_score: 0, risk_level: 'unknown', top10_holders: 0 };
+
+    if (entryMcapNum > 0) {
+      // Check cache first for ATH
+      const cached = await getCachedATHData(alert.contract);
+      if (cached) {
+        console.log(`[Cache] ATH hit for ${alert.contract.substring(0, 8)}`);
+        athData = cached;
+      } else {
+        // Fetch ATH from API
+        const fetchedATH = await fetchATH(alert.contract, entryMcapNum);
+        if (fetchedATH) {
+          athData = { ath_mcap: fetchedATH.ath_mcap, ath_x: fetchedATH.ath_x };
+          // Cache the result
+          await cacheATHData(alert.contract, entryMcapNum, fetchedATH.raw_ath, fetchedATH.ath_x, alert.timestamp);
+        }
+        // Add delay between API requests
+        if (i < alerts.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+        }
+      }
     }
 
-    // Check cache first
-    const cached = await getCachedPeakData(alert.contract);
-    if (cached) {
-      console.log(`[Cache] Hit for ${alert.contract.substring(0, 8)}`);
-      enrichedAlerts.push({ ...alert, ...cached });
-      continue;
+    // Fetch risk data (not cached, relatively quick)
+    const fetchedRisk = await fetchTokenRisk(alert.contract);
+    if (fetchedRisk) {
+      riskData = fetchedRisk;
     }
-
-    // Fetch from API and cache
-    const peakData = await fetchPeakMcap(alert.contract, alert.timestamp, entryMcapNum);
     
-    if (peakData) {
-      // Cache the result
-      await cachePeakData(alert.contract, entryMcapNum, peakData.raw_peak, peakData.peak_x, alert.timestamp);
-      enrichedAlerts.push({
-        ...alert,
-        peak_mcap: peakData.peak_mcap,
-        peak_x: peakData.peak_x,
-      });
-    } else {
-      enrichedAlerts.push({ ...alert, peak_mcap: 'N/A', peak_x: '—' });
-    }
-
-    // Add delay between API requests
-    if (i < alerts.length - 1 && !cached) {
+    // Add delay after risk fetch
+    if (i < alerts.length - 1) {
       await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
     }
+
+    enrichedAlerts.push({
+      ...alert,
+      ath_mcap: athData.ath_mcap,
+      ath_x: athData.ath_x,
+      risk_score: riskData.risk_score,
+      risk_level: riskData.risk_level,
+      top10_holders: riskData.top10_holders,
+    });
   }
 
   return enrichedAlerts;
 }
 
-// Backfill endpoint - processes a few alerts at a time
+// Backfill endpoint - processes a few alerts at a time (for ATH data)
 async function handleBackfill(limit: number = 5): Promise<{ processed: number; updated: number; errors: number }> {
   console.log(`[Backfill] Starting backfill for ${limit} alerts`);
   
@@ -205,10 +260,10 @@ async function handleBackfill(limit: number = 5): Promise<{ processed: number; u
   const data = await response.json();
   const alerts = data.alerts || [];
   
-  // Filter alerts that don't have cached peak data
+  // Filter alerts that don't have cached ATH data
   const uncachedAlerts: any[] = [];
   for (const alert of alerts) {
-    const cached = await getCachedPeakData(alert.contract);
+    const cached = await getCachedATHData(alert.contract);
     if (!cached) {
       uncachedAlerts.push(alert);
     }
@@ -230,12 +285,12 @@ async function handleBackfill(limit: number = 5): Promise<{ processed: number; u
       continue;
     }
 
-    const peakData = await fetchPeakMcap(alert.contract, alert.timestamp, entryMcapNum);
+    const athData = await fetchATH(alert.contract, entryMcapNum);
     
-    if (peakData) {
-      await cachePeakData(alert.contract, entryMcapNum, peakData.raw_peak, peakData.peak_x, alert.timestamp);
+    if (athData) {
+      await cacheATHData(alert.contract, entryMcapNum, athData.raw_ath, athData.ath_x, alert.timestamp);
       updated++;
-      console.log(`[Backfill] Updated ${alert.token} (${alert.contract.substring(0, 8)}): ${peakData.peak_x}`);
+      console.log(`[Backfill] Updated ${alert.token} (${alert.contract.substring(0, 8)}): ATH ${athData.ath_x}`);
     } else {
       errors++;
     }
@@ -362,7 +417,7 @@ serve(async (req) => {
       data.alerts = await enrichWithDexScreener(data.alerts);
       
       if (SOLANATRACKER_API_KEY) {
-        data.alerts = await enrichWithPeakData(data.alerts);
+        data.alerts = await enrichWithSolanaTracker(data.alerts);
       }
     }
     
