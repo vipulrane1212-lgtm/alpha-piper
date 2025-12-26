@@ -201,11 +201,11 @@ async function fetchCurrentMcap(contract: string): Promise<{ market_cap: string;
   }
 }
 
-// Enrich alerts with Peak X (from BirdEye) + Current Mcap (from DexScreener)
-// Limited to first few alerts to respect rate limits
+// Enrich alerts with Current Mcap (from DexScreener)
+// Peak X comes from the API if available, or from BirdEye as fallback
 async function enrichAlerts(alerts: any[]): Promise<any[]> {
-  const DELAY_MS = 500; // Free tier friendly delay
-  const MAX_PEAK_FETCHES = 4; // Only enrich first 4 alerts with Peak X
+  const DELAY_MS = 300;
+  const MAX_PEAK_FETCHES = 4; // Only fetch Peak X for first 4 alerts if not provided by API
   
   const enrichedAlerts: any[] = [];
   let peakFetchCount = 0;
@@ -215,34 +215,39 @@ async function enrichAlerts(alerts: any[]): Promise<any[]> {
     const entryMcapNum = alert.currentMcap || parseMcap(alert.entry_mcap) || 0;
     const isValidContract = isValidSolanaAddress(alert.contract);
 
-    // Defaults
-    let peakX = '—';
-    let peakMcap = 'N/A';
+    // Use Peak X from API if available
+    let peakX = alert.peak_x || '—';
+    let peakMcap = alert.peak_mcap || 'N/A';
+    
+    // Format entry mcap for display
+    let entryMcapDisplay = entryMcapNum > 0 ? formatMcap(entryMcapNum) : (alert.entry_mcap || 'N/A');
+    
+    // Current mcap from DexScreener
     let currentMcap = alert.market_cap || 'N/A';
+    let currentMcapRaw = 0;
 
     // Fetch current mcap from DexScreener (for all valid contracts)
     if (isValidContract) {
       const mcapData = await fetchCurrentMcap(alert.contract);
       if (mcapData) {
         currentMcap = mcapData.market_cap;
+        currentMcapRaw = mcapData.raw_mcap;
       }
     }
 
-    // Fetch Peak X from BirdEye (limited to first few alerts)
-    if (isValidContract && entryMcapNum > 0 && peakFetchCount < MAX_PEAK_FETCHES && alert.timestamp) {
+    // If Peak X not provided by API, try BirdEye (limited to first few alerts)
+    if ((!alert.peak_x || alert.peak_x === '—') && isValidContract && entryMcapNum > 0 && peakFetchCount < MAX_PEAK_FETCHES && alert.timestamp) {
       // Check cache first
       const cached = await getCachedPeakData(alert.contract);
       if (cached) {
         peakX = cached.peak_x;
         peakMcap = cached.peak_mcap;
-        console.log(`[Cache] Using cached Peak X for ${alert.contract.substring(0, 8)}: ${peakX}`);
       } else {
         // Fetch from BirdEye
         const peakData = await fetchBirdeyePeakX(alert.contract, entryMcapNum, alert.timestamp);
         if (peakData) {
           peakX = peakData.peak_x;
           peakMcap = formatMcap(peakData.peak_mcap);
-          // Cache it
           await cachePeakData(alert.contract, entryMcapNum, peakData.peak_mcap, peakData.peak_x, alert.timestamp);
         }
         peakFetchCount++;
@@ -252,16 +257,13 @@ async function enrichAlerts(alerts: any[]): Promise<any[]> {
 
     enrichedAlerts.push({
       ...alert,
-      entry_mcap: entryMcapNum > 0 ? formatMcap(entryMcapNum) : 'N/A',
+      entry_mcap: entryMcapDisplay,
       market_cap: currentMcap,
+      currentMcap: currentMcapRaw || entryMcapNum,
       peak_x: peakX,
       ath_x: peakX, // Alias for UI compatibility
       peak_mcap: peakMcap,
       ath_mcap: peakMcap,
-      // Clear out risk/holder fields since we're not using them
-      risk_score: 0,
-      risk_level: 'unknown',
-      top10_holders: 0,
     });
   }
 
