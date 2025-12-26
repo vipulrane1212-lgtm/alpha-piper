@@ -6,8 +6,8 @@ const corsHeaders = {
 };
 
 const API_BASE_URL = Deno.env.get('SOLBOY_API_URL') || 'http://localhost:5000';
+const SOLANATRACKER_API_KEY = Deno.env.get('SOLANATRACKER_API_KEY');
 
-// Fetch market cap from DexScreener API
 // Format mcap number to readable string
 function formatMcap(mcap: number): string {
   if (mcap >= 1_000_000) {
@@ -17,6 +17,115 @@ function formatMcap(mcap: number): string {
   } else {
     return `$${mcap.toFixed(0)}`;
   }
+}
+
+// Parse mcap string back to number (e.g., "$143.5K" -> 143500)
+function parseMcap(str: string): number | null {
+  if (!str || str === 'N/A') return null;
+  const match = str.match(/\$?([\d.]+)([KMB]?)/i);
+  if (!match) return null;
+  let value = parseFloat(match[1]);
+  const suffix = match[2].toUpperCase();
+  if (suffix === 'K') value *= 1000;
+  else if (suffix === 'M') value *= 1000000;
+  else if (suffix === 'B') value *= 1000000000;
+  return value;
+}
+
+// Fetch peak mcap from Solana Tracker OHLCV API
+async function fetchPeakMcap(contract: string, alertTimestamp: string, entryMcapNum: number): Promise<{ peak_mcap: string; peak_x: string } | null> {
+  if (!SOLANATRACKER_API_KEY) {
+    console.log('[SolanaTracker] No API key configured');
+    return null;
+  }
+
+  try {
+    // Convert alert timestamp to unix seconds
+    const alertTime = Math.floor(new Date(alertTimestamp).getTime() / 1000);
+    const now = Math.floor(Date.now() / 1000);
+    
+    // Fetch hourly OHLCV data with marketCap enabled
+    const url = `https://data.solanatracker.io/chart/${contract}?type=1h&time_from=${alertTime}&time_to=${now}&marketCap=true&removeOutliers=true`;
+    
+    console.log(`[SolanaTracker] Fetching OHLCV for ${contract.substring(0, 8)}...`);
+    
+    const response = await fetch(url, {
+      headers: {
+        'x-api-key': SOLANATRACKER_API_KEY,
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.log(`[SolanaTracker] Failed for ${contract.substring(0, 8)}: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const candles = data.oclhv || data.ohlcv || [];
+    
+    if (!candles || candles.length === 0) {
+      console.log(`[SolanaTracker] No candle data for ${contract.substring(0, 8)}`);
+      return null;
+    }
+
+    // Find the maximum "high" value (peak mcap)
+    let peakMcap = 0;
+    for (const candle of candles) {
+      if (candle.high && candle.high > peakMcap) {
+        peakMcap = candle.high;
+      }
+    }
+
+    if (peakMcap === 0) {
+      return null;
+    }
+
+    // Calculate multiplier (peak / entry)
+    const multiplier = entryMcapNum > 0 ? peakMcap / entryMcapNum : 0;
+    
+    console.log(`[SolanaTracker] ${contract.substring(0, 8)}: peak=${formatMcap(peakMcap)}, entry=${formatMcap(entryMcapNum)}, multiplier=${multiplier.toFixed(2)}x`);
+
+    return {
+      peak_mcap: formatMcap(peakMcap),
+      peak_x: multiplier >= 1 ? `${multiplier.toFixed(1)}x` : `${multiplier.toFixed(2)}x`,
+    };
+  } catch (error) {
+    console.log(`[SolanaTracker] Error for ${contract.substring(0, 8)}:`, error);
+    return null;
+  }
+}
+
+// Sequential processing with delay to respect free tier rate limits
+async function enrichWithPeakData(alerts: any[]): Promise<any[]> {
+  // Process one at a time with delay for free tier (very conservative)
+  const DELAY_MS = 500; // 500ms between requests to stay well under rate limit
+  const enrichedAlerts: any[] = [];
+
+  for (let i = 0; i < alerts.length; i++) {
+    const alert = alerts[i];
+    const entryMcapNum = alert.currentMcap || parseMcap(alert.entry_mcap) || 0;
+    
+    if (entryMcapNum === 0) {
+      enrichedAlerts.push({ ...alert, peak_mcap: 'N/A', peak_x: '—' });
+      continue;
+    }
+
+    const peakData = await fetchPeakMcap(alert.contract, alert.timestamp, entryMcapNum);
+    
+    enrichedAlerts.push({
+      ...alert,
+      peak_mcap: peakData?.peak_mcap || 'N/A',
+      peak_x: peakData?.peak_x || '—',
+    });
+
+    // Add delay between requests (except for last one)
+    if (i < alerts.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+    }
+  }
+
+  return enrichedAlerts;
 }
 
 async function enrichWithDexScreener(alerts: any[]): Promise<any[]> {
@@ -150,10 +259,16 @@ serve(async (req) => {
 
     let data = await response.json();
     
-    // Enrich alerts with DexScreener market cap data
+    // Enrich alerts with DexScreener market cap data and peak multiplier
     if (endpoint === 'alerts' && data.alerts && Array.isArray(data.alerts)) {
       console.log(`[solboy-api] Enriching ${data.alerts.length} alerts with DexScreener data`);
       data.alerts = await enrichWithDexScreener(data.alerts);
+      
+      // Now enrich with peak data from Solana Tracker
+      if (SOLANATRACKER_API_KEY) {
+        console.log(`[solboy-api] Enriching ${data.alerts.length} alerts with peak multiplier data`);
+        data.alerts = await enrichWithPeakData(data.alerts);
+      }
     }
     
     console.log(`[solboy-api] Success, returning data`);
