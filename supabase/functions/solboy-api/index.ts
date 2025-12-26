@@ -8,6 +8,7 @@ const corsHeaders = {
 
 const API_BASE_URL = Deno.env.get('SOLBOY_API_URL') || 'http://localhost:5000';
 const SOLANATRACKER_API_KEY = Deno.env.get('SOLANATRACKER_API_KEY');
+const HELIUS_API_KEY = Deno.env.get('HELIUS_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -125,9 +126,66 @@ async function fetchATH(contract: string, entryMcapNum: number): Promise<{ ath_m
   }
 }
 
-// Fetch token risk + holder concentration data from Solana Tracker
-// NOTE: On free tier this endpoint can 429 easily, so caller should limit how many tokens it requests per page.
-async function fetchTokenRisk(contract: string): Promise<{ risk_score: number; risk_level: string; top10_holders: number } | null> {
+// Fetch top 10 holder concentration using Helius getTokenLargestAccounts
+async function fetchTop10HoldersHelius(contract: string): Promise<number | null> {
+  if (!HELIUS_API_KEY) return null;
+
+  try {
+    const url = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: '1',
+        method: 'getTokenLargestAccounts',
+        params: [contract],
+      }),
+    });
+
+    if (!response.ok) {
+      console.log(`[Helius] getTokenLargestAccounts failed for ${contract.substring(0, 8)}: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const accounts = data?.result?.value;
+
+    if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
+      console.log(`[Helius] No holder data for ${contract.substring(0, 8)}`);
+      return null;
+    }
+
+    // Calculate total supply from all accounts
+    let totalSupply = 0;
+    for (const acc of accounts) {
+      const amount = parseFloat(acc.uiAmountString || acc.amount || '0');
+      totalSupply += amount;
+    }
+
+    if (totalSupply === 0) return null;
+
+    // Calculate top 10 concentration
+    const top10 = accounts.slice(0, 10);
+    let top10Amount = 0;
+    for (const acc of top10) {
+      const amount = parseFloat(acc.uiAmountString || acc.amount || '0');
+      top10Amount += amount;
+    }
+
+    const top10Percent = (top10Amount / totalSupply) * 100;
+    console.log(`[Helius] ${contract.substring(0, 8)}: top10=${top10Percent.toFixed(1)}%`);
+
+    return Math.round(top10Percent);
+  } catch (error) {
+    console.log(`[Helius] Error for ${contract.substring(0, 8)}:`, error);
+    return null;
+  }
+}
+
+// Fetch token risk data from Solana Tracker (risk score only, no holder data)
+async function fetchTokenRiskSolanaTracker(contract: string): Promise<{ risk_score: number; risk_level: string } | null> {
   if (!SOLANATRACKER_API_KEY) return null;
 
   try {
@@ -141,7 +199,6 @@ async function fetchTokenRisk(contract: string): Promise<{ risk_score: number; r
     });
 
     if (!response.ok) {
-      // Common on free tier
       if (response.status === 429) {
         console.log(`[SolanaTracker] Risk rate-limited for ${contract.substring(0, 8)} (429)`);
       } else {
@@ -152,17 +209,7 @@ async function fetchTokenRisk(contract: string): Promise<{ risk_score: number; r
 
     const data = await response.json();
 
-    // --- Top10 holders (try multiple field locations)
-    const top10Raw =
-      data?.top10HoldingPercent ??
-      data?.token?.top10HoldingPercent ??
-      data?.holders?.top10HoldingPercent ??
-      data?.holderDistribution?.top10 ??
-      0;
-
-    const top10Holders = typeof top10Raw === 'number' ? top10Raw : Number(top10Raw) || 0;
-
-    // --- Risk score/level (prefer API-provided score if present)
+    // --- Risk score/level
     const apiScoreRaw = data?.risk?.score ?? data?.risk_score ?? data?.risk?.risk_score;
     const apiScore = typeof apiScoreRaw === 'number' ? apiScoreRaw : Number(apiScoreRaw);
 
@@ -172,7 +219,6 @@ async function fetchTokenRisk(contract: string): Promise<{ risk_score: number; r
     if (Number.isFinite(apiScore)) {
       riskScore = Math.max(0, Math.min(10, Math.round(apiScore)));
     } else if (data?.risk) {
-      // Fallback heuristic when score isn't provided
       const risk = data.risk;
       let score = 0;
       if (risk.freezeAuthority) score += 3;
@@ -193,15 +239,9 @@ async function fetchTokenRisk(contract: string): Promise<{ risk_score: number; r
       else riskLevel = 'low';
     }
 
-    console.log(
-      `[SolanaTracker] ${contract.substring(0, 8)}: risk=${riskScore} (${riskLevel}), top10=${top10Holders}%`
-    );
+    console.log(`[SolanaTracker] ${contract.substring(0, 8)}: risk=${riskScore} (${riskLevel})`);
 
-    return {
-      risk_score: riskScore,
-      risk_level: riskLevel,
-      top10_holders: Math.round(top10Holders),
-    };
+    return { risk_score: riskScore, risk_level: riskLevel };
   } catch (error) {
     console.log(`[SolanaTracker] Risk error for ${contract.substring(0, 8)}:`, error);
     return null;
@@ -224,11 +264,21 @@ async function enrichWithSolanaTracker(alerts: any[]): Promise<any[]> {
 
     // Defaults (UI will render "—" when unknown)
     let athData = { ath_mcap: 'N/A', ath_x: '—' };
-    let riskData = { risk_score: 0, risk_level: 'unknown', top10_holders: 0 };
+    let riskData = { risk_score: 0, risk_level: 'unknown' };
+    let top10Holders = 0;
 
-    // Risk / holders (limited)
+    // Helius: Top 10 holders (more reliable than SolanaTracker)
+    if (HELIUS_API_KEY && riskFetchCount < MAX_RISK_FETCHES) {
+      const heliusTop10 = await fetchTop10HoldersHelius(alert.contract);
+      if (heliusTop10 !== null) {
+        top10Holders = heliusTop10;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 200)); // small delay
+    }
+
+    // SolanaTracker: Risk score only (limited)
     if (riskFetchCount < MAX_RISK_FETCHES) {
-      const fetchedRisk = await fetchTokenRisk(alert.contract);
+      const fetchedRisk = await fetchTokenRiskSolanaTracker(alert.contract);
       if (fetchedRisk) {
         riskData = fetchedRisk;
       }
@@ -258,7 +308,7 @@ async function enrichWithSolanaTracker(alerts: any[]): Promise<any[]> {
       ath_x: athData.ath_x,
       risk_score: riskData.risk_score,
       risk_level: riskData.risk_level,
-      top10_holders: riskData.top10_holders,
+      top10_holders: top10Holders,
     });
   }
 
