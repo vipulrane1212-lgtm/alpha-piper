@@ -7,7 +7,7 @@ import { ElectricBorderCard } from "@/components/ui/electric-border";
 import { useAlerts } from "@/hooks/useData";
 import { formatTimeAgo, truncateContract } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, X, ExternalLink, Copy, RefreshCw, Shield, AlertTriangle, Users } from "lucide-react";
+import { Check, X, ExternalLink, Copy, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -23,20 +23,11 @@ const tierEmojis: Record<number, string> = {
   3: "⚡",
 };
 
-const riskColors: Record<string, string> = {
-  low: "bg-green-500/20 text-green-400 border-green-500/30",
-  medium: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  high: "bg-destructive/20 text-destructive border-destructive/30",
-  unknown: "bg-muted/30 text-muted-foreground border-border",
-};
 
 const Alerts = () => {
   const [filter, setFilter] = useState<number | null>(null);
   const [refreshingAlerts, setRefreshingAlerts] = useState<Set<string>>(new Set());
   const [enrichedData, setEnrichedData] = useState<Record<string, { 
-    top10_holders: number; 
-    risk_score: number; 
-    risk_level: string;
     market_cap?: string;
     peak_x?: string;
   }>>({});
@@ -86,9 +77,6 @@ const Alerts = () => {
       setEnrichedData(prev => ({
         ...prev,
         [contract]: {
-          top10_holders: result.top10_holders || 0,
-          risk_score: result.risk_score || 0,
-          risk_level: result.risk_level || 'unknown',
           market_cap: result.market_cap,
           peak_x: result.peak_x,
         }
@@ -107,13 +95,10 @@ const Alerts = () => {
     }
   };
 
-  // Helper to get enriched or original data (now includes market_cap and peak_x)
+  // Helper to get enriched or original data
   const getAlertData = (alert: typeof allAlerts[number]) => {
     const enriched = enrichedData[alert.contract];
     return {
-      top10_holders: enriched?.top10_holders ?? alert.top10_holders ?? 0,
-      risk_score: enriched?.risk_score ?? alert.risk_score ?? 0,
-      risk_level: enriched?.risk_level ?? alert.risk_level ?? 'unknown',
       market_cap: enriched?.market_cap ?? alert.market_cap,
       peak_x: enriched?.peak_x ?? alert.ath_x,
     };
@@ -223,39 +208,6 @@ const Alerts = () => {
                       <Badge variant="outline" className={tierColors[alert.tier]}>
                         TIER {alert.tier}
                       </Badge>
-                    </div>
-                  </div>
-
-                  {/* Risk Score & Holder Concentration Row */}
-                  <div className="flex items-center gap-2 mb-3">
-                    {/* Risk Score Badge */}
-                    <div 
-                      className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border ${riskColors[alertData.risk_level || 'unknown']}`}
-                      title={`Risk Score: ${alertData.risk_score || 0}/10`}
-                    >
-                      {alertData.risk_level === 'high' ? (
-                        <AlertTriangle className="w-3 h-3" />
-                      ) : (
-                        <Shield className="w-3 h-3" />
-                      )}
-                      <span className="capitalize">{alertData.risk_level || 'N/A'} Risk</span>
-                    </div>
-                    
-                    {/* Top 10 Holder Concentration */}
-                    <div 
-                      className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border ${
-                        alertData.top10_holders > 50 
-                          ? "bg-destructive/20 text-destructive border-destructive/30" 
-                          : alertData.top10_holders > 30
-                            ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                            : alertData.top10_holders > 0
-                              ? "bg-green-500/20 text-green-400 border-green-500/30"
-                              : "bg-muted/30 text-muted-foreground border-border"
-                      }`}
-                      title="Top 10 holders concentration"
-                    >
-                      <Users className="w-3 h-3" />
-                      <span>Top10: {alertData.top10_holders > 0 ? `${alertData.top10_holders}%` : "—"}</span>
                     </div>
                   </div>
 
