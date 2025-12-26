@@ -26,7 +26,6 @@ const tierEmojis: Record<number, string> = {
 const Alerts = () => {
   const [filter, setFilter] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [hotlistFilter, setHotlistFilter] = useState<boolean | null>(null);
   const [refreshingAlerts, setRefreshingAlerts] = useState<Set<string>>(new Set());
   const [enrichedData, setEnrichedData] = useState<Record<string, { 
     market_cap?: string;
@@ -47,11 +46,6 @@ const Alerts = () => {
   const filteredAlerts = deduplicatedAlerts?.filter((alert) => {
     // Tier filter
     if (filter !== null && alert.tier !== filter) return false;
-    // Hotlist filter
-    if (hotlistFilter !== null) {
-      const isHotlist = alert.hotlist === "Yes";
-      if (hotlistFilter !== isHotlist) return false;
-    }
     // Search filter (token name or contract)
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -121,9 +115,8 @@ const Alerts = () => {
             <p className="text-xl text-muted-foreground">Latest trading signals from SolBoy</p>
           </div>
 
-          {/* Search & Filters */}
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-center mb-8">
-            {/* Search Input */}
+          {/* Search */}
+          <div className="flex justify-center mb-8">
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -134,31 +127,6 @@ const Alerts = () => {
                 className="pl-10 bg-card/50 border-border/50"
               />
             </div>
-            
-            {/* Hotlist Filter */}
-            <GlassTabsContainer className="max-w-fit">
-              <GlassTab
-                active={hotlistFilter === null}
-                onClick={() => setHotlistFilter(null)}
-                variant="primary"
-              >
-                All
-              </GlassTab>
-              <GlassTab
-                active={hotlistFilter === true}
-                onClick={() => setHotlistFilter(true)}
-                variant="tier1"
-              >
-                🔥 Hotlist
-              </GlassTab>
-              <GlassTab
-                active={hotlistFilter === false}
-                onClick={() => setHotlistFilter(false)}
-                variant="tier3"
-              >
-                Regular
-              </GlassTab>
-            </GlassTabsContainer>
           </div>
 
           {/* Tier Filter Tabs */}
@@ -303,11 +271,11 @@ const Alerts = () => {
                   <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                     <div className="bg-muted/30 rounded-md p-2">
                       <span className="text-muted-foreground text-xs">📍 Entry</span>
-                      <p className="text-foreground font-semibold text-sm">{alert.entry_mcap || "N/A"}</p>
+                      <p className="text-foreground font-semibold text-sm">{alert.entryMc ? `$${(alert.entryMc / 1000).toFixed(1)}K` : (alert.entry_mcap || "N/A")}</p>
                     </div>
                     <div className="bg-muted/30 rounded-md p-2">
                       <span className="text-muted-foreground text-xs">💰 Current</span>
-                      <p className="text-primary font-semibold text-sm">{alertData.market_cap || alert.market_cap || "N/A"}</p>
+                      <p className="text-primary font-semibold text-sm">{alertData.market_cap || alert.currentMcapDisplay || "N/A"}</p>
                     </div>
                   </div>
                   

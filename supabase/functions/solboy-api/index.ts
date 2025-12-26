@@ -110,19 +110,27 @@ async function enrichAlerts(alerts: any[]): Promise<any[]> {
 
   // Now enrich all alerts using the pre-fetched data
   const enrichedAlerts = alerts.map(alert => {
-    const entryMcapNum = alert.currentMcap || parseMcap(alert.entry_mcap) || 0;
-    const entryMcapDisplay = entryMcapNum > 0 ? formatMcap(entryMcapNum) : (alert.entry_mcap || 'N/A');
+    // Entry mcap comes from API's entryMc field (MCAP when alert was triggered)
+    const entryMcapNum = alert.entryMc || 0;
+    const entryMcapDisplay = entryMcapNum > 0 ? formatMcap(entryMcapNum) : 'N/A';
     
-    // Get current mcap from our map
+    // Current mcap from API's currentMcap field (MCAP shown in Telegram post)
+    const apiCurrentMcap = alert.currentMcap || 0;
+    const apiCurrentMcapDisplay = apiCurrentMcap > 0 ? formatMcap(apiCurrentMcap) : 'N/A';
+    
+    // Live current mcap from DexScreener (for refresh button)
     const mcapData = mcapMap.get(alert.contract);
-    const currentMcap = mcapData?.market_cap || alert.market_cap || 'N/A';
-    const currentMcapRaw = mcapData?.raw_mcap || 0;
+    const liveCurrentMcap = mcapData?.market_cap || null;
 
     return {
       ...alert,
+      // Keep original API fields
+      entryMc: entryMcapNum,
       entry_mcap: entryMcapDisplay,
-      market_cap: currentMcap,
-      currentMcap: currentMcapRaw || entryMcapNum,
+      // currentMcap from API (Telegram post value)
+      currentMcapDisplay: apiCurrentMcapDisplay,
+      // Live market cap from DexScreener (for real-time updates)
+      market_cap: liveCurrentMcap || apiCurrentMcapDisplay,
     };
   });
 
