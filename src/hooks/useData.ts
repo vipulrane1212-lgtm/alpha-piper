@@ -25,16 +25,11 @@ export interface Alert {
   timestamp: string;
   contract: string;
   score: number;
-  market_cap: string; // Current mcap from DexScreener (formatted)
-  entry_mcap: string; // Mcap when alert was called
-  currentMcap: number; // Current mcap raw number
-  // ATH data from Solana Tracker
-  ath_mcap: string; // All-time high market cap
-  ath_x: string; // ATH multiplier (ath_mcap / entry_mcap) e.g. "3.6x"
-  // Risk data from Solana Tracker
-  risk_score: number; // 0-10 risk score
-  risk_level: string; // "low", "medium", "high"
-  top10_holders: number; // Top 10 holder concentration %
+  market_cap: string; // Live current mcap from DexScreener (formatted)
+  entry_mcap: string; // Formatted entry mcap display
+  entryMc: number; // Raw entry mcap number from API
+  currentMcap: number; // Current mcap from API (Telegram post value)
+  currentMcapDisplay: string; // Formatted current mcap from API
   // Other data
   callers: number;
   subs: number;
