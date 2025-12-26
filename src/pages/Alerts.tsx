@@ -211,7 +211,9 @@ const Alerts = () => {
                   <div className="grid grid-cols-3 gap-2 text-sm mb-3">
                     <div className="bg-muted/30 rounded-md p-2">
                       <span className="text-muted-foreground text-xs">📍 Entry</span>
-                      <p className="text-foreground font-semibold text-sm">{alert.entryMc ? `$${(alert.entryMc / 1000).toFixed(1)}K` : (alert.entry_mcap || "N/A")}</p>
+                      <p className="text-foreground font-semibold text-sm">
+                        {alert.entryMc != null ? `$${(alert.entryMc / 1000).toFixed(1)}K` : (alert.entry_mcap || "N/A")}
+                      </p>
                     </div>
                     <div className="bg-muted/30 rounded-md p-2">
                       <span className="text-muted-foreground text-xs">📢 Callers</span>

@@ -35,28 +35,6 @@ export function RecentAlerts() {
     toast.success("Contract copied!");
   };
 
-  // Calculate P/L percentage
-  const calculatePL = (entryMcap: string | undefined, currentMcap: number | undefined) => {
-    if (!entryMcap || !currentMcap) return null;
-    
-    // Parse entry mcap (e.g., "$143.5K" -> 143500)
-    const parseValue = (str: string): number | null => {
-      const match = str.match(/\$?([\d.]+)([KMB]?)/i);
-      if (!match) return null;
-      let value = parseFloat(match[1]);
-      const suffix = match[2].toUpperCase();
-      if (suffix === 'K') value *= 1000;
-      else if (suffix === 'M') value *= 1000000;
-      else if (suffix === 'B') value *= 1000000000;
-      return value;
-    };
-
-    const entry = parseValue(entryMcap);
-    if (!entry) return null;
-    
-    const plPercent = ((currentMcap - entry) / entry) * 100;
-    return plPercent;
-  };
 
   return (
     <section className="py-20 bg-secondary">
@@ -83,7 +61,6 @@ export function RecentAlerts() {
           ) : (
             alerts?.map((alert, index) => {
               const cardVariant = alert.tier === 1 ? "tier1" : alert.tier === 2 ? "tier2" : "tier3";
-              const plPercent = calculatePL(alert.entry_mcap, alert.currentMcap);
               
               return (
                 <ElectricBorderCard
@@ -142,26 +119,13 @@ export function RecentAlerts() {
                     )}
 
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                    <div className="grid grid-cols-3 gap-2 text-sm mb-3">
                       <div className="bg-muted/30 rounded-md p-2">
                         <span className="text-muted-foreground text-xs">📍 Entry</span>
-                        <p className="text-foreground font-semibold text-sm">{alert.entry_mcap || "N/A"}</p>
+                        <p className="text-foreground font-semibold text-sm">
+                          {alert.entryMc != null ? `$${(alert.entryMc / 1000).toFixed(1)}K` : (alert.entry_mcap || "N/A")}
+                        </p>
                       </div>
-                      <div className="bg-muted/30 rounded-md p-2">
-                        <span className="text-muted-foreground text-xs">💰 Current</span>
-                        <div className="flex items-center gap-1">
-                          <p className="text-primary font-semibold text-sm">{alert.market_cap || "N/A"}</p>
-                          {plPercent !== null && (
-                            <span className={`text-[10px] font-bold ${plPercent >= 0 ? "text-green-400" : "text-red-400"}`}>
-                              {plPercent >= 0 ? "+" : ""}{plPercent.toFixed(0)}%
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Secondary Stats */}
-                    <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                       <div className="bg-muted/30 rounded-md p-2">
                         <span className="text-muted-foreground text-xs">📢 Callers</span>
                         <p className="text-foreground font-semibold">{alert.callers || 0}</p>
