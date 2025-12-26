@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,11 +7,6 @@ const corsHeaders = {
 
 const rawApiBaseUrl = Deno.env.get('SOLBOY_API_URL') || 'http://localhost:5000';
 const API_BASE_URL = rawApiBaseUrl.replace(/\/+$/, '');
-const BIRDEYE_API_KEY = Deno.env.get('BIRDEYE_API_KEY');
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 // Validate Solana address (base58, 32-44 chars)
 function isValidSolanaAddress(address: string): boolean {
@@ -43,129 +37,6 @@ function parseMcap(str: string): number | null {
   else if (suffix === 'M') value *= 1000000;
   else if (suffix === 'B') value *= 1000000000;
   return value;
-}
-
-// Check cache for Peak data
-async function getCachedPeakData(contract: string): Promise<{ peak_mcap: string; peak_x: string } | null> {
-  try {
-    const { data, error } = await supabase
-      .from('peak_cache')
-      .select('peak_mcap, peak_x')
-      .eq('contract', contract)
-      .maybeSingle();
-    
-    if (error || !data) return null;
-    
-    return {
-      peak_mcap: data.peak_mcap ? formatMcap(Number(data.peak_mcap)) : 'N/A',
-      peak_x: data.peak_x || '—',
-    };
-  } catch {
-    return null;
-  }
-}
-
-// Save Peak data to cache
-async function cachePeakData(contract: string, entryMcap: number, peakMcap: number, peakX: string, alertTimestamp: string): Promise<void> {
-  try {
-    await supabase
-      .from('peak_cache')
-      .upsert({
-        contract,
-        entry_mcap: entryMcap,
-        peak_mcap: peakMcap,
-        peak_x: peakX,
-        alert_timestamp: alertTimestamp,
-        last_updated: new Date().toISOString(),
-      }, { onConflict: 'contract' });
-  } catch (error) {
-    console.log(`[Cache] Failed to save Peak for ${contract.substring(0, 8)}:`, error);
-  }
-}
-
-// Fetch price history from BirdEye to find Peak X since alert timestamp
-// Uses /defi/history_price endpoint with type=15m intervals
-async function fetchBirdeyePeakX(contract: string, entryMcap: number, alertTimestamp: string): Promise<{
-  peak_x: string;
-  peak_mcap: number;
-} | null> {
-  if (!BIRDEYE_API_KEY) {
-    console.log('[BirdEye] No API key configured');
-    return null;
-  }
-
-  if (!isValidSolanaAddress(contract)) {
-    console.log(`[BirdEye] Skipping invalid address: ${contract.substring(0, 8)}...`);
-    return null;
-  }
-
-  try {
-    // Convert timestamp to unix seconds
-    const alertTime = Math.floor(new Date(alertTimestamp).getTime() / 1000);
-    const now = Math.floor(Date.now() / 1000);
-    
-    // BirdEye history_price endpoint - gets price points over time
-    const url = `https://public-api.birdeye.so/defi/history_price?address=${contract}&address_type=token&type=15m&time_from=${alertTime}&time_to=${now}`;
-    
-    console.log(`[BirdEye] Fetching price history for ${contract.substring(0, 8)}...`);
-    
-    const response = await fetch(url, {
-      headers: {
-        'X-API-KEY': BIRDEYE_API_KEY,
-        'x-chain': 'solana',
-        'Accept': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.log(`[BirdEye] Price history failed for ${contract.substring(0, 8)}: ${response.status} - ${errorText.substring(0, 50)}`);
-      return null;
-    }
-
-    const data = await response.json();
-    const items = data?.data?.items;
-
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      console.log(`[BirdEye] No price data for ${contract.substring(0, 8)}`);
-      return null;
-    }
-
-    // Find the peak (highest) price in the period
-    let peakPrice = 0;
-    let entryPrice = items[0]?.value || 0;
-
-    for (const item of items) {
-      const price = item.value || 0;
-      if (price > peakPrice) {
-        peakPrice = price;
-      }
-    }
-
-    if (peakPrice === 0 || entryPrice === 0) {
-      return null;
-    }
-
-    // Peak X = peak_price / entry_price
-    const multiplier = peakPrice / entryPrice;
-    const peakX = multiplier >= 1 ? `${multiplier.toFixed(1)}x` : `${multiplier.toFixed(2)}x`;
-    const peakMcap = entryMcap * multiplier;
-
-    console.log(`[BirdEye] ${contract.substring(0, 8)}: Peak X = ${peakX}`);
-
-    return { peak_x: peakX, peak_mcap: peakMcap };
-  } catch (error) {
-    console.log(`[BirdEye] Price error for ${contract.substring(0, 8)}:`, error);
-    return null;
-  }
-}
-
-// Calculate P/L % from entry mcap to current mcap
-function calculatePL(entryMcap: number, currentMcap: number): string {
-  if (!entryMcap || entryMcap === 0 || !currentMcap) return '—';
-  const pl = ((currentMcap - entryMcap) / entryMcap) * 100;
-  const sign = pl >= 0 ? '+' : '';
-  return `${sign}${pl.toFixed(0)}%`;
 }
 
 // Fetch current market cap from DexScreener
@@ -201,24 +72,15 @@ async function fetchCurrentMcap(contract: string): Promise<{ market_cap: string;
   }
 }
 
-// Enrich alerts with Current Mcap (from DexScreener)
-// Peak X comes from the API if available, or from BirdEye as fallback
+// Enrich alerts with Current Mcap from DexScreener
 async function enrichAlerts(alerts: any[]): Promise<any[]> {
-  const DELAY_MS = 300;
-  const MAX_PEAK_FETCHES = 4; // Only fetch Peak X for first 4 alerts if not provided by API
-  
   const enrichedAlerts: any[] = [];
-  let peakFetchCount = 0;
 
   for (let i = 0; i < alerts.length; i++) {
     const alert = alerts[i];
     const entryMcapNum = alert.currentMcap || parseMcap(alert.entry_mcap) || 0;
     const isValidContract = isValidSolanaAddress(alert.contract);
 
-    // Use Peak X from API if available
-    let peakX = alert.peak_x || '—';
-    let peakMcap = alert.peak_mcap || 'N/A';
-    
     // Format entry mcap for display
     let entryMcapDisplay = entryMcapNum > 0 ? formatMcap(entryMcapNum) : (alert.entry_mcap || 'N/A');
     
@@ -235,52 +97,24 @@ async function enrichAlerts(alerts: any[]): Promise<any[]> {
       }
     }
 
-    // If Peak X not provided by API, try BirdEye (limited to first few alerts)
-    if ((!alert.peak_x || alert.peak_x === '—') && isValidContract && entryMcapNum > 0 && peakFetchCount < MAX_PEAK_FETCHES && alert.timestamp) {
-      // Check cache first
-      const cached = await getCachedPeakData(alert.contract);
-      if (cached) {
-        peakX = cached.peak_x;
-        peakMcap = cached.peak_mcap;
-      } else {
-        // Fetch from BirdEye
-        const peakData = await fetchBirdeyePeakX(alert.contract, entryMcapNum, alert.timestamp);
-        if (peakData) {
-          peakX = peakData.peak_x;
-          peakMcap = formatMcap(peakData.peak_mcap);
-          await cachePeakData(alert.contract, entryMcapNum, peakData.peak_mcap, peakData.peak_x, alert.timestamp);
-        }
-        peakFetchCount++;
-        await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
-      }
-    }
-
     enrichedAlerts.push({
       ...alert,
       entry_mcap: entryMcapDisplay,
       market_cap: currentMcap,
       currentMcap: currentMcapRaw || entryMcapNum,
-      peak_x: peakX,
-      ath_x: peakX, // Alias for UI compatibility
-      peak_mcap: peakMcap,
-      ath_mcap: peakMcap,
     });
   }
 
-  console.log(`[Enrich] Completed ${enrichedAlerts.length} alerts | peak_fetches=${peakFetchCount}`);
+  console.log(`[Enrich] Completed ${enrichedAlerts.length} alerts`);
 
   return enrichedAlerts;
 }
 
 // Enrich single token (for per-alert refresh button)
-async function enrichSingleToken(contract: string, alertTimestamp?: string, entryMcap?: number): Promise<{
-  peak_x: string;
-  peak_mcap: string;
+async function enrichSingleToken(contract: string): Promise<{
   market_cap: string;
 }> {
   const result = {
-    peak_x: '—',
-    peak_mcap: 'N/A',
     market_cap: 'N/A',
   };
 
@@ -293,17 +127,6 @@ async function enrichSingleToken(contract: string, alertTimestamp?: string, entr
   const mcapData = await fetchCurrentMcap(contract);
   if (mcapData) {
     result.market_cap = mcapData.market_cap;
-  }
-
-  // Fetch Peak X if we have timestamp and entry mcap
-  if (alertTimestamp && entryMcap && entryMcap > 0) {
-    const peakData = await fetchBirdeyePeakX(contract, entryMcap, alertTimestamp);
-    if (peakData) {
-      result.peak_x = peakData.peak_x;
-      result.peak_mcap = formatMcap(peakData.peak_mcap);
-      // Update cache
-      await cachePeakData(contract, entryMcap, peakData.peak_mcap, peakData.peak_x, alertTimestamp);
-    }
   }
 
   return result;
@@ -343,8 +166,6 @@ serve(async (req) => {
     // Handle single-token enrichment endpoint (for per-alert refresh)
     if (endpoint === 'enrich-token') {
       const contract = url.searchParams.get('contract');
-      const timestamp = url.searchParams.get('timestamp');
-      const entryMcapParam = url.searchParams.get('entry_mcap');
       
       if (!contract) {
         return new Response(JSON.stringify({ error: 'Missing contract parameter' }), {
@@ -355,8 +176,7 @@ serve(async (req) => {
 
       console.log(`[solboy-api] Enriching single token: ${contract.substring(0, 8)}...`);
 
-      const entryMcap = entryMcapParam ? parseMcap(entryMcapParam) || 0 : 0;
-      const result = await enrichSingleToken(contract, timestamp || undefined, entryMcap);
+      const result = await enrichSingleToken(contract);
 
       console.log(`[solboy-api] Single token result: ${JSON.stringify(result)}`);
 
@@ -429,7 +249,7 @@ serve(async (req) => {
       
       console.log(`[solboy-api] Enriching ${data.alerts.length} alerts`);
       
-      // Enrich with Peak X (BirdEye) + Current Mcap (DexScreener)
+      // Enrich with Current Mcap from DexScreener
       data.alerts = await enrichAlerts(data.alerts);
     }
     

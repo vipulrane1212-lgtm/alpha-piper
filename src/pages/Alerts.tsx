@@ -29,7 +29,6 @@ const Alerts = () => {
   const [refreshingAlerts, setRefreshingAlerts] = useState<Set<string>>(new Set());
   const [enrichedData, setEnrichedData] = useState<Record<string, { 
     market_cap?: string;
-    peak_x?: string;
   }>>({});
   const { data: allAlerts, isLoading } = useAlerts();
   const queryClient = useQueryClient();
@@ -53,17 +52,14 @@ const Alerts = () => {
     toast.success("Contract copied to clipboard!");
   };
 
-  // Refresh data for a single alert (now updates everything including Peak X)
+  // Refresh current mcap for a single alert
   const refreshSingleAlert = async (alert: typeof allAlerts[number]) => {
-    const { contract, token, timestamp, entry_mcap } = alert;
+    const { contract, token } = alert;
     if (refreshingAlerts.has(contract)) return;
     
     setRefreshingAlerts(prev => new Set(prev).add(contract));
     try {
-      // Build URL with all params for full refresh
-      let url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/solboy-api?endpoint=enrich-token&contract=${contract}`;
-      if (timestamp) url += `&timestamp=${encodeURIComponent(timestamp)}`;
-      if (entry_mcap) url += `&entry_mcap=${encodeURIComponent(entry_mcap)}`;
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/solboy-api?endpoint=enrich-token&contract=${contract}`;
       
       const response = await fetch(url, { headers: { "Content-Type": "application/json" } });
       
@@ -73,12 +69,10 @@ const Alerts = () => {
       
       const result = await response.json();
       
-      // Store enriched data locally (includes market_cap and peak_x now)
       setEnrichedData(prev => ({
         ...prev,
         [contract]: {
           market_cap: result.market_cap,
-          peak_x: result.peak_x,
         }
       }));
       
@@ -100,7 +94,6 @@ const Alerts = () => {
     const enriched = enrichedData[alert.contract];
     return {
       market_cap: enriched?.market_cap ?? alert.market_cap,
-      peak_x: enriched?.peak_x ?? alert.ath_x,
     };
   };
 
@@ -242,8 +235,8 @@ const Alerts = () => {
                     </p>
                   )}
 
-                  {/* Stats Grid with Peak X */}
-                  <div className="grid grid-cols-3 gap-2 text-sm mb-3">
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                     <div className="bg-muted/30 rounded-md p-2">
                       <span className="text-muted-foreground text-xs">📍 Entry</span>
                       <p className="text-foreground font-semibold text-sm">{alert.entry_mcap || "N/A"}</p>
@@ -251,18 +244,6 @@ const Alerts = () => {
                     <div className="bg-muted/30 rounded-md p-2">
                       <span className="text-muted-foreground text-xs">💰 Current</span>
                       <p className="text-primary font-semibold text-sm">{alertData.market_cap || alert.market_cap || "N/A"}</p>
-                    </div>
-                    <div className="bg-gradient-to-r from-tier-1/20 to-tier-2/20 rounded-md p-2 border border-tier-1/30">
-                      <span className="text-muted-foreground text-xs">🏔️ Peak X</span>
-                      <p className={`font-bold text-sm ${
-                        alertData.peak_x && alertData.peak_x !== '—' && parseFloat(alertData.peak_x) >= 2 
-                          ? "text-tier-1" 
-                          : alertData.peak_x && alertData.peak_x !== '—' && parseFloat(alertData.peak_x) >= 1.5 
-                            ? "text-tier-2" 
-                            : "text-foreground"
-                      }`}>
-                        {alertData.peak_x || "—"}
-                      </p>
                     </div>
                   </div>
                   

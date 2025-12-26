@@ -141,8 +141,8 @@ export function RecentAlerts() {
                       </div>
                     )}
 
-                    {/* Stats Grid with P/L and ATH X */}
-                    <div className="grid grid-cols-3 gap-2 text-sm mb-3">
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                       <div className="bg-muted/30 rounded-md p-2">
                         <span className="text-muted-foreground text-xs">📍 Entry</span>
                         <p className="text-foreground font-semibold text-sm">{alert.entry_mcap || "N/A"}</p>
@@ -157,18 +157,6 @@ export function RecentAlerts() {
                             </span>
                           )}
                         </div>
-                      </div>
-                      <div className="bg-gradient-to-r from-tier-1/20 to-tier-2/20 rounded-md p-2 border border-tier-1/30">
-                        <span className="text-muted-foreground text-xs">🏔️ ATH X</span>
-                        <p className={`font-bold text-sm ${
-                          alert.ath_x && alert.ath_x !== '—' && parseFloat(alert.ath_x) >= 2 
-                            ? "text-tier-1" 
-                            : alert.ath_x && alert.ath_x !== '—' && parseFloat(alert.ath_x) >= 1.5 
-                              ? "text-tier-2" 
-                              : "text-foreground"
-                        }`}>
-                          {alert.ath_x || "—"}
-                        </p>
                       </div>
                     </div>
                     
