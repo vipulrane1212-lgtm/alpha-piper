@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { GlassTab, GlassTabsContainer } from "@/components/ui/glass-tabs";
 import { ElectricBorderCard } from "@/components/ui/electric-border";
 import { useAlerts } from "@/hooks/useData";
 import { formatTimeAgo, truncateContract } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, X, ExternalLink, Copy } from "lucide-react";
+import { Check, X, ExternalLink, Copy, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 const tierColors: Record<number, string> = {
   1: "bg-tier-1/20 text-tier-1 border-tier-1/30",
@@ -23,7 +25,9 @@ const tierEmojis: Record<number, string> = {
 
 const Alerts = () => {
   const [filter, setFilter] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { data: allAlerts, isLoading } = useAlerts();
+  const queryClient = useQueryClient();
 
   const filteredAlerts = filter 
     ? allAlerts?.filter((a) => a.tier === filter) 
@@ -34,13 +38,53 @@ const Alerts = () => {
     toast.success("Contract copied to clipboard!");
   };
 
+  const refreshPeakData = async () => {
+    setIsRefreshing(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/solboy-api?endpoint=backfill&limit=10`,
+        { headers: { "Content-Type": "application/json" } }
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to refresh peak data");
+      }
+      
+      const result = await response.json();
+      
+      if (result.updated > 0) {
+        toast.success(`Updated peak data for ${result.updated} alerts`);
+        // Invalidate alerts query to refetch with new data
+        queryClient.invalidateQueries({ queryKey: ["alerts"] });
+      } else if (result.processed === 0) {
+        toast.info("All alerts already have peak data cached");
+      } else {
+        toast.info(`Processed ${result.processed} alerts - OHLCV data not yet available for these tokens`);
+      }
+    } catch (error) {
+      toast.error("Failed to refresh peak data");
+      console.error(error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <Layout>
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold text-foreground mb-4">Recent Alerts</h1>
-            <p className="text-xl text-muted-foreground">Latest trading signals from SolBoy</p>
+            <p className="text-xl text-muted-foreground mb-6">Latest trading signals from SolBoy</p>
+            <Button
+              onClick={refreshPeakData}
+              disabled={isRefreshing}
+              variant="outline"
+              className="gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              {isRefreshing ? "Updating Peak Data..." : "Refresh Peak Data"}
+            </Button>
           </div>
 
           {/* Filter Tabs - Glassmorphism */}
