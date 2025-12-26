@@ -33,6 +33,8 @@ const riskColors: Record<string, string> = {
 const Alerts = () => {
   const [filter, setFilter] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshingAlerts, setRefreshingAlerts] = useState<Set<string>>(new Set());
+  const [enrichedData, setEnrichedData] = useState<Record<string, { top10_holders: number; risk_score: number; risk_level: string }>>({});
   const { data: allAlerts, isLoading } = useAlerts();
   const queryClient = useQueryClient();
 
@@ -43,6 +45,46 @@ const Alerts = () => {
   const copyContract = (contract: string) => {
     navigator.clipboard.writeText(contract);
     toast.success("Contract copied to clipboard!");
+  };
+
+  // Refresh data for a single alert
+  const refreshSingleAlert = async (contract: string, token: string) => {
+    if (refreshingAlerts.has(contract)) return;
+    
+    setRefreshingAlerts(prev => new Set(prev).add(contract));
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/solboy-api?endpoint=enrich-token&contract=${contract}`,
+        { headers: { "Content-Type": "application/json" } }
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch data");
+      }
+      
+      const result = await response.json();
+      
+      // Store enriched data locally
+      setEnrichedData(prev => ({
+        ...prev,
+        [contract]: {
+          top10_holders: result.top10_holders || 0,
+          risk_score: result.risk_score || 0,
+          risk_level: result.risk_level || 'unknown',
+        }
+      }));
+      
+      toast.success(`Refreshed data for ${token}`);
+    } catch (error) {
+      toast.error(`Failed to refresh ${token}`);
+      console.error(error);
+    } finally {
+      setRefreshingAlerts(prev => {
+        const next = new Set(prev);
+        next.delete(contract);
+        return next;
+      });
+    }
   };
 
   const refreshATHData = async () => {
@@ -73,6 +115,16 @@ const Alerts = () => {
     } finally {
       setIsRefreshing(false);
     }
+  };
+
+  // Helper to get enriched or original data
+  const getAlertData = (alert: typeof allAlerts[number]) => {
+    const enriched = enrichedData[alert.contract];
+    return {
+      top10_holders: enriched?.top10_holders ?? alert.top10_holders ?? 0,
+      risk_score: enriched?.risk_score ?? alert.risk_score ?? 0,
+      risk_level: enriched?.risk_level ?? alert.risk_level ?? 'unknown',
+    };
   };
 
   return (
@@ -142,6 +194,9 @@ const Alerts = () => {
             ) : (
               filteredAlerts?.map((alert, index) => {
                 const cardVariant = alert.tier === 1 ? "tier1" : alert.tier === 2 ? "tier2" : "tier3";
+                const alertData = getAlertData(alert);
+                const isRefreshingThis = refreshingAlerts.has(alert.contract);
+                
                 return (
                 <ElectricBorderCard
                   key={alert.id}
@@ -150,13 +205,22 @@ const Alerts = () => {
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   <div className="p-6">
-                  {/* Header */}
+                  {/* Header with Refresh Button */}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-2xl animate-pulse">{tierEmojis[alert.tier]}</span>
                       <span className="text-xl font-bold text-foreground">{alert.token}</span>
                     </div>
                     <div className="flex items-center gap-2">
+                      {/* Per-Alert Refresh Button */}
+                      <button
+                        onClick={() => refreshSingleAlert(alert.contract, alert.token)}
+                        disabled={isRefreshingThis}
+                        className="p-1.5 hover:bg-primary/20 rounded-md transition-colors disabled:opacity-50"
+                        title="Refresh Risk & Holders data"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 text-primary ${isRefreshingThis ? "animate-spin" : ""}`} />
+                      </button>
                       {/* Hotlist Indicator */}
                       <div 
                         className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -183,32 +247,32 @@ const Alerts = () => {
                   <div className="flex items-center gap-2 mb-3">
                     {/* Risk Score Badge */}
                     <div 
-                      className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border ${riskColors[alert.risk_level || 'unknown']}`}
-                      title={`Risk Score: ${alert.risk_score || 0}/10`}
+                      className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border ${riskColors[alertData.risk_level || 'unknown']}`}
+                      title={`Risk Score: ${alertData.risk_score || 0}/10`}
                     >
-                      {alert.risk_level === 'high' ? (
+                      {alertData.risk_level === 'high' ? (
                         <AlertTriangle className="w-3 h-3" />
                       ) : (
                         <Shield className="w-3 h-3" />
                       )}
-                      <span className="capitalize">{alert.risk_level || 'N/A'} Risk</span>
+                      <span className="capitalize">{alertData.risk_level || 'N/A'} Risk</span>
                     </div>
                     
                     {/* Top 10 Holder Concentration */}
                     <div 
                       className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border ${
-                        alert.top10_holders > 50 
+                        alertData.top10_holders > 50 
                           ? "bg-destructive/20 text-destructive border-destructive/30" 
-                          : alert.top10_holders > 30
+                          : alertData.top10_holders > 30
                             ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                            : alert.top10_holders > 0
+                            : alertData.top10_holders > 0
                               ? "bg-green-500/20 text-green-400 border-green-500/30"
                               : "bg-muted/30 text-muted-foreground border-border"
                       }`}
                       title="Top 10 holders concentration"
                     >
                       <Users className="w-3 h-3" />
-                      <span>Top10: {alert.top10_holders > 0 ? `${alert.top10_holders}%` : "—"}</span>
+                      <span>Top10: {alertData.top10_holders > 0 ? `${alertData.top10_holders}%` : "—"}</span>
                     </div>
                   </div>
 
