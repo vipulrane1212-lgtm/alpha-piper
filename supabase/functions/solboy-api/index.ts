@@ -6,7 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const API_BASE_URL = Deno.env.get('SOLBOY_API_URL') || 'http://localhost:5000';
+const rawApiBaseUrl = Deno.env.get('SOLBOY_API_URL') || 'http://localhost:5000';
+// Normalize to avoid double slashes like "...app//api/stats" which can 404 on some hosts
+const API_BASE_URL = rawApiBaseUrl.replace(/\/+$/, '');
 const SOLANATRACKER_API_KEY = Deno.env.get('SOLANATRACKER_API_KEY');
 const HELIUS_API_KEY = Deno.env.get('HELIUS_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -483,6 +485,9 @@ serve(async (req) => {
     let apiUrl: string;
     
     switch (endpoint) {
+      case 'health':
+        apiUrl = `${API_BASE_URL}/api/health`;
+        break;
       case 'stats':
         apiUrl = `${API_BASE_URL}/api/stats`;
         break;
