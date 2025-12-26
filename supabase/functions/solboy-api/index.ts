@@ -186,19 +186,34 @@ async function fetchTokenRisk(contract: string): Promise<{ risk_score: number; r
   }
 }
 
-// Enrich alerts with ATH and Risk data
+// Enrich alerts with ATH and Risk data (fetches risk for ALL alerts, ATH only for first 3)
 async function enrichWithSolanaTracker(alerts: any[]): Promise<any[]> {
-  const DELAY_MS = 400; // Delay between API requests
+  const DELAY_MS = 300; // Delay between API requests
+  const MAX_ATH_FETCHES = 3; // Only fetch ATH for first 3 alerts to avoid rate limits
+  
+  // First, fetch risk data for all alerts in parallel (it's lightweight)
+  console.log(`[SolanaTracker] Fetching risk data for ${alerts.length} alerts...`);
+  const riskPromises = alerts.map(async (alert, i) => {
+    // Stagger requests slightly
+    await new Promise((resolve) => setTimeout(resolve, i * 100));
+    return fetchTokenRisk(alert.contract);
+  });
+  
+  const riskResults = await Promise.all(riskPromises);
+  
+  // Now process alerts with risk data and selective ATH fetching
   const enrichedAlerts: any[] = [];
+  let athFetchCount = 0;
 
   for (let i = 0; i < alerts.length; i++) {
     const alert = alerts[i];
     const entryMcapNum = alert.currentMcap || parseMcap(alert.entry_mcap) || 0;
     
     let athData = { ath_mcap: 'N/A', ath_x: '—' };
-    let riskData = { risk_score: 0, risk_level: 'unknown', top10_holders: 0 };
+    const riskData = riskResults[i] || { risk_score: 0, risk_level: 'unknown', top10_holders: 0 };
 
-    if (entryMcapNum > 0) {
+    // Only fetch ATH for first few alerts to avoid rate limits
+    if (entryMcapNum > 0 && athFetchCount < MAX_ATH_FETCHES) {
       // Check cache first for ATH
       const cached = await getCachedATHData(alert.contract);
       if (cached) {
@@ -209,25 +224,12 @@ async function enrichWithSolanaTracker(alerts: any[]): Promise<any[]> {
         const fetchedATH = await fetchATH(alert.contract, entryMcapNum);
         if (fetchedATH) {
           athData = { ath_mcap: fetchedATH.ath_mcap, ath_x: fetchedATH.ath_x };
-          // Cache the result
           await cacheATHData(alert.contract, entryMcapNum, fetchedATH.raw_ath, fetchedATH.ath_x, alert.timestamp);
         }
-        // Add delay between API requests
-        if (i < alerts.length - 1) {
-          await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
-        }
+        athFetchCount++;
+        // Add delay between ATH requests
+        await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
       }
-    }
-
-    // Fetch risk data (not cached, relatively quick)
-    const fetchedRisk = await fetchTokenRisk(alert.contract);
-    if (fetchedRisk) {
-      riskData = fetchedRisk;
-    }
-    
-    // Add delay after risk fetch
-    if (i < alerts.length - 1) {
-      await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
     }
 
     enrichedAlerts.push({
@@ -240,6 +242,7 @@ async function enrichWithSolanaTracker(alerts: any[]): Promise<any[]> {
     });
   }
 
+  console.log(`[SolanaTracker] Enriched ${enrichedAlerts.length} alerts with risk data, ${athFetchCount} ATH fetches`);
   return enrichedAlerts;
 }
 
