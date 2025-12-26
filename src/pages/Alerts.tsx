@@ -32,31 +32,49 @@ const riskColors: Record<string, string> = {
 
 const Alerts = () => {
   const [filter, setFilter] = useState<number | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshingAlerts, setRefreshingAlerts] = useState<Set<string>>(new Set());
-  const [enrichedData, setEnrichedData] = useState<Record<string, { top10_holders: number; risk_score: number; risk_level: string }>>({});
+  const [enrichedData, setEnrichedData] = useState<Record<string, { 
+    top10_holders: number; 
+    risk_score: number; 
+    risk_level: string;
+    market_cap?: string;
+    peak_x?: string;
+  }>>({});
   const { data: allAlerts, isLoading } = useAlerts();
   const queryClient = useQueryClient();
 
+  // Deduplicate alerts by contract + tier (safety net if backend missed any)
+  const deduplicatedAlerts = allAlerts?.reduce((acc, alert) => {
+    const key = `${alert.contract}_${alert.tier}`;
+    if (!acc.seen.has(key)) {
+      acc.seen.add(key);
+      acc.alerts.push(alert);
+    }
+    return acc;
+  }, { seen: new Set<string>(), alerts: [] as typeof allAlerts }).alerts;
+
   const filteredAlerts = filter 
-    ? allAlerts?.filter((a) => a.tier === filter) 
-    : allAlerts;
+    ? deduplicatedAlerts?.filter((a) => a.tier === filter) 
+    : deduplicatedAlerts;
 
   const copyContract = (contract: string) => {
     navigator.clipboard.writeText(contract);
     toast.success("Contract copied to clipboard!");
   };
 
-  // Refresh data for a single alert
-  const refreshSingleAlert = async (contract: string, token: string) => {
+  // Refresh data for a single alert (now updates everything including Peak X)
+  const refreshSingleAlert = async (alert: typeof allAlerts[number]) => {
+    const { contract, token, timestamp, entry_mcap } = alert;
     if (refreshingAlerts.has(contract)) return;
     
     setRefreshingAlerts(prev => new Set(prev).add(contract));
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/solboy-api?endpoint=enrich-token&contract=${contract}`,
-        { headers: { "Content-Type": "application/json" } }
-      );
+      // Build URL with all params for full refresh
+      let url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/solboy-api?endpoint=enrich-token&contract=${contract}`;
+      if (timestamp) url += `&timestamp=${encodeURIComponent(timestamp)}`;
+      if (entry_mcap) url += `&entry_mcap=${encodeURIComponent(entry_mcap)}`;
+      
+      const response = await fetch(url, { headers: { "Content-Type": "application/json" } });
       
       if (!response.ok) {
         throw new Error("Failed to fetch data");
@@ -64,13 +82,15 @@ const Alerts = () => {
       
       const result = await response.json();
       
-      // Store enriched data locally
+      // Store enriched data locally (includes market_cap and peak_x now)
       setEnrichedData(prev => ({
         ...prev,
         [contract]: {
           top10_holders: result.top10_holders || 0,
           risk_score: result.risk_score || 0,
           risk_level: result.risk_level || 'unknown',
+          market_cap: result.market_cap,
+          peak_x: result.peak_x,
         }
       }));
       
@@ -87,43 +107,15 @@ const Alerts = () => {
     }
   };
 
-  const refreshATHData = async () => {
-    setIsRefreshing(true);
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/solboy-api?endpoint=backfill&limit=10`,
-        { headers: { "Content-Type": "application/json" } }
-      );
-      
-      if (!response.ok) {
-        throw new Error("Failed to refresh ATH data");
-      }
-      
-      const result = await response.json();
-      
-      if (result.updated > 0) {
-        toast.success(`Updated ATH data for ${result.updated} alerts`);
-        queryClient.invalidateQueries({ queryKey: ["alerts"] });
-      } else if (result.processed === 0) {
-        toast.info("All alerts already have ATH data cached");
-      } else {
-        toast.info(`Processed ${result.processed} alerts - ATH data not yet available`);
-      }
-    } catch (error) {
-      toast.error("Failed to refresh ATH data");
-      console.error(error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  // Helper to get enriched or original data
+  // Helper to get enriched or original data (now includes market_cap and peak_x)
   const getAlertData = (alert: typeof allAlerts[number]) => {
     const enriched = enrichedData[alert.contract];
     return {
       top10_holders: enriched?.top10_holders ?? alert.top10_holders ?? 0,
       risk_score: enriched?.risk_score ?? alert.risk_score ?? 0,
       risk_level: enriched?.risk_level ?? alert.risk_level ?? 'unknown',
+      market_cap: enriched?.market_cap ?? alert.market_cap,
+      peak_x: enriched?.peak_x ?? alert.ath_x,
     };
   };
 
@@ -133,16 +125,7 @@ const Alerts = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold text-foreground mb-4">Recent Alerts</h1>
-            <p className="text-xl text-muted-foreground mb-6">Latest trading signals from SolBoy</p>
-            <Button
-              onClick={refreshATHData}
-              disabled={isRefreshing}
-              variant="outline"
-              className="gap-2"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
-              {isRefreshing ? "Updating ATH Data..." : "Refresh ATH Data"}
-            </Button>
+            <p className="text-xl text-muted-foreground">Latest trading signals from SolBoy</p>
           </div>
 
           {/* Filter Tabs - Glassmorphism */}
@@ -214,10 +197,10 @@ const Alerts = () => {
                     <div className="flex items-center gap-2">
                       {/* Per-Alert Refresh Button */}
                       <button
-                        onClick={() => refreshSingleAlert(alert.contract, alert.token)}
+                        onClick={() => refreshSingleAlert(alert)}
                         disabled={isRefreshingThis}
                         className="p-1.5 hover:bg-primary/20 rounded-md transition-colors disabled:opacity-50"
-                        title="Refresh Risk & Holders data"
+                        title="Refresh all data for this alert"
                       >
                         <RefreshCw className={`w-3.5 h-3.5 text-primary ${isRefreshingThis ? "animate-spin" : ""}`} />
                       </button>
@@ -283,7 +266,7 @@ const Alerts = () => {
                     </p>
                   )}
 
-                  {/* Stats Grid with ATH X */}
+                  {/* Stats Grid with Peak X */}
                   <div className="grid grid-cols-3 gap-2 text-sm mb-3">
                     <div className="bg-muted/30 rounded-md p-2">
                       <span className="text-muted-foreground text-xs">📍 Entry</span>
@@ -291,18 +274,18 @@ const Alerts = () => {
                     </div>
                     <div className="bg-muted/30 rounded-md p-2">
                       <span className="text-muted-foreground text-xs">💰 Current</span>
-                      <p className="text-primary font-semibold text-sm">{alert.market_cap || "N/A"}</p>
+                      <p className="text-primary font-semibold text-sm">{alertData.market_cap || alert.market_cap || "N/A"}</p>
                     </div>
                     <div className="bg-gradient-to-r from-tier-1/20 to-tier-2/20 rounded-md p-2 border border-tier-1/30">
-                      <span className="text-muted-foreground text-xs">🏔️ ATH X</span>
+                      <span className="text-muted-foreground text-xs">🏔️ Peak X</span>
                       <p className={`font-bold text-sm ${
-                        alert.ath_x && alert.ath_x !== '—' && parseFloat(alert.ath_x) >= 2 
+                        alertData.peak_x && alertData.peak_x !== '—' && parseFloat(alertData.peak_x) >= 2 
                           ? "text-tier-1" 
-                          : alert.ath_x && alert.ath_x !== '—' && parseFloat(alert.ath_x) >= 1.5 
+                          : alertData.peak_x && alertData.peak_x !== '—' && parseFloat(alertData.peak_x) >= 1.5 
                             ? "text-tier-2" 
                             : "text-foreground"
                       }`}>
-                        {alert.ath_x || "—"}
+                        {alertData.peak_x || "—"}
                       </p>
                     </div>
                   </div>
