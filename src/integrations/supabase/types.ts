@@ -41,6 +41,33 @@ export type Database = {
         }
         Relationships: []
       }
+      peak_cache: {
+        Row: {
+          alert_timestamp: string | null
+          contract: string
+          entry_mcap: number | null
+          last_updated: string
+          peak_mcap: number | null
+          peak_x: string | null
+        }
+        Insert: {
+          alert_timestamp?: string | null
+          contract: string
+          entry_mcap?: number | null
+          last_updated?: string
+          peak_mcap?: number | null
+          peak_x?: string | null
+        }
+        Update: {
+          alert_timestamp?: string | null
+          contract?: string
+          entry_mcap?: number | null
+          last_updated?: string
+          peak_mcap?: number | null
+          peak_x?: string | null
+        }
+        Relationships: []
+      }
       stats: {
         Row: {
           id: string
