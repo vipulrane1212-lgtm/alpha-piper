@@ -82,38 +82,49 @@ async function fetchCurrentMcap(contract: string): Promise<{ market_cap: string;
   }
 }
 
-// Enrich alerts with Current Mcap from DexScreener
+// Enrich alerts with Current Mcap from DexScreener (parallel requests)
 async function enrichAlerts(alerts: any[]): Promise<any[]> {
-  const enrichedAlerts: any[] = [];
-
-  for (let i = 0; i < alerts.length; i++) {
-    const alert = alerts[i];
-    const entryMcapNum = alert.currentMcap || parseMcap(alert.entry_mcap) || 0;
-    const isValidContract = isValidSolanaAddress(alert.contract);
-
-    // Format entry mcap for display
-    let entryMcapDisplay = entryMcapNum > 0 ? formatMcap(entryMcapNum) : (alert.entry_mcap || 'N/A');
-    
-    // Current mcap from DexScreener
-    let currentMcap = alert.market_cap || 'N/A';
-    let currentMcapRaw = 0;
-
-    // Fetch current mcap from DexScreener (for all valid contracts)
-    if (isValidContract) {
-      const mcapData = await fetchCurrentMcap(alert.contract);
-      if (mcapData) {
-        currentMcap = mcapData.market_cap;
-        currentMcapRaw = mcapData.raw_mcap;
-      }
+  // Fetch all DexScreener data in parallel for speed
+  const validContracts = alerts
+    .filter(a => isValidSolanaAddress(a.contract))
+    .map(a => a.contract);
+  
+  console.log(`[Enrich] Fetching mcap for ${validContracts.length} valid contracts in parallel`);
+  
+  // Create a map of contract -> mcap data
+  const mcapPromises = validContracts.map(async (contract) => {
+    const data = await fetchCurrentMcap(contract);
+    return { contract, data };
+  });
+  
+  const mcapResults = await Promise.all(mcapPromises);
+  const mcapMap = new Map<string, { market_cap: string; raw_mcap: number }>();
+  
+  for (const result of mcapResults) {
+    if (result.data) {
+      mcapMap.set(result.contract, result.data);
     }
+  }
+  
+  console.log(`[Enrich] Got mcap for ${mcapMap.size}/${validContracts.length} contracts`);
 
-    enrichedAlerts.push({
+  // Now enrich all alerts using the pre-fetched data
+  const enrichedAlerts = alerts.map(alert => {
+    const entryMcapNum = alert.currentMcap || parseMcap(alert.entry_mcap) || 0;
+    const entryMcapDisplay = entryMcapNum > 0 ? formatMcap(entryMcapNum) : (alert.entry_mcap || 'N/A');
+    
+    // Get current mcap from our map
+    const mcapData = mcapMap.get(alert.contract);
+    const currentMcap = mcapData?.market_cap || alert.market_cap || 'N/A';
+    const currentMcapRaw = mcapData?.raw_mcap || 0;
+
+    return {
       ...alert,
       entry_mcap: entryMcapDisplay,
       market_cap: currentMcap,
       currentMcap: currentMcapRaw || entryMcapNum,
-    });
-  }
+    };
+  });
 
   console.log(`[Enrich] Completed ${enrichedAlerts.length} alerts`);
 

@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { GlassTab, GlassTabsContainer } from "@/components/ui/glass-tabs";
 import { ElectricBorderCard } from "@/components/ui/electric-border";
 import { useAlerts } from "@/hooks/useData";
-import { formatTimeAgo, truncateContract } from "@/lib/formatters";
+import { formatTimeAgo } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, X, ExternalLink, Copy, RefreshCw } from "lucide-react";
+import { Check, X, ExternalLink, Copy, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 
 const tierColors: Record<number, string> = {
   1: "bg-tier-1/20 text-tier-1 border-tier-1/30",
@@ -26,12 +25,13 @@ const tierEmojis: Record<number, string> = {
 
 const Alerts = () => {
   const [filter, setFilter] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [hotlistFilter, setHotlistFilter] = useState<boolean | null>(null);
   const [refreshingAlerts, setRefreshingAlerts] = useState<Set<string>>(new Set());
   const [enrichedData, setEnrichedData] = useState<Record<string, { 
     market_cap?: string;
   }>>({});
   const { data: allAlerts, isLoading } = useAlerts();
-  const queryClient = useQueryClient();
 
   // Deduplicate alerts by contract + tier (safety net if backend missed any)
   const deduplicatedAlerts = allAlerts?.reduce((acc, alert) => {
@@ -43,9 +43,24 @@ const Alerts = () => {
     return acc;
   }, { seen: new Set<string>(), alerts: [] as typeof allAlerts }).alerts;
 
-  const filteredAlerts = filter 
-    ? deduplicatedAlerts?.filter((a) => a.tier === filter) 
-    : deduplicatedAlerts;
+  // Apply all filters
+  const filteredAlerts = deduplicatedAlerts?.filter((alert) => {
+    // Tier filter
+    if (filter !== null && alert.tier !== filter) return false;
+    // Hotlist filter
+    if (hotlistFilter !== null) {
+      const isHotlist = alert.hotlist === "Yes";
+      if (hotlistFilter !== isHotlist) return false;
+    }
+    // Search filter (token name or contract)
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesToken = alert.token?.toLowerCase().includes(query);
+      const matchesContract = alert.contract?.toLowerCase().includes(query);
+      if (!matchesToken && !matchesContract) return false;
+    }
+    return true;
+  });
 
   const copyContract = (contract: string) => {
     navigator.clipboard.writeText(contract);
@@ -106,7 +121,47 @@ const Alerts = () => {
             <p className="text-xl text-muted-foreground">Latest trading signals from SolBoy</p>
           </div>
 
-          {/* Filter Tabs - Glassmorphism */}
+          {/* Search & Filters */}
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-center mb-8">
+            {/* Search Input */}
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search by token or contract..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-card/50 border-border/50"
+              />
+            </div>
+            
+            {/* Hotlist Filter */}
+            <GlassTabsContainer className="max-w-fit">
+              <GlassTab
+                active={hotlistFilter === null}
+                onClick={() => setHotlistFilter(null)}
+                variant="primary"
+              >
+                All
+              </GlassTab>
+              <GlassTab
+                active={hotlistFilter === true}
+                onClick={() => setHotlistFilter(true)}
+                variant="tier1"
+              >
+                🔥 Hotlist
+              </GlassTab>
+              <GlassTab
+                active={hotlistFilter === false}
+                onClick={() => setHotlistFilter(false)}
+                variant="tier3"
+              >
+                Regular
+              </GlassTab>
+            </GlassTabsContainer>
+          </div>
+
+          {/* Tier Filter Tabs */}
           <GlassTabsContainer className="mb-12 max-w-fit mx-auto">
             <GlassTab
               active={filter === null}
@@ -162,10 +217,10 @@ const Alerts = () => {
                 <ElectricBorderCard
                   key={alert.id}
                   variant={cardVariant}
-                  className="animate-fade-in hover:scale-[1.02] hover:-translate-y-1 transition-transform duration-300"
+                  className="animate-fade-in hover:scale-[1.02] hover:-translate-y-1 transition-transform duration-300 h-full flex flex-col"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
-                  <div className="p-6">
+                  <div className="p-6 flex flex-col h-full">
                   {/* Header with Refresh Button */}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -204,38 +259,47 @@ const Alerts = () => {
                     </div>
                   </div>
 
-                  {/* Matched Signals */}
-                  {alert.matchedSignals && alert.matchedSignals.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      {alert.matchedSignals.slice(0, 3).map((signal, idx) => (
-                        <span
-                          key={idx}
-                          className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${
-                            idx === 0 ? "bg-primary/20 text-primary border-primary/40" :
-                            idx === 1 ? "bg-tier-1/20 text-tier-1 border-tier-1/40" :
-                            idx === 2 ? "bg-tier-2/20 text-tier-2 border-tier-2/40" :
-                            "bg-success/20 text-success border-success/40"
-                          }`}
-                        >
-                          {signal}
-                        </span>
-                      ))}
-                      {alert.matchedSignals.length > 3 && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full border border-border bg-muted/30 text-muted-foreground">
-                          +{alert.matchedSignals.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  {/* Matched Signals - Fixed height container */}
+                  <div className="h-[52px] mb-3">
+                    {alert.matchedSignals && alert.matchedSignals.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {alert.matchedSignals.slice(0, 3).map((signal, idx) => (
+                          <span
+                            key={idx}
+                            className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${
+                              idx === 0 ? "bg-primary/20 text-primary border-primary/40" :
+                              idx === 1 ? "bg-tier-1/20 text-tier-1 border-tier-1/40" :
+                              idx === 2 ? "bg-tier-2/20 text-tier-2 border-tier-2/40" :
+                              "bg-success/20 text-success border-success/40"
+                            }`}
+                          >
+                            {signal}
+                          </span>
+                        ))}
+                        {alert.matchedSignals.length > 3 && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full border border-border bg-muted/30 text-muted-foreground">
+                            +{alert.matchedSignals.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-muted-foreground/50 italic">No signals</div>
+                    )}
+                  </div>
 
-                  {/* Description */}
-                  {alert.description && (
-                    <p className="text-xs text-muted-foreground mb-4 line-clamp-2 italic">
-                      "{alert.description}"
-                    </p>
-                  )}
+                  {/* Description - Fixed height */}
+                  <div className="h-[40px] mb-4">
+                    {alert.description ? (
+                      <p className="text-xs text-muted-foreground line-clamp-2 italic">
+                        "{alert.description}"
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground/50 italic">No description</p>
+                    )}
+                  </div>
 
-                  {/* Stats Grid */}
+                  {/* Stats Grid - Flex grow to push contract to bottom */}
+                  <div className="flex-grow">
                   <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                     <div className="bg-muted/30 rounded-md p-2">
                       <span className="text-muted-foreground text-xs">📍 Entry</span>
@@ -296,6 +360,7 @@ const Alerts = () => {
                     >
                       {alert.contract}
                     </a>
+                  </div>
                   </div>
                   </div>
                 </ElectricBorderCard>
