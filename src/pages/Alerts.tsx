@@ -7,7 +7,7 @@ import { ElectricBorderCard } from "@/components/ui/electric-border";
 import { useAlerts } from "@/hooks/useData";
 import { formatTimeAgo } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, X, ExternalLink, Copy, RefreshCw, Search } from "lucide-react";
+import { Check, X, ExternalLink, Copy, Search } from "lucide-react";
 import { toast } from "sonner";
 
 const tierColors: Record<number, string> = {
@@ -26,10 +26,6 @@ const tierEmojis: Record<number, string> = {
 const Alerts = () => {
   const [filter, setFilter] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [refreshingAlerts, setRefreshingAlerts] = useState<Set<string>>(new Set());
-  const [enrichedData, setEnrichedData] = useState<Record<string, { 
-    market_cap?: string;
-  }>>({});
   const { data: allAlerts, isLoading } = useAlerts();
 
   // Deduplicate alerts by contract + tier (safety net if backend missed any)
@@ -59,51 +55,6 @@ const Alerts = () => {
   const copyContract = (contract: string) => {
     navigator.clipboard.writeText(contract);
     toast.success("Contract copied to clipboard!");
-  };
-
-  // Refresh current mcap for a single alert
-  const refreshSingleAlert = async (alert: typeof allAlerts[number]) => {
-    const { contract, token } = alert;
-    if (refreshingAlerts.has(contract)) return;
-    
-    setRefreshingAlerts(prev => new Set(prev).add(contract));
-    try {
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/solboy-api?endpoint=enrich-token&contract=${contract}`;
-      
-      const response = await fetch(url, { headers: { "Content-Type": "application/json" } });
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-      
-      const result = await response.json();
-      
-      setEnrichedData(prev => ({
-        ...prev,
-        [contract]: {
-          market_cap: result.market_cap,
-        }
-      }));
-      
-      toast.success(`Refreshed data for ${token}`);
-    } catch (error) {
-      toast.error(`Failed to refresh ${token}`);
-      console.error(error);
-    } finally {
-      setRefreshingAlerts(prev => {
-        const next = new Set(prev);
-        next.delete(contract);
-        return next;
-      });
-    }
-  };
-
-  // Helper to get enriched or original data
-  const getAlertData = (alert: typeof allAlerts[number]) => {
-    const enriched = enrichedData[alert.contract];
-    return {
-      market_cap: enriched?.market_cap ?? alert.market_cap,
-    };
   };
 
   return (
@@ -178,8 +129,6 @@ const Alerts = () => {
             ) : (
               filteredAlerts?.map((alert, index) => {
                 const cardVariant = alert.tier === 1 ? "tier1" : alert.tier === 2 ? "tier2" : "tier3";
-                const alertData = getAlertData(alert);
-                const isRefreshingThis = refreshingAlerts.has(alert.contract);
                 
                 return (
                 <ElectricBorderCard
@@ -189,22 +138,13 @@ const Alerts = () => {
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   <div className="p-6 flex flex-col h-full">
-                  {/* Header with Refresh Button */}
+                  {/* Header */}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-2xl animate-pulse">{tierEmojis[alert.tier]}</span>
                       <span className="text-xl font-bold text-foreground">{alert.token}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {/* Per-Alert Refresh Button */}
-                      <button
-                        onClick={() => refreshSingleAlert(alert)}
-                        disabled={isRefreshingThis}
-                        className="p-1.5 hover:bg-primary/20 rounded-md transition-colors disabled:opacity-50"
-                        title="Refresh all data for this alert"
-                      >
-                        <RefreshCw className={`w-3.5 h-3.5 text-primary ${isRefreshingThis ? "animate-spin" : ""}`} />
-                      </button>
                       {/* Hotlist Indicator */}
                       <div 
                         className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -268,19 +208,11 @@ const Alerts = () => {
 
                   {/* Stats Grid - Flex grow to push contract to bottom */}
                   <div className="flex-grow">
-                  <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                  <div className="grid grid-cols-3 gap-2 text-sm mb-3">
                     <div className="bg-muted/30 rounded-md p-2">
                       <span className="text-muted-foreground text-xs">📍 Entry</span>
                       <p className="text-foreground font-semibold text-sm">{alert.entryMc ? `$${(alert.entryMc / 1000).toFixed(1)}K` : (alert.entry_mcap || "N/A")}</p>
                     </div>
-                    <div className="bg-muted/30 rounded-md p-2">
-                      <span className="text-muted-foreground text-xs">💰 Current</span>
-                      <p className="text-primary font-semibold text-sm">{alertData.market_cap || alert.currentMcapDisplay || "N/A"}</p>
-                    </div>
-                  </div>
-                  
-                  {/* Secondary Stats */}
-                  <div className="grid grid-cols-2 gap-2 text-sm mb-4">
                     <div className="bg-muted/30 rounded-md p-2">
                       <span className="text-muted-foreground text-xs">📢 Callers</span>
                       <p className="text-foreground font-semibold">{alert.callers || 0}</p>
@@ -290,6 +222,7 @@ const Alerts = () => {
                       <p className="text-foreground font-semibold">{(alert.subs || 0).toLocaleString()}</p>
                     </div>
                   </div>
+                  
 
                   {/* Time */}
                   <div className="flex justify-between text-xs text-muted-foreground mb-3">
