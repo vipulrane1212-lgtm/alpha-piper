@@ -2,7 +2,6 @@ import { Users, Bell, TrendingUp, Target } from "lucide-react";
 import { AnimatedSection, AnimatedCard } from "@/components/ui/animated-section";
 import { useStats } from "@/hooks/useData";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FireAnimation } from "@/components/animations/FireAnimation";
 
 export function StatsPreview() {
   const { data: stats, isLoading } = useStats();
@@ -35,13 +34,8 @@ export function StatsPreview() {
   ];
 
   return (
-    <section className="py-20 relative overflow-hidden">
-      {/* Fire Animation Background */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-64 h-32 opacity-60">
-        <FireAnimation />
-      </div>
-      
-      <div className="container mx-auto px-4 relative z-10">
+    <section className="py-20">
+      <div className="container mx-auto px-4">
         <AnimatedSection className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Real-Time Statistics
