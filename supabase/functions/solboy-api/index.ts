@@ -126,56 +126,71 @@ async function fetchATH(contract: string, entryMcapNum: number): Promise<{ ath_m
   }
 }
 
-// Fetch top 10 holder concentration using Helius getTokenLargestAccounts
+// Fetch top 10 holder concentration using Helius DAS getTokenAccounts
 async function fetchTop10HoldersHelius(contract: string): Promise<number | null> {
   if (!HELIUS_API_KEY) return null;
 
   try {
     const url = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
     
+    // Use DAS getTokenAccounts which works better for new tokens
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         jsonrpc: '2.0',
         id: '1',
-        method: 'getTokenLargestAccounts',
-        params: [contract],
+        method: 'getTokenAccounts',
+        params: {
+          mint: contract,
+          limit: 100, // Get top 100 holders
+        },
       }),
     });
 
     if (!response.ok) {
-      console.log(`[Helius] getTokenLargestAccounts failed for ${contract.substring(0, 8)}: ${response.status}`);
+      console.log(`[Helius] getTokenAccounts failed for ${contract.substring(0, 8)}: ${response.status}`);
       return null;
     }
 
     const data = await response.json();
-    const accounts = data?.result?.value;
-
-    if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
-      console.log(`[Helius] No holder data for ${contract.substring(0, 8)}`);
+    
+    // Check for RPC errors
+    if (data.error) {
+      console.log(`[Helius] RPC error for ${contract.substring(0, 8)}: ${JSON.stringify(data.error)}`);
       return null;
     }
 
-    // Calculate total supply from all accounts
-    let totalSupply = 0;
-    for (const acc of accounts) {
-      const amount = parseFloat(acc.uiAmountString || acc.amount || '0');
-      totalSupply += amount;
+    const tokenAccounts = data?.result?.token_accounts;
+
+    if (!tokenAccounts || !Array.isArray(tokenAccounts) || tokenAccounts.length === 0) {
+      console.log(`[Helius] No token accounts for ${contract.substring(0, 8)} (result: ${JSON.stringify(data?.result || {}).substring(0, 100)})`);
+      return null;
     }
 
-    if (totalSupply === 0) return null;
+    // Sort by amount descending
+    const sorted = [...tokenAccounts].sort((a, b) => (b.amount || 0) - (a.amount || 0));
+
+    // Calculate total supply from all accounts
+    let totalSupply = 0;
+    for (const acc of sorted) {
+      totalSupply += acc.amount || 0;
+    }
+
+    if (totalSupply === 0) {
+      console.log(`[Helius] Zero total supply for ${contract.substring(0, 8)}`);
+      return null;
+    }
 
     // Calculate top 10 concentration
-    const top10 = accounts.slice(0, 10);
+    const top10 = sorted.slice(0, 10);
     let top10Amount = 0;
     for (const acc of top10) {
-      const amount = parseFloat(acc.uiAmountString || acc.amount || '0');
-      top10Amount += amount;
+      top10Amount += acc.amount || 0;
     }
 
     const top10Percent = (top10Amount / totalSupply) * 100;
-    console.log(`[Helius] ${contract.substring(0, 8)}: top10=${top10Percent.toFixed(1)}%`);
+    console.log(`[Helius] ${contract.substring(0, 8)}: top10=${top10Percent.toFixed(1)}% (${sorted.length} holders)`);
 
     return Math.round(top10Percent);
   } catch (error) {
@@ -428,6 +443,36 @@ serve(async (req) => {
     if (endpoint === 'backfill') {
       const limit = parseInt(url.searchParams.get('limit') || '5');
       const result = await handleBackfill(limit);
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Handle single-token enrichment endpoint (for per-alert refresh)
+    if (endpoint === 'enrich-token') {
+      const contract = url.searchParams.get('contract');
+      if (!contract) {
+        return new Response(JSON.stringify({ error: 'Missing contract parameter' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      console.log(`[solboy-api] Enriching single token: ${contract.substring(0, 8)}...`);
+
+      // Fetch all data for this single token
+      const top10 = await fetchTop10HoldersHelius(contract);
+      const riskData = await fetchTokenRiskSolanaTracker(contract);
+
+      const result = {
+        contract,
+        top10_holders: top10 ?? 0,
+        risk_score: riskData?.risk_score ?? 0,
+        risk_level: riskData?.risk_level ?? 'unknown',
+      };
+
+      console.log(`[solboy-api] Single token result: ${JSON.stringify(result)}`);
+
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
