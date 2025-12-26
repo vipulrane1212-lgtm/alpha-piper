@@ -5,7 +5,7 @@ import { formatTimeAgo } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedHeading } from "@/components/ui/animated-text";
 import { ElectricBorderCard } from "@/components/ui/electric-border";
-import { Check, X, ExternalLink, Copy, Shield, AlertTriangle, Users } from "lucide-react";
+import { Check, X, ExternalLink, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 const tierColors: Record<number, string> = {
@@ -26,13 +26,6 @@ const signalColors = [
   "bg-tier-2/20 text-tier-2 border-tier-2/40",
   "bg-success/20 text-success border-success/40",
 ];
-
-const riskColors: Record<string, string> = {
-  low: "bg-green-500/20 text-green-400 border-green-500/30",
-  medium: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  high: "bg-destructive/20 text-destructive border-destructive/30",
-  unknown: "bg-muted/30 text-muted-foreground border-border",
-};
 
 export function RecentAlerts() {
   const { data: alerts, isLoading } = useAlerts(4);
@@ -126,39 +119,6 @@ export function RecentAlerts() {
                         <Badge variant="outline" className={tierColors[alert.tier]}>
                           TIER {alert.tier}
                         </Badge>
-                      </div>
-                    </div>
-
-                    {/* Risk Score & Holder Concentration Row */}
-                    <div className="flex items-center gap-2 mb-3">
-                      {/* Risk Score Badge */}
-                      <div 
-                        className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border ${riskColors[alert.risk_level || 'unknown']}`}
-                        title={`Risk Score: ${alert.risk_score || 0}/10`}
-                      >
-                        {alert.risk_level === 'high' ? (
-                          <AlertTriangle className="w-2.5 h-2.5" />
-                        ) : (
-                          <Shield className="w-2.5 h-2.5" />
-                        )}
-                        <span className="capitalize">{alert.risk_level || 'N/A'}</span>
-                      </div>
-                      
-                      {/* Top 10 Holder Concentration */}
-                      <div 
-                        className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border ${
-                          alert.top10_holders > 50 
-                            ? "bg-destructive/20 text-destructive border-destructive/30" 
-                            : alert.top10_holders > 30
-                              ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                              : alert.top10_holders > 0
-                                ? "bg-green-500/20 text-green-400 border-green-500/30"
-                                : "bg-muted/30 text-muted-foreground border-border"
-                        }`}
-                        title="Top 10 holders concentration"
-                      >
-                        <Users className="w-2.5 h-2.5" />
-                        <span>Top10: {alert.top10_holders > 0 ? `${alert.top10_holders}%` : "—"}</span>
                       </div>
                     </div>
 
