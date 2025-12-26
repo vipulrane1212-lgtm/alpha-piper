@@ -151,12 +151,14 @@ export function RecentAlerts() {
                             ? "bg-destructive/20 text-destructive border-destructive/30" 
                             : alert.top10_holders > 30
                               ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                              : "bg-green-500/20 text-green-400 border-green-500/30"
+                              : alert.top10_holders > 0
+                                ? "bg-green-500/20 text-green-400 border-green-500/30"
+                                : "bg-muted/30 text-muted-foreground border-border"
                         }`}
                         title="Top 10 holders concentration"
                       >
                         <Users className="w-2.5 h-2.5" />
-                        <span>Top10: {alert.top10_holders || 0}%</span>
+                        <span>Top10: {alert.top10_holders > 0 ? `${alert.top10_holders}%` : "—"}</span>
                       </div>
                     </div>
 

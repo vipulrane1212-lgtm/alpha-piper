@@ -125,15 +125,14 @@ async function fetchATH(contract: string, entryMcapNum: number): Promise<{ ath_m
   }
 }
 
-// Fetch token risk data from Solana Tracker
+// Fetch token risk + holder concentration data from Solana Tracker
+// NOTE: On free tier this endpoint can 429 easily, so caller should limit how many tokens it requests per page.
 async function fetchTokenRisk(contract: string): Promise<{ risk_score: number; risk_level: string; top10_holders: number } | null> {
-  if (!SOLANATRACKER_API_KEY) {
-    return null;
-  }
+  if (!SOLANATRACKER_API_KEY) return null;
 
   try {
     const url = `https://data.solanatracker.io/tokens/${contract}`;
-    
+
     const response = await fetch(url, {
       headers: {
         'x-api-key': SOLANATRACKER_API_KEY,
@@ -142,38 +141,61 @@ async function fetchTokenRisk(contract: string): Promise<{ risk_score: number; r
     });
 
     if (!response.ok) {
+      // Common on free tier
+      if (response.status === 429) {
+        console.log(`[SolanaTracker] Risk rate-limited for ${contract.substring(0, 8)} (429)`);
+      } else {
+        console.log(`[SolanaTracker] Risk failed for ${contract.substring(0, 8)}: ${response.status}`);
+      }
       return null;
     }
 
     const data = await response.json();
-    const risk = data.risk;
-    
-    if (!risk) {
+
+    // --- Top10 holders (try multiple field locations)
+    const top10Raw =
+      data?.top10HoldingPercent ??
+      data?.token?.top10HoldingPercent ??
+      data?.holders?.top10HoldingPercent ??
+      data?.holderDistribution?.top10 ??
+      0;
+
+    const top10Holders = typeof top10Raw === 'number' ? top10Raw : Number(top10Raw) || 0;
+
+    // --- Risk score/level (prefer API-provided score if present)
+    const apiScoreRaw = data?.risk?.score ?? data?.risk_score ?? data?.risk?.risk_score;
+    const apiScore = typeof apiScoreRaw === 'number' ? apiScoreRaw : Number(apiScoreRaw);
+
+    let riskScore: number;
+    let riskLevel: string;
+
+    if (Number.isFinite(apiScore)) {
+      riskScore = Math.max(0, Math.min(10, Math.round(apiScore)));
+    } else if (data?.risk) {
+      // Fallback heuristic when score isn't provided
+      const risk = data.risk;
+      let score = 0;
+      if (risk.freezeAuthority) score += 3;
+      if (risk.mintAuthority) score += 2;
+      if (risk.rugged) score += 5;
+      const sniperAdj = risk.sniperCount ? Math.min(risk.sniperCount / 10, 2) : 0;
+      const insiderAdj = risk.insiderPercentage ? Math.min(risk.insiderPercentage / 20, 2) : 0;
+      score += sniperAdj + insiderAdj;
+      riskScore = Math.min(Math.round(score), 10);
+    } else {
       return null;
     }
 
-    // Calculate risk score (0-10) based on risk factors
-    let riskScore = 0;
-    if (risk.freezeAuthority) riskScore += 3;
-    if (risk.mintAuthority) riskScore += 2;
-    if (risk.rugged) riskScore += 5;
-    
-    // Adjust based on known factors
-    const sniperPercent = risk.sniperCount ? Math.min(risk.sniperCount / 10, 2) : 0;
-    const insiderPercent = risk.insiderPercentage ? Math.min(risk.insiderPercentage / 20, 2) : 0;
-    riskScore += sniperPercent + insiderPercent;
-    
-    riskScore = Math.min(Math.round(riskScore), 10);
-    
-    // Determine risk level
-    let riskLevel = 'low';
-    if (riskScore >= 7) riskLevel = 'high';
-    else if (riskScore >= 4) riskLevel = 'medium';
+    riskLevel = data?.risk?.level ?? data?.risk_level ?? '';
+    if (!riskLevel) {
+      if (riskScore >= 7) riskLevel = 'high';
+      else if (riskScore >= 4) riskLevel = 'medium';
+      else riskLevel = 'low';
+    }
 
-    // Get top 10 holder concentration
-    const top10Holders = data.top10HoldingPercent || 0;
-
-    console.log(`[SolanaTracker] ${contract.substring(0, 8)}: risk=${riskScore} (${riskLevel}), top10=${top10Holders}%`);
+    console.log(
+      `[SolanaTracker] ${contract.substring(0, 8)}: risk=${riskScore} (${riskLevel}), top10=${top10Holders}%`
+    );
 
     return {
       risk_score: riskScore,
@@ -186,48 +208,46 @@ async function fetchTokenRisk(contract: string): Promise<{ risk_score: number; r
   }
 }
 
-// Enrich alerts with ATH and Risk data (fetches risk for ALL alerts, ATH only for first 3)
+// Enrich alerts with ATH and Risk data (free-tier friendly limits)
 async function enrichWithSolanaTracker(alerts: any[]): Promise<any[]> {
-  const DELAY_MS = 300; // Delay between API requests
-  const MAX_ATH_FETCHES = 3; // Only fetch ATH for first 3 alerts to avoid rate limits
-  
-  // First, fetch risk data for all alerts in parallel (it's lightweight)
-  console.log(`[SolanaTracker] Fetching risk data for ${alerts.length} alerts...`);
-  const riskPromises = alerts.map(async (alert, i) => {
-    // Stagger requests slightly
-    await new Promise((resolve) => setTimeout(resolve, i * 100));
-    return fetchTokenRisk(alert.contract);
-  });
-  
-  const riskResults = await Promise.all(riskPromises);
-  
-  // Now process alerts with risk data and selective ATH fetching
+  const DELAY_MS = 650; // free tier-friendly
+  const MAX_ATH_FETCHES = 2; // ATH endpoint 404/429 often for fresh tokens
+  const MAX_RISK_FETCHES = 5; // risk endpoint also rate-limits
+
   const enrichedAlerts: any[] = [];
   let athFetchCount = 0;
+  let riskFetchCount = 0;
 
   for (let i = 0; i < alerts.length; i++) {
     const alert = alerts[i];
     const entryMcapNum = alert.currentMcap || parseMcap(alert.entry_mcap) || 0;
-    
-    let athData = { ath_mcap: 'N/A', ath_x: '—' };
-    const riskData = riskResults[i] || { risk_score: 0, risk_level: 'unknown', top10_holders: 0 };
 
-    // Only fetch ATH for first few alerts to avoid rate limits
+    // Defaults (UI will render "—" when unknown)
+    let athData = { ath_mcap: 'N/A', ath_x: '—' };
+    let riskData = { risk_score: 0, risk_level: 'unknown', top10_holders: 0 };
+
+    // Risk / holders (limited)
+    if (riskFetchCount < MAX_RISK_FETCHES) {
+      const fetchedRisk = await fetchTokenRisk(alert.contract);
+      if (fetchedRisk) {
+        riskData = fetchedRisk;
+      }
+      riskFetchCount++;
+      await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+    }
+
+    // ATH (limited and cached)
     if (entryMcapNum > 0 && athFetchCount < MAX_ATH_FETCHES) {
-      // Check cache first for ATH
       const cached = await getCachedATHData(alert.contract);
       if (cached) {
-        console.log(`[Cache] ATH hit for ${alert.contract.substring(0, 8)}`);
         athData = cached;
       } else {
-        // Fetch ATH from API
         const fetchedATH = await fetchATH(alert.contract, entryMcapNum);
         if (fetchedATH) {
           athData = { ath_mcap: fetchedATH.ath_mcap, ath_x: fetchedATH.ath_x };
           await cacheATHData(alert.contract, entryMcapNum, fetchedATH.raw_ath, fetchedATH.ath_x, alert.timestamp);
         }
         athFetchCount++;
-        // Add delay between ATH requests
         await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
       }
     }
@@ -242,7 +262,10 @@ async function enrichWithSolanaTracker(alerts: any[]): Promise<any[]> {
     });
   }
 
-  console.log(`[SolanaTracker] Enriched ${enrichedAlerts.length} alerts with risk data, ${athFetchCount} ATH fetches`);
+  console.log(
+    `[SolanaTracker] Enriched ${enrichedAlerts.length} alerts | risk_fetches=${riskFetchCount} | ath_fetches=${athFetchCount}`
+  );
+
   return enrichedAlerts;
 }
 
