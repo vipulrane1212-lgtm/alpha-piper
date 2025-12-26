@@ -46,28 +46,38 @@ async function fetchCurrentMcap(contract: string): Promise<{ market_cap: string;
   }
 
   try {
+    // Use the correct DexScreener endpoint for token pairs
     const dexRes = await fetch(
-      `https://api.dexscreener.com/tokens/v1/solana/${contract}`,
+      `https://api.dexscreener.com/latest/dex/tokens/${contract}`,
       { headers: { 'Accept': 'application/json' } }
     );
     
     if (!dexRes.ok) {
+      console.log(`[DexScreener] Failed for ${contract.substring(0, 8)}... status: ${dexRes.status}`);
       return null;
     }
     
     const dexData = await dexRes.json();
-    const pairs = Array.isArray(dexData) ? dexData : dexData.pairs;
-    const pair = pairs?.[0];
+    const pairs = dexData?.pairs;
     
-    if (pair?.marketCap) {
-      return { 
-        market_cap: formatMcap(pair.marketCap),
-        raw_mcap: pair.marketCap,
-      };
+    if (pairs && pairs.length > 0) {
+      // Get the pair with highest liquidity
+      const pair = pairs[0];
+      const mcap = pair?.marketCap || pair?.fdv;
+      
+      if (mcap && mcap > 0) {
+        console.log(`[DexScreener] Got mcap for ${contract.substring(0, 8)}...: ${mcap}`);
+        return { 
+          market_cap: formatMcap(mcap),
+          raw_mcap: mcap,
+        };
+      }
     }
     
+    console.log(`[DexScreener] No mcap data for ${contract.substring(0, 8)}...`);
     return null;
-  } catch {
+  } catch (err) {
+    console.log(`[DexScreener] Error for ${contract.substring(0, 8)}...: ${err}`);
     return null;
   }
 }
