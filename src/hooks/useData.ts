@@ -35,7 +35,7 @@ export interface Alert {
   description: string;
 }
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://oaoaihienaacnmavfase.supabase.co';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://uzalzrrvwrxhszznlcgy.supabase.co';
 
 export function useStats() {
   return useQuery({
