@@ -17,9 +17,9 @@ export function MetaballsBackground() {
     let animationId: number;
 
     const uniforms = {
-      t: { value: 0.0 },
-      r: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-      mouse: { value: new THREE.Vector2(0.5, 0.5) },
+      iTime: { value: 0.0 },
+      iResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+      iMouse: { value: new THREE.Vector4(0.5, 0.5, 0, 0) },
     };
 
     const vertexShader = `
@@ -30,16 +30,23 @@ export function MetaballsBackground() {
       }
     `;
 
+    // CodePen VoXelo/raxRoxg shader - glowing wave lines with starfield
     const fragmentShader = `
-      uniform float t;
-      uniform vec2 r;
-      uniform vec2 mouse;
+      uniform float iTime;
+      uniform vec2 iResolution;
+      uniform vec4 iMouse;
       varying vec2 vUv;
 
       #define PI 3.14159265359
-      #define NUM_WAVES 6
+      #define S(a,b,t) smoothstep(a,b,t)
 
-      // Simplex noise functions
+      // Rotation matrix
+      mat2 rot(float a) {
+        float s = sin(a), c = cos(a);
+        return mat2(c, -s, s, c);
+      }
+
+      // Simplex noise
       vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
       vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
       vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
@@ -70,88 +77,127 @@ export function MetaballsBackground() {
         return 130.0 * dot(m, g);
       }
 
-      float fbm(vec2 p) {
-        float value = 0.0;
-        float amplitude = 0.5;
-        for (int i = 0; i < 5; i++) {
-          value += amplitude * snoise(p);
-          p *= 2.0;
-          amplitude *= 0.5;
+      // Wave function
+      float wave(vec2 uv, float time, float freq) {
+        return sin(uv.x * freq + time) * 0.1 +
+               sin(uv.x * freq * 1.5 + time * 1.3) * 0.05 +
+               sin(uv.x * freq * 2.0 + time * 0.8) * 0.03;
+      }
+
+      // Glow line function
+      float glowLine(float y, float thickness, float glow) {
+        float line = S(thickness, 0.0, abs(y));
+        float glowEffect = S(glow, 0.0, abs(y)) * 0.5;
+        return line + glowEffect;
+      }
+
+      // Hash for starfield
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+      }
+
+      // Starfield
+      float starfield(vec2 uv, float time) {
+        float stars = 0.0;
+        for (float i = 0.0; i < 3.0; i++) {
+          vec2 p = uv * (10.0 + i * 5.0);
+          vec2 id = floor(p);
+          vec2 f = fract(p);
+          
+          float h = hash(id);
+          vec2 center = vec2(h, fract(h * 43.1));
+          float d = length(f - center);
+          
+          float twinkle = sin(time * (2.0 + h * 3.0) + h * 6.28) * 0.5 + 0.5;
+          float star = S(0.1, 0.0, d) * twinkle * (0.5 + h * 0.5);
+          stars += star * (0.3 + i * 0.2);
         }
-        return value;
+        return stars;
       }
 
       void main() {
-        vec2 uv = gl_FragCoord.xy / r;
-        float aspect = r.x / r.y;
-        vec2 p = (gl_FragCoord.xy * 2.0 - r) / min(r.x, r.y);
+        vec2 uv = gl_FragCoord.xy / iResolution.xy;
+        vec2 uv0 = uv;
+        float aspect = iResolution.x / iResolution.y;
+        uv.x *= aspect;
+        uv = uv * 2.0 - vec2(aspect, 1.0);
         
-        float time = t * 0.5;
+        float t = iTime;
         
-        // Mouse position in normalized coords
-        vec2 mousePos = (mouse * 2.0 - 1.0) * vec2(aspect, 1.0);
+        // Slow rotation
+        uv *= rot(t * 0.05);
         
-        // Create wave field
-        float wave = 0.0;
+        // Mouse position
+        vec2 mousePos = iMouse.xy;
+        mousePos.x *= aspect;
+        mousePos = mousePos * 2.0 - vec2(aspect, 1.0);
+        float mouseDist = length(uv - mousePos);
         
-        // Multiple wave sources
-        for (int i = 0; i < NUM_WAVES; i++) {
-          float fi = float(i);
-          float angle = fi * PI * 2.0 / float(NUM_WAVES) + time * 0.3;
-          float radius = 0.8 + sin(time * 0.5 + fi) * 0.3;
-          vec2 center = vec2(cos(angle), sin(angle)) * radius;
-          
-          float dist = length(p - center);
-          float freq = 8.0 + fi * 2.0;
-          float speed = time * (2.0 + fi * 0.5);
-          
-          wave += sin(dist * freq - speed) / (dist + 0.5);
-        }
+        // Color cycling
+        float c1 = sin(t * 0.5) * 0.5 + 0.5;
+        float c2 = cos(t * 0.3) * 0.5 + 0.5;
         
-        // Mouse wave influence
-        float mouseDist = length(p - mousePos);
-        wave += sin(mouseDist * 12.0 - time * 4.0) / (mouseDist + 0.3) * 0.5;
+        // Wave noise
+        float waveNoise = snoise(uv * 0.5 + t * 0.1) * 0.1;
         
-        // Add noise for organic feel
-        float noise = fbm(p * 2.0 + time * 0.3) * 0.3;
-        wave += noise;
+        // Three glowing wave lines
+        vec3 col = vec3(0.0);
         
-        // Normalize wave
-        wave = wave * 0.15 + 0.5;
+        // Line 1 - Pink/Magenta
+        float y1 = uv.y - wave(uv, t * 1.5, 2.0) + waveNoise - 0.3;
+        float line1 = glowLine(y1, 0.02, 0.6);
+        vec3 color1 = vec3(1.0, c1 * 0.4 + 0.2, c2 * 0.6 + 0.4);
+        col += color1 * line1;
         
-        // Create color gradient
-        vec3 color1 = vec3(0.61, 0.53, 0.96); // Purple #9b87f5
-        vec3 color2 = vec3(0.48, 0.23, 0.93); // Deep purple #7c3aed
-        vec3 color3 = vec3(0.55, 0.36, 0.98); // Violet #8b5cf6
+        // Line 2 - Purple
+        float y2 = uv.y - wave(uv, t * 1.2 + 1.0, 2.5) + waveNoise * 1.2;
+        float line2 = glowLine(y2, 0.02, 0.6);
+        vec3 color2 = vec3(0.6 + c2 * 0.4, 0.3, 1.0);
+        col += color2 * line2;
         
-        // Mix colors based on wave
-        vec3 color = mix(color2, color1, smoothstep(0.3, 0.7, wave));
-        color = mix(color, color3, smoothstep(0.5, 0.9, wave) * 0.5);
+        // Line 3 - Blue/Cyan
+        float y3 = uv.y - wave(uv, t * 1.8 + 2.0, 1.8) + waveNoise * 0.8 + 0.3;
+        float line3 = glowLine(y3, 0.02, 0.6);
+        vec3 color3 = vec3(0.3, c1 * 0.5 + 0.5, 1.0);
+        col += color3 * line3;
         
-        // Add highlights
-        float highlight = pow(max(0.0, wave - 0.6) * 2.5, 2.0);
-        color += vec3(1.0, 0.95, 1.0) * highlight * 0.4;
+        // Starfield
+        float stars = starfield(uv0 * 2.0 + t * 0.01, t);
+        col += vec3(1.0, 0.95, 0.9) * stars * 0.6;
         
-        // Add mouse glow
-        float mouseGlow = exp(-mouseDist * 2.0) * 0.3;
-        color += color3 * mouseGlow;
+        // Mouse glow with pulsing
+        float mouseGlow = 0.08 / (mouseDist + 0.1);
+        mouseGlow *= (sin(t * 1.5) * 0.4 + 0.6);
+        vec3 mouseColor = mix(color1, color2, sin(t * 0.5) * 0.5 + 0.5);
+        col += mouseColor * mouseGlow * 0.5;
         
-        // Edge darkening (vignette)
-        float vignette = 1.0 - length(uv - 0.5) * 0.8;
-        vignette = smoothstep(0.0, 1.0, vignette);
+        // Center glow
+        float centerDist = length(uv);
+        float centerGlow = 0.15 / (centerDist + 0.3);
+        vec3 centerColor = vec3(0.5 + c1 * 0.3, 0.2, 0.8 + c2 * 0.2);
+        col += centerColor * centerGlow * 0.15;
+        
+        // Noise overlay for texture
+        float noise = snoise(uv * 3.0 + t * 0.2) * 0.05;
+        col += vec3(noise * 0.3);
+        
+        // Vignette
+        float vignette = 1.0 - length(uv0 - 0.5) * 1.2;
+        vignette = S(0.0, 0.7, vignette);
+        col *= vignette;
         
         // Dark background blend
-        vec3 bgColor = vec3(0.02, 0.01, 0.05);
-        float bgBlend = smoothstep(0.35, 0.55, wave);
-        color = mix(bgColor, color, bgBlend);
-        
-        // Apply vignette
-        color *= vignette;
+        vec3 bgColor = vec3(0.02, 0.01, 0.04);
+        float bgMask = max(max(line1, line2), line3) + stars * 0.5 + centerGlow * 0.2;
+        col = mix(bgColor, col, S(0.0, 0.3, bgMask));
         
         // Gamma correction
-        color = pow(color, vec3(0.9));
+        col = pow(col, vec3(0.9));
         
-        gl_FragColor = vec4(color, 1.0);
+        // Clamp to prevent overflow
+        col = clamp(col, 0.0, 1.0);
+        
+        gl_FragColor = vec4(col, 1.0);
       }
     `;
 
@@ -183,6 +229,7 @@ export function MetaballsBackground() {
 
       window.addEventListener("resize", onResize);
       window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("touchmove", onTouchMove);
       
       animate();
     }
@@ -190,7 +237,7 @@ export function MetaballsBackground() {
     function onResize() {
       const width = containerRef.current?.clientWidth || window.innerWidth;
       const height = containerRef.current?.clientHeight || window.innerHeight;
-      uniforms.r.value.set(width, height);
+      uniforms.iResolution.value.set(width, height);
       renderer.setSize(width, height);
     }
 
@@ -201,15 +248,22 @@ export function MetaballsBackground() {
       targetMouseRef.current.y = 1.0 - (e.clientY - rect.top) / rect.height;
     }
 
+    function onTouchMove(e: TouchEvent) {
+      if (!containerRef.current || !e.touches[0]) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      targetMouseRef.current.x = (e.touches[0].clientX - rect.left) / rect.width;
+      targetMouseRef.current.y = 1.0 - (e.touches[0].clientY - rect.top) / rect.height;
+    }
+
     function animate() {
       animationId = requestAnimationFrame(animate);
       
-      uniforms.t.value = clock.getElapsedTime();
+      uniforms.iTime.value = clock.getElapsedTime();
       
       // Smooth mouse following
       mouseRef.current.x += (targetMouseRef.current.x - mouseRef.current.x) * 0.05;
       mouseRef.current.y += (targetMouseRef.current.y - mouseRef.current.y) * 0.05;
-      uniforms.mouse.value.copy(mouseRef.current);
+      uniforms.iMouse.value.set(mouseRef.current.x, mouseRef.current.y, 0, 0);
       
       renderer.render(scene, camera);
     }
@@ -220,6 +274,7 @@ export function MetaballsBackground() {
       cancelAnimationFrame(animationId);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("touchmove", onTouchMove);
       if (renderer) {
         renderer.dispose();
         if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
@@ -233,7 +288,7 @@ export function MetaballsBackground() {
     <div 
       ref={containerRef} 
       className="absolute inset-0 w-full h-full"
-      style={{ background: "#020105" }}
+      style={{ background: "#020104" }}
     />
   );
 }
