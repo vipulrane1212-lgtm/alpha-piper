@@ -58,7 +58,7 @@ export function Hero() {
             <MagicCard 
               className="animate-fade-in" 
               style={{ animationDelay: "0.6s" }}
-              gradientColors={["hsl(51, 100%, 50%)", "hsl(38, 100%, 60%)", "hsl(20, 100%, 60%)"]}
+              gradientColors={["hsl(187, 100%, 50%)", "hsl(220, 90%, 55%)", "hsl(260, 80%, 60%)"]}
             >
               <div className="p-6 text-center">
                 <Zap className="w-8 h-8 text-tier-1 mb-2 mx-auto" />
@@ -69,7 +69,7 @@ export function Hero() {
             <MagicCard 
               className="animate-fade-in" 
               style={{ animationDelay: "0.7s" }}
-              gradientColors={["hsl(187, 100%, 50%)", "hsl(220, 80%, 60%)", "hsl(260, 80%, 50%)"]}
+              gradientColors={["hsl(180, 100%, 45%)", "hsl(200, 100%, 50%)", "hsl(240, 80%, 60%)"]}
             >
               <div className="p-6 text-center">
                 <TrendingUp className="w-8 h-8 text-primary mb-2 mx-auto" />
@@ -80,7 +80,7 @@ export function Hero() {
             <MagicCard 
               className="animate-fade-in" 
               style={{ animationDelay: "0.8s" }}
-              gradientColors={["hsl(20, 100%, 60%)", "hsl(51, 100%, 50%)", "hsl(187, 100%, 50%)"]}
+              gradientColors={["hsl(220, 90%, 55%)", "hsl(187, 100%, 50%)", "hsl(280, 70%, 55%)"]}
             >
               <div className="p-6 text-center">
                 <Shield className="w-8 h-8 text-tier-2 mb-2 mx-auto" />
