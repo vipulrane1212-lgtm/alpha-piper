@@ -124,8 +124,8 @@ export function MetaballsBackground() {
         
         float t = iTime;
         
-        // Slow rotation
-        uv *= rot(t * 0.05);
+        // Slow rotation (reduced speed)
+        uv *= rot(t * 0.02);
         
         // Mouse position
         vec2 mousePos = iMouse.xy;
@@ -140,42 +140,42 @@ export function MetaballsBackground() {
         // Wave noise
         float waveNoise = snoise(uv * 0.5 + t * 0.1) * 0.1;
         
-        // Three glowing wave lines
+        // Three glowing wave lines (reduced speed and glow)
         vec3 col = vec3(0.0);
         
-        // Line 1 - Pink/Magenta
-        float y1 = uv.y - wave(uv, t * 1.5, 2.0) + waveNoise - 0.3;
-        float line1 = glowLine(y1, 0.02, 0.6);
+        // Line 1 - Pink/Magenta (slowed down)
+        float y1 = uv.y - wave(uv, t * 0.6, 2.0) + waveNoise - 0.3;
+        float line1 = glowLine(y1, 0.015, 0.4);
         vec3 color1 = vec3(1.0, c1 * 0.4 + 0.2, c2 * 0.6 + 0.4);
-        col += color1 * line1;
+        col += color1 * line1 * 0.7;
         
-        // Line 2 - Purple
-        float y2 = uv.y - wave(uv, t * 1.2 + 1.0, 2.5) + waveNoise * 1.2;
-        float line2 = glowLine(y2, 0.02, 0.6);
+        // Line 2 - Purple (slowed down)
+        float y2 = uv.y - wave(uv, t * 0.5 + 1.0, 2.5) + waveNoise * 1.2;
+        float line2 = glowLine(y2, 0.015, 0.4);
         vec3 color2 = vec3(0.6 + c2 * 0.4, 0.3, 1.0);
-        col += color2 * line2;
+        col += color2 * line2 * 0.7;
         
-        // Line 3 - Blue/Cyan
-        float y3 = uv.y - wave(uv, t * 1.8 + 2.0, 1.8) + waveNoise * 0.8 + 0.3;
-        float line3 = glowLine(y3, 0.02, 0.6);
+        // Line 3 - Blue/Cyan (slowed down)
+        float y3 = uv.y - wave(uv, t * 0.7 + 2.0, 1.8) + waveNoise * 0.8 + 0.3;
+        float line3 = glowLine(y3, 0.015, 0.4);
         vec3 color3 = vec3(0.3, c1 * 0.5 + 0.5, 1.0);
-        col += color3 * line3;
+        col += color3 * line3 * 0.7;
         
-        // Starfield
-        float stars = starfield(uv0 * 2.0 + t * 0.01, t);
-        col += vec3(1.0, 0.95, 0.9) * stars * 0.6;
+        // Starfield (reduced brightness)
+        float stars = starfield(uv0 * 2.0 + t * 0.005, t);
+        col += vec3(1.0, 0.95, 0.9) * stars * 0.4;
         
-        // Mouse glow with pulsing
-        float mouseGlow = 0.08 / (mouseDist + 0.1);
-        mouseGlow *= (sin(t * 1.5) * 0.4 + 0.6);
-        vec3 mouseColor = mix(color1, color2, sin(t * 0.5) * 0.5 + 0.5);
-        col += mouseColor * mouseGlow * 0.5;
+        // Mouse glow with pulsing (reduced intensity)
+        float mouseGlow = 0.04 / (mouseDist + 0.15);
+        mouseGlow *= (sin(t * 0.8) * 0.3 + 0.7);
+        vec3 mouseColor = mix(color1, color2, sin(t * 0.3) * 0.5 + 0.5);
+        col += mouseColor * mouseGlow * 0.3;
         
-        // Center glow
+        // Center glow (reduced)
         float centerDist = length(uv);
-        float centerGlow = 0.15 / (centerDist + 0.3);
+        float centerGlow = 0.1 / (centerDist + 0.4);
         vec3 centerColor = vec3(0.5 + c1 * 0.3, 0.2, 0.8 + c2 * 0.2);
-        col += centerColor * centerGlow * 0.15;
+        col += centerColor * centerGlow * 0.1;
         
         // Noise overlay for texture
         float noise = snoise(uv * 3.0 + t * 0.2) * 0.05;
