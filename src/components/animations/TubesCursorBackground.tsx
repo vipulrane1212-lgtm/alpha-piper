@@ -65,28 +65,20 @@ export function TubesCursorBackground() {
           return;
         }
 
+        // Solana-themed colors: green, purple, cyan
         const options = {
           tubes: {
-            colors: ["#f967fb", "#53bc28", "#6958d5"],
+            colors: ["#14F195", "#9945FF", "#00D9FF"],
             lights: {
               intensity: 200,
-              colors: ["#83f36e", "#fe8a2e", "#ff008a", "#60aed5"]
+              colors: ["#14F195", "#9945FF", "#00D9FF", "#19FB9B"]
             }
           }
         };
 
         appRef.current = TubesCursor(canvasRef.current, options);
 
-        // Random color change on click
-        clickHandler = () => {
-          if (!appRef.current) return;
-          const colors = randomColors(3);
-          const lightsColors = randomColors(4);
-          appRef.current.tubes.setColors(colors);
-          appRef.current.tubes.setLightsColors(lightsColors);
-        };
-
-        document.body.addEventListener('click', clickHandler);
+        // Removed click handler - keep Solana colors constant
       } catch (error) {
         console.error("Failed to load TubesCursor:", error);
       }
