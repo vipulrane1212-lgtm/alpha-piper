@@ -101,21 +101,13 @@ export function TubesCursorBackground() {
     <div 
       ref={containerRef}
       id="tubes-container"
-      className="absolute inset-0 w-full h-full overflow-hidden"
+      className="fixed inset-0 w-full h-full overflow-hidden z-0"
       style={{ touchAction: "none" }}
     >
       <canvas
         ref={canvasRef}
         id="canvas"
-        className="fixed inset-0 w-full h-full"
-        style={{ 
-          position: "fixed",
-          top: 0,
-          right: 0,
-          bottom: 0,
-          left: 0,
-          overflow: "hidden"
-        }}
+        className="w-full h-full"
       />
     </div>
   );
