@@ -1,16 +1,16 @@
 import { ArrowRight, Zap, TrendingUp, Shield } from "lucide-react";
 import { GlassButton, GlassCard } from "@/components/ui/glass-tabs";
 import { AnimatedHeading } from "@/components/ui/animated-text";
-import { ParticleNetworkBackground } from "@/components/animations/ParticleNetworkBackground";
+import { MetaballsBackground } from "@/components/animations/MetaballsBackground";
 
 export function Hero() {
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-background">
-      {/* Particle Network Background */}
-      <ParticleNetworkBackground />
+      {/* Metaballs 3D Background */}
+      <MetaballsBackground />
       
       {/* Gradient overlay for better text readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/20 to-background pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/30 to-background pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
