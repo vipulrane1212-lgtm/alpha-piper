@@ -1,6 +1,5 @@
 import { ArrowRight, Zap, TrendingUp, Shield } from "lucide-react";
-import { GlassButton } from "@/components/ui/glass-tabs";
-import { MagicCard } from "@/components/ui/magic-card";
+import { GlassButton, GlassCard } from "@/components/ui/glass-tabs";
 import { AnimatedHeading } from "@/components/ui/animated-text";
 import { MetaballsBackground } from "@/components/animations/MetaballsBackground";
 
@@ -53,41 +52,23 @@ export function Hero() {
             </a>
           </div>
 
-          {/* Quick stats with magic card effect */}
+          {/* Quick stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-            <MagicCard 
-              className="animate-fade-in" 
-              style={{ animationDelay: "0.6s" }}
-              gradientColors={["hsl(187, 100%, 50%)", "hsl(220, 90%, 55%)", "hsl(260, 80%, 60%)"]}
-            >
-              <div className="p-6 text-center">
-                <Zap className="w-8 h-8 text-tier-1 mb-2 mx-auto" />
-                <div className="text-3xl font-bold text-foreground mb-1">3 Tiers</div>
-                <div className="text-muted-foreground text-sm">Confidence Levels</div>
-              </div>
-            </MagicCard>
-            <MagicCard 
-              className="animate-fade-in" 
-              style={{ animationDelay: "0.7s" }}
-              gradientColors={["hsl(180, 100%, 45%)", "hsl(200, 100%, 50%)", "hsl(240, 80%, 60%)"]}
-            >
-              <div className="p-6 text-center">
-                <TrendingUp className="w-8 h-8 text-primary mb-2 mx-auto" />
-                <div className="text-3xl font-bold text-foreground mb-1">12+ Sources</div>
-                <div className="text-muted-foreground text-sm">Monitored 24/7</div>
-              </div>
-            </MagicCard>
-            <MagicCard 
-              className="animate-fade-in" 
-              style={{ animationDelay: "0.8s" }}
-              gradientColors={["hsl(220, 90%, 55%)", "hsl(187, 100%, 50%)", "hsl(280, 70%, 55%)"]}
-            >
-              <div className="p-6 text-center">
-                <Shield className="w-8 h-8 text-tier-2 mb-2 mx-auto" />
-                <div className="text-3xl font-bold text-foreground mb-1">32%</div>
-                <div className="text-muted-foreground text-sm">Quality Filter</div>
-              </div>
-            </MagicCard>
+            <GlassCard variant="tier1" className="p-6 text-center animate-fade-in" style={{ animationDelay: "0.6s" }}>
+              <Zap className="w-8 h-8 text-tier-1 mb-2 mx-auto" />
+              <div className="text-3xl font-bold text-foreground mb-1">3 Tiers</div>
+              <div className="text-muted-foreground text-sm">Confidence Levels</div>
+            </GlassCard>
+            <GlassCard variant="primary" className="p-6 text-center animate-fade-in" style={{ animationDelay: "0.7s" }}>
+              <TrendingUp className="w-8 h-8 text-primary mb-2 mx-auto" />
+              <div className="text-3xl font-bold text-foreground mb-1">12+ Sources</div>
+              <div className="text-muted-foreground text-sm">Monitored 24/7</div>
+            </GlassCard>
+            <GlassCard variant="tier2" className="p-6 text-center animate-fade-in" style={{ animationDelay: "0.8s" }}>
+              <Shield className="w-8 h-8 text-tier-2 mb-2 mx-auto" />
+              <div className="text-3xl font-bold text-foreground mb-1">32%</div>
+              <div className="text-muted-foreground text-sm">Quality Filter</div>
+            </GlassCard>
           </div>
         </div>
       </div>
