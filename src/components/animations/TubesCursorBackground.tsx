@@ -17,18 +17,19 @@ export function TubesCursorBackground() {
     let tubePoints: THREE.Vector3[][] = [];
     const clock = new THREE.Clock();
 
-    // Solana-themed colors
+    // Vibrant neon colors - super bright
     const colors = [
-      new THREE.Color("#14F195"), // Solana green
-      new THREE.Color("#9945FF"), // Solana purple
-      new THREE.Color("#00D9FF"), // Cyan
-      new THREE.Color("#FF6B6B"), // Coral accent
-      new THREE.Color("#4A90E2"), // Blue
+      new THREE.Color("#00FF9F"), // Bright neon green
+      new THREE.Color("#BD00FF"), // Vivid purple
+      new THREE.Color("#00FFFF"), // Electric cyan
+      new THREE.Color("#FF0080"), // Hot pink
+      new THREE.Color("#00BFFF"), // Bright blue
+      new THREE.Color("#FFFF00"), // Electric yellow
     ];
 
-    const tubeCount = 5;
+    const tubeCount = 6;
     const pointsPerTube = 50;
-    const tubeRadius = 0.08;
+    const tubeRadius = 0.1;
 
     function init() {
       const width = containerRef.current!.clientWidth;
@@ -48,21 +49,25 @@ export function TubesCursorBackground() {
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       containerRef.current!.appendChild(renderer.domElement);
 
-      // Lights
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+      // Brighter lights for neon effect
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
       scene.add(ambientLight);
 
-      const pointLight1 = new THREE.PointLight(0x14F195, 2, 20);
+      const pointLight1 = new THREE.PointLight(0x00FF9F, 4, 25);
       pointLight1.position.set(5, 5, 5);
       scene.add(pointLight1);
 
-      const pointLight2 = new THREE.PointLight(0x9945FF, 2, 20);
+      const pointLight2 = new THREE.PointLight(0xBD00FF, 4, 25);
       pointLight2.position.set(-5, -5, 5);
       scene.add(pointLight2);
 
-      const pointLight3 = new THREE.PointLight(0x00D9FF, 1.5, 15);
+      const pointLight3 = new THREE.PointLight(0x00FFFF, 3, 20);
       pointLight3.position.set(0, 0, 8);
       scene.add(pointLight3);
+
+      const pointLight4 = new THREE.PointLight(0xFF0080, 3, 20);
+      pointLight4.position.set(3, -3, 6);
+      scene.add(pointLight4);
 
       // Initialize tube points
       for (let i = 0; i < tubeCount; i++) {
@@ -109,10 +114,10 @@ export function TubesCursorBackground() {
           const material = new THREE.MeshPhongMaterial({
             color: colors[index % colors.length],
             emissive: colors[index % colors.length],
-            emissiveIntensity: 0.3,
-            shininess: 100,
+            emissiveIntensity: 0.8,
+            shininess: 150,
             transparent: true,
-            opacity: 0.85,
+            opacity: 0.95,
           });
 
           const tube = new THREE.Mesh(geometry, material);
