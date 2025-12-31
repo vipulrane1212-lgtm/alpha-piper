@@ -1,13 +1,13 @@
 import { ArrowRight, Zap, TrendingUp, Shield } from "lucide-react";
 import { GlassButton, GlassCard } from "@/components/ui/glass-tabs";
 import { AnimatedHeading } from "@/components/ui/animated-text";
-import { SpectralGhostBackground } from "@/components/animations/SpectralGhostBackground";
+import { TubesCursorBackground } from "@/components/animations/TubesCursorBackground";
 
 export function Hero() {
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-background">
-      {/* Spectral Ghost Background */}
-      <SpectralGhostBackground />
+      {/* Tubes Cursor Background */}
+      <TubesCursorBackground />
       
       {/* Gradient overlay for better text readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/30 to-background pointer-events-none" />
