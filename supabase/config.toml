@@ -1,0 +1,4 @@
+project_id = "oaoaihienaacnmavfase"
+
+[functions.solboy-api]
+verify_jwt = false

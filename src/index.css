@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* SolBoy Alerts Design System - Cyan/Solana Theme
+   All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Light mode - redirects to dark for this crypto theme */
+    --background: 230 25% 7%;
+    --foreground: 210 40% 98%;
+
+    --card: 230 25% 10%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 230 25% 10%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Primary - Cyan/Solana */
+    --primary: 187 100% 50%;
+    --primary-foreground: 230 25% 7%;
+
+    /* Secondary - Dark Navy */
+    --secondary: 230 25% 12%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 230 20% 15%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 230 25% 15%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 230 20% 18%;
+    --input: 230 20% 18%;
+    --ring: 187 100% 50%;
+
+    --radius: 0.5rem;
+
+    /* Tier Colors */
+    --tier-1: 51 100% 50%;
+    --tier-2: 20 100% 60%;
+    --tier-3: 187 100% 50%;
+
+    /* Success/Warning */
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+
+    /* Sidebar */
+    --sidebar-background: 230 25% 8%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 187 100% 50%;
+    --sidebar-primary-foreground: 230 25% 7%;
+    --sidebar-accent: 230 25% 15%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 230 20% 18%;
+    --sidebar-ring: 187 100% 50%;
+  }
+
+  .dark {
+    --background: 230 25% 7%;
+    --foreground: 210 40% 98%;
+
+    --card: 230 25% 10%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 230 25% 10%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 187 100% 50%;
+    --primary-foreground: 230 25% 7%;
+
+    --secondary: 230 25% 12%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 230 20% 15%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 230 25% 15%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 230 20% 18%;
+    --input: 230 20% 18%;
+    --ring: 187 100% 50%;
+
+    --tier-1: 51 100% 50%;
+    --tier-2: 20 100% 60%;
+    --tier-3: 187 100% 50%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+
+    --sidebar-background: 230 25% 8%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 187 100% 50%;
+    --sidebar-primary-foreground: 230 25% 7%;
+    --sidebar-accent: 230 25% 15%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 230 20% 18%;
+    --sidebar-ring: 187 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-foreground to-primary;
+  }
+}
