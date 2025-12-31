@@ -127,8 +127,8 @@ const ElectricBorderCard = React.forwardRef<HTMLDivElement, ElectricBorderCardPr
           }}
         />
 
-        {/* Content container */}
-        <div className="relative bg-card rounded-xl overflow-hidden">
+        {/* Content container with glassmorphism */}
+        <div className="relative bg-card/40 backdrop-blur-xl rounded-xl overflow-hidden border border-white/10">
           {children}
         </div>
       </div>

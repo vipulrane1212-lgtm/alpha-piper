@@ -1,26 +1,16 @@
 import { ArrowRight, Zap, TrendingUp, Shield } from "lucide-react";
 import { GlassButton, GlassCard } from "@/components/ui/glass-tabs";
 import { AnimatedHeading } from "@/components/ui/animated-text";
-import solboyBanner from "@/assets/solboy-banner.jpg";
+import { ParticleNetworkBackground } from "@/components/animations/ParticleNetworkBackground";
 
 export function Hero() {
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-      {/* Banner background with reduced opacity */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-15"
-        style={{ backgroundImage: `url(${solboyBanner})` }}
-      />
+    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-background">
+      {/* Particle Network Background */}
+      <ParticleNetworkBackground />
       
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
-
-      {/* Animated glow elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-tier-1/10 rounded-full blur-3xl animate-pulse-glow" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: "1s" }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
-      </div>
+      {/* Gradient overlay for better text readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/20 to-background pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
