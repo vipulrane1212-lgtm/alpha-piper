@@ -12,25 +12,25 @@ export function StatsPreview() {
       icon: Users,
       label: "Active Subscribers",
       value: stats?.totalSubscribers?.toLocaleString() || "0",
-      gradientColors: ["hsl(187, 100%, 50%)", "hsl(220, 80%, 60%)", "hsl(260, 80%, 50%)"],
+      gradientColors: ["hsl(187, 100%, 50%)", "hsl(220, 90%, 55%)", "hsl(260, 80%, 60%)"],
     },
     {
       icon: Bell,
       label: "Total Alerts Sent",
       value: stats?.totalAlerts?.toLocaleString() || "0",
-      gradientColors: ["hsl(20, 100%, 60%)", "hsl(51, 100%, 50%)", "hsl(38, 100%, 60%)"],
+      gradientColors: ["hsl(180, 100%, 45%)", "hsl(200, 100%, 50%)", "hsl(240, 80%, 60%)"],
     },
     {
       icon: TrendingUp,
       label: "TIER 1 Alerts",
       value: stats?.tier1Alerts?.toLocaleString() || "0",
-      gradientColors: ["hsl(51, 100%, 50%)", "hsl(38, 100%, 60%)", "hsl(20, 100%, 60%)"],
+      gradientColors: ["hsl(220, 90%, 55%)", "hsl(187, 100%, 50%)", "hsl(280, 70%, 55%)"],
     },
     {
       icon: Target,
       label: "Success Rate",
       value: `${stats?.winRate || 0}%`,
-      gradientColors: ["hsl(142, 76%, 36%)", "hsl(160, 80%, 40%)", "hsl(187, 100%, 50%)"],
+      gradientColors: ["hsl(200, 100%, 50%)", "hsl(180, 100%, 45%)", "hsl(260, 80%, 60%)"],
     },
   ];
 
@@ -38,19 +38,19 @@ export function StatsPreview() {
     {
       value: stats?.tier1Alerts?.toLocaleString() || "0",
       label: "TIER 1 ULTRA",
-      gradientColors: ["hsl(51, 100%, 50%)", "hsl(38, 100%, 60%)", "hsl(20, 100%, 60%)"],
+      gradientColors: ["hsl(187, 100%, 50%)", "hsl(220, 90%, 55%)", "hsl(260, 80%, 60%)"],
       textColor: "text-tier-1",
     },
     {
       value: stats?.tier2Alerts?.toLocaleString() || "0",
       label: "TIER 2 HIGH",
-      gradientColors: ["hsl(20, 100%, 60%)", "hsl(51, 100%, 50%)", "hsl(38, 100%, 60%)"],
+      gradientColors: ["hsl(180, 100%, 45%)", "hsl(200, 100%, 50%)", "hsl(240, 80%, 60%)"],
       textColor: "text-tier-2",
     },
     {
       value: stats?.tier3Alerts?.toLocaleString() || "0",
       label: "TIER 3 MEDIUM",
-      gradientColors: ["hsl(187, 100%, 50%)", "hsl(220, 80%, 60%)", "hsl(260, 80%, 50%)"],
+      gradientColors: ["hsl(220, 90%, 55%)", "hsl(187, 100%, 50%)", "hsl(280, 70%, 55%)"],
       textColor: "text-primary",
     },
   ];
