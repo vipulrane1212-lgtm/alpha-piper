@@ -157,54 +157,77 @@ export function SpectralGhostBackground() {
         
         vec3 col = bgColor;
         
-        // Multiple ghost wisps with different colors
+        // Multiple ghost wisps with different colors - INTENSIFIED
         // Wisp 1 - Cyan/Teal spectral
         float wisp1 = ghostWisp(uvCentered + vec2(sin(t * 0.7) * 0.3, cos(t * 0.5) * 0.2), t, 0.0);
-        vec3 color1 = vec3(0.2, 0.8, 0.9);
-        col += color1 * wisp1 * 0.15;
+        vec3 color1 = vec3(0.3, 0.9, 1.0);
+        col += color1 * wisp1 * 0.35;
         
         // Wisp 2 - Purple/Violet
         float wisp2 = ghostWisp(uvCentered + vec2(cos(t * 0.6) * 0.25, sin(t * 0.8) * 0.3), t * 1.1, 1.234);
-        vec3 color2 = vec3(0.6, 0.3, 0.9);
-        col += color2 * wisp2 * 0.12;
+        vec3 color2 = vec3(0.7, 0.3, 1.0);
+        col += color2 * wisp2 * 0.3;
         
         // Wisp 3 - Blue
         float wisp3 = ghostWisp(uvCentered + vec2(sin(t * 0.4) * 0.2, cos(t * 0.6) * 0.25), t * 0.9, 2.567);
-        vec3 color3 = vec3(0.3, 0.5, 1.0);
-        col += color3 * wisp3 * 0.1;
+        vec3 color3 = vec3(0.4, 0.6, 1.0);
+        col += color3 * wisp3 * 0.25;
         
-        // Ethereal fog layer
+        // Wisp 4 - Additional intense wisp
+        float wisp4 = ghostWisp(uvCentered + vec2(cos(t * 0.5) * 0.4, sin(t * 0.7) * 0.35), t * 1.3, 3.789);
+        vec3 color4 = vec3(0.5, 0.8, 0.95);
+        col += color4 * wisp4 * 0.2;
+        
+        // Wisp 5 - Deep purple wisp
+        float wisp5 = ghostWisp(uvCentered + vec2(sin(t * 0.9) * 0.35, cos(t * 0.4) * 0.3), t * 0.8, 4.321);
+        vec3 color5 = vec3(0.8, 0.2, 0.9);
+        col += color5 * wisp5 * 0.18;
+        
+        // Ethereal fog layer - more intense
         float fog = fbm(vec3(uvCentered * 1.5, t * 0.3));
         fog = smoothstep(-0.2, 0.8, fog);
-        vec3 fogColor = vec3(0.15, 0.2, 0.35);
-        col += fogColor * fog * 0.08;
+        vec3 fogColor = vec3(0.2, 0.25, 0.45);
+        col += fogColor * fog * 0.15;
         
-        // Floating particles / dust
-        for(float i = 0.0; i < 4.0; i++) {
+        // Many more floating particles / dust - increased from 4 to 12
+        for(float i = 0.0; i < 12.0; i++) {
           vec2 particlePos = vec2(
-            sin(t * 0.3 + i * 1.618) * 0.8,
-            cos(t * 0.25 + i * 2.1) * 0.6 + sin(t * 0.15 + i) * 0.2
+            sin(t * 0.3 + i * 1.618) * 1.2,
+            cos(t * 0.25 + i * 2.1) * 0.8 + sin(t * 0.15 + i) * 0.3
           );
-          float particle = spectralGlow(uvCentered, particlePos, 0.02 + sin(t + i) * 0.01, 0.15);
+          float particleSize = 0.015 + sin(t * 0.8 + i * 0.5) * 0.008;
+          float particle = spectralGlow(uvCentered, particlePos, particleSize, 0.12);
           vec3 particleColor = mix(color1, color2, sin(i + t * 0.2) * 0.5 + 0.5);
-          col += particleColor * particle * 0.08;
+          col += particleColor * particle * 0.12;
         }
         
-        // Central ghostly presence
-        float centralGlow = spectralGlow(uvCentered, vec2(0.0, sin(t * 0.3) * 0.1), 0.3, 0.5);
-        float centralPulse = sin(t * 0.5) * 0.15 + 0.85;
+        // Additional smaller sparkle particles
+        for(float j = 0.0; j < 8.0; j++) {
+          vec2 sparklePos = vec2(
+            cos(t * 0.4 + j * 2.3) * 1.0,
+            sin(t * 0.35 + j * 1.7) * 0.7
+          );
+          float sparkle = spectralGlow(uvCentered, sparklePos, 0.008, 0.08);
+          float twinkle = sin(t * 3.0 + j * 1.5) * 0.5 + 0.5;
+          vec3 sparkleColor = mix(color3, color4, cos(j + t * 0.3) * 0.5 + 0.5);
+          col += sparkleColor * sparkle * twinkle * 0.15;
+        }
+        
+        // Central ghostly presence - more intense
+        float centralGlow = spectralGlow(uvCentered, vec2(0.0, sin(t * 0.3) * 0.1), 0.4, 0.6);
+        float centralPulse = sin(t * 0.5) * 0.2 + 0.8;
         vec3 centralColor = mix(color1, color3, sin(t * 0.2) * 0.5 + 0.5);
-        col += centralColor * centralGlow * 0.06 * centralPulse;
+        col += centralColor * centralGlow * 0.12 * centralPulse;
         
-        // Mouse glow interaction
-        float mouseGlow = 0.03 / (length(uvCentered - mouse) + 0.2);
+        // Mouse glow interaction - stronger
+        float mouseGlow = 0.05 / (length(uvCentered - mouse) + 0.15);
         vec3 mouseColor = mix(color1, color2, sin(t * 0.4) * 0.5 + 0.5);
-        col += mouseColor * mouseGlow * mouseInfluence * 0.02;
+        col += mouseColor * mouseGlow * mouseInfluence * 0.05;
         
-        // Spectral shimmer overlay
+        // Spectral shimmer overlay - more visible
         float shimmer = snoise(vec3(uvCentered * 8.0, t * 0.5));
-        shimmer = smoothstep(0.3, 0.8, shimmer);
-        col += vec3(0.4, 0.6, 0.8) * shimmer * 0.02;
+        shimmer = smoothstep(0.2, 0.7, shimmer);
+        col += vec3(0.5, 0.7, 0.9) * shimmer * 0.04;
         
         // Vignette
         float vignette = 1.0 - length(uv - 0.5) * 1.3;
