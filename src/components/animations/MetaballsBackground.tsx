@@ -3,7 +3,8 @@ import * as THREE from "three";
 
 export function MetaballsBackground() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mouseRef = useRef({ x: 0.5, y: 0.5 });
+  const mouseRef = useRef(new THREE.Vector2(0.5, 0.5));
+  const targetMouseRef = useRef(new THREE.Vector2(0.5, 0.5));
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -36,137 +37,121 @@ export function MetaballsBackground() {
       varying vec2 vUv;
 
       #define PI 3.14159265359
-      
-      float noise(vec2 p) {
-        return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+      #define NUM_WAVES 6
+
+      // Simplex noise functions
+      vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+
+      float snoise(vec2 v) {
+        const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+                           -0.577350269189626, 0.024390243902439);
+        vec2 i  = floor(v + dot(v, C.yy));
+        vec2 x0 = v - i + dot(i, C.xx);
+        vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+        vec4 x12 = x0.xyxy + C.xxzz;
+        x12.xy -= i1;
+        i = mod289(i);
+        vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0))
+                                    + i.x + vec3(0.0, i1.x, 1.0));
+        vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
+                                dot(x12.zw,x12.zw)), 0.0);
+        m = m*m;
+        m = m*m;
+        vec3 x = 2.0 * fract(p * C.www) - 1.0;
+        vec3 h = abs(x) - 0.5;
+        vec3 ox = floor(x + 0.5);
+        vec3 a0 = x - ox;
+        m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+        vec3 g;
+        g.x = a0.x * x0.x + h.x * x0.y;
+        g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+        return 130.0 * dot(m, g);
       }
-      
-      float smoothNoise(vec2 p) {
-        vec2 i = floor(p);
-        vec2 f = fract(p);
-        f = f * f * (3.0 - 2.0 * f);
-        
-        float a = noise(i);
-        float b = noise(i + vec2(1.0, 0.0));
-        float c = noise(i + vec2(0.0, 1.0));
-        float d = noise(i + vec2(1.0, 1.0));
-        
-        return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-      }
-      
+
       float fbm(vec2 p) {
         float value = 0.0;
         float amplitude = 0.5;
-        float frequency = 1.0;
-        
         for (int i = 0; i < 5; i++) {
-          value += amplitude * smoothNoise(p * frequency);
+          value += amplitude * snoise(p);
+          p *= 2.0;
           amplitude *= 0.5;
-          frequency *= 2.0;
         }
         return value;
       }
 
-      float metaball(vec2 p, vec2 center, float radius) {
-        float d = length(p - center);
-        return radius * radius / (d * d + 0.001);
-      }
-
       void main() {
         vec2 uv = gl_FragCoord.xy / r;
+        float aspect = r.x / r.y;
         vec2 p = (gl_FragCoord.xy * 2.0 - r) / min(r.x, r.y);
         
-        float time = t * 0.3;
+        float time = t * 0.5;
         
-        // Mouse influence
-        vec2 mousePos = (mouse * 2.0 - 1.0) * vec2(r.x / r.y, 1.0);
+        // Mouse position in normalized coords
+        vec2 mousePos = (mouse * 2.0 - 1.0) * vec2(aspect, 1.0);
         
-        // Multiple metaballs with organic movement
-        float field = 0.0;
+        // Create wave field
+        float wave = 0.0;
         
-        // Large corner metaballs
-        vec2 ball1 = vec2(-0.8, 0.8) + vec2(sin(time * 0.5), cos(time * 0.4)) * 0.2;
-        vec2 ball2 = vec2(0.9, -0.85) + vec2(cos(time * 0.6), sin(time * 0.5)) * 0.15;
+        // Multiple wave sources
+        for (int i = 0; i < NUM_WAVES; i++) {
+          float fi = float(i);
+          float angle = fi * PI * 2.0 / float(NUM_WAVES) + time * 0.3;
+          float radius = 0.8 + sin(time * 0.5 + fi) * 0.3;
+          vec2 center = vec2(cos(angle), sin(angle)) * radius;
+          
+          float dist = length(p - center);
+          float freq = 8.0 + fi * 2.0;
+          float speed = time * (2.0 + fi * 0.5);
+          
+          wave += sin(dist * freq - speed) / (dist + 0.5);
+        }
         
-        // Medium floating metaballs
-        vec2 ball3 = vec2(sin(time * 0.7) * 0.6, cos(time * 0.8) * 0.5);
-        vec2 ball4 = vec2(cos(time * 0.5) * 0.7, sin(time * 0.6) * 0.6);
-        vec2 ball5 = vec2(sin(time * 0.9 + 2.0) * 0.5, cos(time * 0.7 + 1.0) * 0.7);
-        vec2 ball6 = vec2(cos(time * 0.8 + 1.5) * 0.8, sin(time * 0.9 + 0.5) * 0.4);
-        
-        // Small accent metaballs
-        vec2 ball7 = vec2(-0.3, 0.3) + vec2(sin(time * 1.1), cos(time * 0.9)) * 0.3;
-        vec2 ball8 = vec2(0.35, -0.35) + vec2(cos(time * 1.0), sin(time * 1.2)) * 0.25;
-        
-        // Mouse-following metaball
-        vec2 mouseBall = mousePos * 0.8;
-        
-        // Calculate field with different radii
-        field += metaball(p, ball1, 0.8);
-        field += metaball(p, ball2, 0.9);
-        field += metaball(p, ball3, 0.4);
-        field += metaball(p, ball4, 0.35);
-        field += metaball(p, ball5, 0.3);
-        field += metaball(p, ball6, 0.32);
-        field += metaball(p, ball7, 0.3);
-        field += metaball(p, ball8, 0.35);
-        field += metaball(p, mouseBall, 0.25);
-        
-        // Add wave distortion
-        float wave = sin(p.x * 3.0 + time * 2.0) * cos(p.y * 2.5 + time * 1.5) * 0.15;
-        field += wave;
+        // Mouse wave influence
+        float mouseDist = length(p - mousePos);
+        wave += sin(mouseDist * 12.0 - time * 4.0) / (mouseDist + 0.3) * 0.5;
         
         // Add noise for organic feel
-        float n = fbm(p * 2.0 + time * 0.5) * 0.3;
-        field += n;
+        float noise = fbm(p * 2.0 + time * 0.3) * 0.3;
+        wave += noise;
         
-        // Threshold for smooth blend
-        float threshold = 0.8;
-        float edge = smoothstep(threshold - 0.3, threshold + 0.1, field);
+        // Normalize wave
+        wave = wave * 0.15 + 0.5;
         
-        // Color palette - purple metallic theme
-        vec3 baseColor = vec3(0.61, 0.53, 0.96); // #9b87f5
-        vec3 accentColor = vec3(0.48, 0.23, 0.93); // #7c3aed
-        vec3 highlightColor = vec3(0.55, 0.36, 0.98); // #8b5cf6
+        // Create color gradient
+        vec3 color1 = vec3(0.61, 0.53, 0.96); // Purple #9b87f5
+        vec3 color2 = vec3(0.48, 0.23, 0.93); // Deep purple #7c3aed
+        vec3 color3 = vec3(0.55, 0.36, 0.98); // Violet #8b5cf6
         
-        // Gradient based on position and field
-        vec3 color = mix(accentColor, baseColor, field * 0.5);
-        color = mix(color, highlightColor, sin(field * PI) * 0.5 + 0.5);
+        // Mix colors based on wave
+        vec3 color = mix(color2, color1, smoothstep(0.3, 0.7, wave));
+        color = mix(color, color3, smoothstep(0.5, 0.9, wave) * 0.5);
         
-        // Add specular highlight effect
-        float spec = pow(max(0.0, field - threshold), 2.0) * 3.0;
-        color += vec3(1.0, 0.9, 1.0) * spec * 0.5;
+        // Add highlights
+        float highlight = pow(max(0.0, wave - 0.6) * 2.5, 2.0);
+        color += vec3(1.0, 0.95, 1.0) * highlight * 0.4;
         
-        // Fresnel-like edge glow
-        float fresnel = pow(1.0 - edge, 3.0);
-        color += highlightColor * fresnel * 0.3;
+        // Add mouse glow
+        float mouseGlow = exp(-mouseDist * 2.0) * 0.3;
+        color += color3 * mouseGlow;
         
-        // Mouse glow effect
-        float mouseDist = length(p - mouseBall);
-        float mouseGlow = exp(-mouseDist * 2.0) * 0.4;
-        color += highlightColor * mouseGlow;
+        // Edge darkening (vignette)
+        float vignette = 1.0 - length(uv - 0.5) * 0.8;
+        vignette = smoothstep(0.0, 1.0, vignette);
         
-        // Apply edge mask
-        color *= edge;
+        // Dark background blend
+        vec3 bgColor = vec3(0.02, 0.01, 0.05);
+        float bgBlend = smoothstep(0.35, 0.55, wave);
+        color = mix(bgColor, color, bgBlend);
         
-        // Dark background with subtle gradient
-        vec3 bgColor = mix(
-          vec3(0.02, 0.01, 0.05),
-          vec3(0.05, 0.02, 0.1),
-          uv.y * 0.5 + fbm(uv * 5.0) * 0.2
-        );
+        // Apply vignette
+        color *= vignette;
         
-        // Blend metaballs with background
-        vec3 finalColor = mix(bgColor, color, edge);
+        // Gamma correction
+        color = pow(color, vec3(0.9));
         
-        // Add subtle vignette
-        float vignette = 1.0 - length(uv - 0.5) * 0.5;
-        finalColor *= vignette;
-        
-        // Contrast adjustment
-        finalColor = pow(finalColor, vec3(0.9));
-        
-        gl_FragColor = vec4(finalColor, 1.0);
+        gl_FragColor = vec4(color, 1.0);
       }
     `;
 
@@ -203,13 +188,17 @@ export function MetaballsBackground() {
     }
 
     function onResize() {
-      uniforms.r.value.set(window.innerWidth, window.innerHeight);
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      const width = containerRef.current?.clientWidth || window.innerWidth;
+      const height = containerRef.current?.clientHeight || window.innerHeight;
+      uniforms.r.value.set(width, height);
+      renderer.setSize(width, height);
     }
 
     function onMouseMove(e: MouseEvent) {
-      mouseRef.current.x = e.clientX / window.innerWidth;
-      mouseRef.current.y = 1.0 - e.clientY / window.innerHeight;
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      targetMouseRef.current.x = (e.clientX - rect.left) / rect.width;
+      targetMouseRef.current.y = 1.0 - (e.clientY - rect.top) / rect.height;
     }
 
     function animate() {
@@ -218,8 +207,9 @@ export function MetaballsBackground() {
       uniforms.t.value = clock.getElapsedTime();
       
       // Smooth mouse following
-      uniforms.mouse.value.x += (mouseRef.current.x - uniforms.mouse.value.x) * 0.05;
-      uniforms.mouse.value.y += (mouseRef.current.y - uniforms.mouse.value.y) * 0.05;
+      mouseRef.current.x += (targetMouseRef.current.x - mouseRef.current.x) * 0.05;
+      mouseRef.current.y += (targetMouseRef.current.y - mouseRef.current.y) * 0.05;
+      uniforms.mouse.value.copy(mouseRef.current);
       
       renderer.render(scene, camera);
     }
@@ -230,8 +220,12 @@ export function MetaballsBackground() {
       cancelAnimationFrame(animationId);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("mousemove", onMouseMove);
-      renderer.dispose();
-      containerRef.current?.removeChild(renderer.domElement);
+      if (renderer) {
+        renderer.dispose();
+        if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
+          containerRef.current.removeChild(renderer.domElement);
+        }
+      }
     };
   }, []);
 
