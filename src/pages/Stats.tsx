@@ -3,7 +3,6 @@ import { Users, Bell, TrendingUp, Target } from "lucide-react";
 import { useStats } from "@/hooks/useData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedHeading } from "@/components/ui/animated-text";
-import { TubesCursorBackground } from "@/components/animations/TubesCursorBackground";
 
 const Stats = () => {
   const { data: stats, isLoading } = useStats();
@@ -37,14 +36,8 @@ const Stats = () => {
 
   return (
     <Layout>
-      <section className="relative py-20 min-h-screen">
-        {/* Same Tubes Background as Home */}
-        <TubesCursorBackground />
-        
-        {/* Gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/30 to-background pointer-events-none" />
-        
-        <div className="container mx-auto px-4 relative z-10">
+      <section className="py-20 min-h-screen">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <AnimatedHeading level={1} className="text-5xl md:text-6xl mb-4">
               Real-Time Statistics

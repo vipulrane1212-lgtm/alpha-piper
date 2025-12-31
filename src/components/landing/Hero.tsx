@@ -1,17 +1,10 @@
 import { ArrowRight, Zap, TrendingUp, Shield } from "lucide-react";
 import { GlassButton, GlassCard } from "@/components/ui/glass-tabs";
 import { AnimatedHeading } from "@/components/ui/animated-text";
-import { TubesCursorBackground } from "@/components/animations/TubesCursorBackground";
 
 export function Hero() {
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-background">
-      {/* Tubes Cursor Background */}
-      <TubesCursorBackground />
-      
-      {/* Gradient overlay for better text readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/30 to-background pointer-events-none" />
-
+    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
           <div className="inline-block mb-6 animate-fade-in" style={{ animationDelay: "0.1s" }}>
