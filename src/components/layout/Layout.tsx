@@ -8,9 +8,13 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  // Neon cursor effect - works on desktop and mobile
+  // Neon cursor effect - desktop only (like web version)
   useEffect(() => {
-    // Create cursor element - exact web version styling with strong glow
+    // Only create cursor on desktop (not mobile) - matches web version
+    const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+    if (!isDesktop) return;
+
+    // Create cursor element - exact web version styling
     const cursorEl = document.createElement('div');
     cursorEl.id = 'neon-cursor';
     cursorEl.style.cssText = `
@@ -18,27 +22,21 @@ export function Layout({ children }: LayoutProps) {
       width: 20px;
       height: 20px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(0, 217, 255, 0.9) 0%, rgba(0, 217, 255, 0.6) 40%, rgba(0, 217, 255, 0.3) 70%, transparent 100%);
+      background: radial-gradient(circle, rgba(0, 217, 255, 0.8) 0%, rgba(0, 217, 255, 0.4) 50%, transparent 100%);
       pointer-events: none;
       z-index: 99999;
       transform: translate(-50%, -50%);
-      box-shadow: 
-        0 0 10px rgba(0, 217, 255, 1),
-        0 0 20px rgba(0, 217, 255, 0.9),
-        0 0 30px rgba(0, 217, 255, 0.7),
-        0 0 40px rgba(0, 217, 255, 0.5),
-        0 0 60px rgba(0, 217, 255, 0.3);
-      transition: opacity 0.2s ease, transform 0.05s ease;
+      box-shadow: 0 0 20px rgba(0, 217, 255, 0.8), 0 0 40px rgba(0, 217, 255, 0.4);
+      transition: opacity 0.2s ease;
       opacity: 0;
       left: -100px;
       top: -100px;
-      will-change: transform, opacity;
     `;
     document.body.appendChild(cursorEl);
 
     const updateCursorPosition = (x: number, y: number) => {
-      // Use transform for better performance and smoother movement
-      cursorEl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+      cursorEl.style.left = x + 'px';
+      cursorEl.style.top = y + 'px';
       cursorEl.style.opacity = '1';
     };
 
@@ -46,7 +44,7 @@ export function Layout({ children }: LayoutProps) {
       cursorEl.style.opacity = '0';
     };
 
-    // Mouse events (desktop)
+    // Mouse events (desktop only)
     const handleMouseMove = (e: MouseEvent) => {
       updateCursorPosition(e.clientX, e.clientY);
     };
@@ -55,38 +53,13 @@ export function Layout({ children }: LayoutProps) {
       hideCursor();
     };
 
-    // Touch events (mobile/tablet) - same behavior as mouse
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
-        updateCursorPosition(e.touches[0].clientX, e.touches[0].clientY);
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
-        updateCursorPosition(e.touches[0].clientX, e.touches[0].clientY);
-        e.preventDefault(); // Prevent scrolling for better cursor tracking
-      }
-    };
-
-    const handleTouchEnd = () => {
-      // Hide cursor immediately on touch end (like mouse leave)
-      hideCursor();
-    };
-
-    // Add event listeners
+    // Add event listeners (desktop only)
     window.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseleave', handleMouseLeave);
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    window.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseleave', handleMouseLeave);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
       if (cursorEl.parentNode) {
         cursorEl.remove();
       }

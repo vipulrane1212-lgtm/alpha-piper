@@ -187,6 +187,7 @@ function GhostMesh() {
           alphaTest={0.01}
           depthWrite={false}
           blending={THREE.NormalBlending}
+          fog={false}
         />
       </mesh>
       <Eyes currentMovement={currentMovement} />
@@ -557,7 +558,7 @@ export function GhostAnimation() {
   const isMobile = isMobileDevice();
   
   return (
-    <div className="relative w-full h-full min-h-[500px] lg:min-h-[600px] flex items-center justify-center bg-transparent">
+    <div className="relative w-full h-full min-h-[500px] lg:min-h-[600px] flex items-center justify-center" style={{ background: "transparent", backgroundColor: "transparent" }}>
       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-muted-foreground">Loading ghost...</div>}>
         <Canvas
           camera={{ position: [0, 0, 20], fov: isMobile ? 70 : 60 }}
@@ -569,10 +570,10 @@ export function GhostAnimation() {
             preserveDrawingBuffer: false,
           }}
           style={{ 
-            background: "transparent", 
+            background: "transparent !important", 
             width: "100%", 
             height: "100%",
-            backgroundColor: "transparent"
+            backgroundColor: "transparent !important"
           }}
           dpr={isMobile ? 1 : Math.min(window.devicePixelRatio, 2)} // Limit pixel ratio on mobile
           onCreated={({ gl, scene }) => {
@@ -580,6 +581,11 @@ export function GhostAnimation() {
             gl.clearColor(); // Clear with transparent
             scene.background = null; // Ensure no background
             scene.fog = null; // Remove any fog
+            // Force transparent on mobile
+            if (isMobile) {
+              gl.domElement.style.backgroundColor = "transparent";
+              gl.domElement.style.background = "transparent";
+            }
           }}
         >
           {/* Lighting - CodePen exact */}
