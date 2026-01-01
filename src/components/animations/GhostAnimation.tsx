@@ -517,17 +517,17 @@ function Particles() {
 
 export function GhostAnimation() {
   return (
-    <div className="relative w-full h-full min-h-[500px]">
+    <div className="relative w-full h-full min-h-[600px] flex items-center justify-center">
       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-muted-foreground">Loading ghost...</div>}>
         <Canvas
-          camera={{ position: [0, 0, 20], fov: 75 }}
+          camera={{ position: [0, 0, 20], fov: 60 }}
           gl={{
             antialias: true,
             alpha: true,
             powerPreference: "high-performance",
             premultipliedAlpha: false,
           }}
-          style={{ background: "transparent" }}
+          style={{ background: "transparent", width: "100%", height: "100%" }}
         >
           {/* Lighting - CodePen exact */}
           <ambientLight color={0x0a0a2e} intensity={0.08} />
@@ -548,14 +548,14 @@ export function GhostAnimation() {
             <Bloom intensity={0.3} luminanceThreshold={0.0} luminanceSmoothing={1.25} />
           </EffectComposer>
 
-          {/* Auto rotate */}
+          {/* Auto rotate - wider vertical angle to show full ghost */}
           <OrbitControls
             enableZoom={false}
             enablePan={false}
             autoRotate
             autoRotateSpeed={0.5}
-            minPolarAngle={Math.PI / 3}
-            maxPolarAngle={Math.PI / 1.5}
+            minPolarAngle={Math.PI / 6}
+            maxPolarAngle={Math.PI / 1.1}
           />
         </Canvas>
       </Suspense>
