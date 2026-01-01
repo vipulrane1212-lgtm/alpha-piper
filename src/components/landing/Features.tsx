@@ -1,7 +1,7 @@
 import { CheckCircle2, Zap, TrendingUp, Shield, Clock, BarChart3 } from "lucide-react";
 import { AnimatedSection } from "@/components/ui/animated-section";
 import { GlassCard } from "@/components/ui/glass-tabs";
-import { BlockchainAnimation } from "@/components/animations/BlockchainAnimation";
+import { GhostAnimation } from "@/components/animations/GhostAnimation";
 import { AnimatedHeading } from "@/components/ui/animated-text";
 
 const features = [
@@ -72,7 +72,7 @@ export function Features() {
         <div className="flex flex-col lg:flex-row gap-12 items-center relative z-10">
           {/* Left side - Animation */}
           <div className="w-full lg:w-2/5 hidden lg:block relative z-10">
-            <BlockchainAnimation />
+            <GhostAnimation />
           </div>
 
           {/* Right side - Feature cards */}
@@ -109,7 +109,7 @@ export function Features() {
 
         {/* Mobile animation - shown only on smaller screens */}
         <div className="lg:hidden mt-12 max-w-sm mx-auto relative z-10">
-          <BlockchainAnimation />
+          <GhostAnimation />
         </div>
       </div>
     </section>
