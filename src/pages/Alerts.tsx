@@ -275,15 +275,15 @@ const Alerts = () => {
                     </a>
                   </div>
 
-                  {/* Swap Buttons with Referral Links */}
-                  <div className="flex flex-col gap-2">
+                  {/* Swap Buttons with Referral Links - Horizontal Layout */}
+                  <div className="flex flex-row gap-2">
                     <a
                       href={getGMGNLink(alert.contract)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full"
+                      className="flex-1"
                     >
-                      <GlassButton variant="primary" size="sm" className="w-full text-xs">
+                      <GlassButton variant="primary" size="sm" className="w-full text-xs font-semibold">
                         <Bot className="w-3 h-3 mr-2" />
                         Swap via GMGN
                       </GlassButton>
@@ -292,9 +292,9 @@ const Alerts = () => {
                       href={getMaestroLink(alert.contract)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full"
+                      className="flex-1"
                     >
-                      <GlassButton variant="tier2" size="sm" className="w-full text-xs">
+                      <GlassButton variant="tier2" size="sm" className="w-full text-xs font-semibold">
                         <Bot className="w-3 h-3 mr-2" />
                         Swap via Maestro
                       </GlassButton>

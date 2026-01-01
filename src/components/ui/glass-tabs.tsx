@@ -123,36 +123,36 @@ interface GlassButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
 
 const glassButtonVariants = {
   primary: {
-    bg: "hsl(var(--primary) / 0.1)",
-    activeBg: "hsl(var(--primary) / 0.2)",
+    bg: "hsl(var(--primary) / 0.15)",
+    activeBg: "hsl(var(--primary) / 0.25)",
     shadow: "hsl(var(--primary) / 0.35)",
     glow: "hsl(var(--primary) / 0.5)",
-    text: "hsl(var(--primary-foreground))",
-    border: "hsl(var(--primary) / 0.3)",
+    text: "hsl(var(--primary))",
+    border: "hsl(var(--primary) / 0.4)",
   },
   secondary: {
-    bg: "hsl(var(--foreground) / 0.05)",
-    activeBg: "hsl(var(--foreground) / 0.1)",
-    shadow: "hsl(var(--foreground) / 0.15)",
-    glow: "hsl(var(--foreground) / 0.2)",
+    bg: "hsl(var(--foreground) / 0.1)",
+    activeBg: "hsl(var(--foreground) / 0.15)",
+    shadow: "hsl(var(--foreground) / 0.2)",
+    glow: "hsl(var(--foreground) / 0.3)",
     text: "hsl(var(--foreground))",
     border: "hsl(var(--border))",
   },
   tier1: {
-    bg: "hsl(var(--tier-1) / 0.1)",
-    activeBg: "hsl(var(--tier-1) / 0.2)",
+    bg: "hsl(var(--tier-1) / 0.15)",
+    activeBg: "hsl(var(--tier-1) / 0.25)",
     shadow: "hsl(var(--tier-1) / 0.35)",
     glow: "hsl(var(--tier-1) / 0.5)",
     text: "hsl(var(--tier-1))",
-    border: "hsl(var(--tier-1) / 0.3)",
+    border: "hsl(var(--tier-1) / 0.4)",
   },
   tier2: {
-    bg: "hsl(var(--tier-2) / 0.1)",
-    activeBg: "hsl(var(--tier-2) / 0.2)",
+    bg: "hsl(var(--tier-2) / 0.15)",
+    activeBg: "hsl(var(--tier-2) / 0.25)",
     shadow: "hsl(var(--tier-2) / 0.35)",
     glow: "hsl(var(--tier-2) / 0.5)",
     text: "hsl(var(--tier-2))",
-    border: "hsl(var(--tier-2) / 0.3)",
+    border: "hsl(var(--tier-2) / 0.4)",
   },
 };
 
@@ -175,6 +175,7 @@ const GlassButton = React.forwardRef<HTMLButtonElement, GlassButtonProps>(
             "backdrop-blur-md transition-all duration-300 ease-out",
             "hover:translate-y-[2px] active:translate-y-[4px]",
             "border",
+            "drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]",
             sizeStyles[size],
             className
           )}
@@ -183,6 +184,7 @@ const GlassButton = React.forwardRef<HTMLButtonElement, GlassButtonProps>(
             boxShadow: `0px -4px 20px 0px ${styles.shadow} inset, 0 4px 20px -5px ${styles.glow}`,
             color: styles.text,
             borderColor: styles.border,
+            textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5)',
           }}
           {...props}
         >
@@ -235,8 +237,9 @@ const GlassCard = React.forwardRef<HTMLDivElement, GlassCardProps>(
     return (
       <div
         ref={ref}
+        data-glass-card="true"
         className={cn(
-          "relative rounded-xl backdrop-blur-md border transition-all duration-300",
+          "relative rounded-xl backdrop-blur-md border transition-all duration-300 glass-card",
           hover && "hover:scale-[1.02] hover:-translate-y-1",
           className
         )}
