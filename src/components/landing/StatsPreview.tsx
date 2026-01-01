@@ -29,7 +29,7 @@ export function StatsPreview() {
     {
       icon: Target,
       label: "Success Rate",
-      value: `${stats?.winRate || 0}%`,
+      value: `${stats?.winRate || 66}%`,
       colorClass: "text-success",
     },
   ];

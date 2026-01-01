@@ -71,7 +71,7 @@ const About = () => {
                 {
                   icon: CheckCircle2,
                   title: "Selective Alerts",
-                  description: "Quality over quantity (only ~32% of tokens trigger alerts)",
+                  description: "Quality over quantity (only ~91% of tokens trigger alerts)",
                 },
               ].map((item, index) => {
                 const Icon = item.icon;

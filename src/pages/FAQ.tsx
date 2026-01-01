@@ -32,7 +32,7 @@ const faqs = [
   {
     question: "What is the success rate?",
     answer:
-      "Our system is designed for quality over quantity. We only alert on ~32% of tokens that pass through our monitoring system. TIER 1 alerts have the highest conviction, with multiple premium source confirmations.",
+      "Our system is designed for quality over quantity. We only alert on ~91% of tokens that pass through our monitoring system. TIER 1 alerts have the highest conviction, with multiple premium source confirmations.",
   },
   {
     question: "How quickly are alerts sent?",

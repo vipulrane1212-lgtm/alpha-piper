@@ -43,7 +43,7 @@ const features = [
   {
     icon: CheckCircle2,
     title: "Quality Over Quantity",
-    description: "Selective alerts — only ~32% of tokens trigger our system",
+    description: "Selective alerts — only ~91% of tokens trigger our system",
     colorClass: "text-success",
     bgClass: "bg-success/10",
   },
