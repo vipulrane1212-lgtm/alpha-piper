@@ -1,4 +1,4 @@
-import React, { useRef, Suspense } from "react";
+import React, { useRef, Suspense, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
@@ -184,19 +184,102 @@ function Particles() {
   );
 }
 
-// Error boundary wrapper
-function ErrorBoundary({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+// CSS-based fallback ghost (simpler, always works)
+function CSSGhost() {
+  return (
+    <div className="relative w-full h-full min-h-[500px] flex items-center justify-center">
+      <div className="relative">
+        {/* Ghost body */}
+        <div className="relative w-48 h-64 mx-auto">
+          {/* Main body - white rounded top */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-40 bg-white rounded-t-full shadow-lg" 
+               style={{
+                 filter: 'drop-shadow(0 0 20px rgba(176, 176, 255, 0.8))',
+                 animation: 'float 3s ease-in-out infinite'
+               }}>
+            {/* Eyes */}
+            <div className="absolute top-12 left-8 w-6 h-6 bg-black rounded-full animate-pulse"></div>
+            <div className="absolute top-12 right-8 w-6 h-6 bg-black rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+            
+            {/* Wavy bottom */}
+            <div className="absolute bottom-0 left-0 w-full h-8">
+              <svg viewBox="0 0 128 32" className="w-full h-full">
+                <path d="M0,32 Q32,16 64,24 T128,32 L128,32 L0,32 Z" fill="white" />
+              </svg>
+            </div>
+          </div>
+          
+          {/* Glow effect */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-48 bg-blue-400/30 rounded-t-full blur-2xl animate-pulse"></div>
+          
+          {/* Floating particles */}
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-2 bg-blue-300 rounded-full opacity-60"
+              style={{
+                left: `${20 + i * 10}%`,
+                top: `${30 + Math.sin(i) * 20}%`,
+                animation: `particleFloat ${3 + i * 0.5}s ease-in-out infinite`,
+                animationDelay: `${i * 0.3}s`
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(2deg); }
+        }
+        @keyframes particleFloat {
+          0%, 100% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.6; }
+          50% { transform: translateY(-30px) translateX(10px) scale(1.2); opacity: 1; }
+        }
+      `}</style>
+    </div>
+  );
 }
 
 export function GhostAnimation() {
+  const [hasError, setHasError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if WebGL is supported
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!gl) {
+        setHasError(true);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Give Three.js a moment to load
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 1000);
+    } catch (e) {
+      setHasError(true);
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Fallback to CSS ghost if WebGL fails or while loading
+  if (hasError || isLoading) {
+    return <CSSGhost />;
+  }
+
   return (
     <div className="relative w-full h-full min-h-[500px]">
-      <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-muted-foreground">Loading ghost...</div>}>
+      <Suspense fallback={<CSSGhost />}>
         <Canvas
           camera={{ position: [0, 0, 5], fov: 50 }}
           gl={{ alpha: true, antialias: true }}
           style={{ background: "transparent" }}
+          onError={() => setHasError(true)}
         >
           {/* Lighting */}
           <ambientLight intensity={0.4} />
@@ -229,4 +312,3 @@ export function GhostAnimation() {
     </div>
   );
 }
-
