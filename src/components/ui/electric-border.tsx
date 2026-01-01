@@ -1,4 +1,4 @@
-﻿import * as React from "react";
+import * as React from "react";
 import { cn } from "@/lib/utils";
 
 interface ElectricBorderCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -140,11 +140,11 @@ const ElectricBorderCard = React.forwardRef<HTMLDivElement, ElectricBorderCardPr
         ref={cardRef}
         className={cn("card relative rounded-xl", className)}
         style={{
-          "--glow-color": hsl(),
-          "--pointer-x": ${pointerX}%,
-          "--pointer-y": ${pointerY}%,
-          "--pointer-angle": ${pointerAngle}deg,
-          "--pointer-d": ${pointerDistance},
+          "--glow-color": `hsl(${colors.glowColor})`,
+          "--pointer-x": `${pointerX}%`,
+          "--pointer-y": `${pointerY}%`,
+          "--pointer-angle": `${pointerAngle}deg`,
+          "--pointer-d": `${pointerDistance}`,
         } as React.CSSProperties}
         {...props}
       >
@@ -222,3 +222,5 @@ const ElectricBorderCard = React.forwardRef<HTMLDivElement, ElectricBorderCardPr
 ElectricBorderCard.displayName = "ElectricBorderCard";
 
 export { ElectricBorderCard };
+
+
