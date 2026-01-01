@@ -590,18 +590,16 @@ export function GhostAnimation() {
           {/* Ghost */}
           <GhostMesh />
 
-          {/* Fireflies - Only on desktop */}
-          {!isMobile && <Fireflies />}
+          {/* Fireflies - Live animation on all devices */}
+          <Fireflies />
 
-          {/* Particles - Only on desktop */}
-          {!isMobile && <Particles />}
+          {/* Particles - Live animation on all devices */}
+          <Particles />
 
-          {/* Post-processing - Strong bloom like CodePen - Only on desktop */}
-          {!isMobile && (
-            <EffectComposer>
-              <Bloom intensity={0.3} luminanceThreshold={0.0} luminanceSmoothing={1.25} />
-            </EffectComposer>
-          )}
+          {/* Post-processing - Strong bloom like CodePen - Live animation on all devices */}
+          <EffectComposer>
+            <Bloom intensity={0.3} luminanceThreshold={0.0} luminanceSmoothing={1.25} />
+          </EffectComposer>
 
           {/* Auto rotate - wider vertical angle to show full ghost */}
           <OrbitControls
