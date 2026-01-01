@@ -20,14 +20,6 @@ const fluorescentColors: Record<string, number> = {
   violet: 0x8a2be2,
 };
 
-// Detect mobile device
-function isMobileDevice(): boolean {
-  if (typeof window === 'undefined') return false;
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-    (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) ||
-    ('ontouchstart' in window);
-}
-
 // Parameters from CodePen - identical on all devices
 const getParams = () => {
   return {
@@ -311,14 +303,13 @@ function Eyes({ currentMovement }: { currentMovement: number }) {
 function Fireflies() {
   const firefliesRef = useRef<THREE.Group>(null);
   const fireflies = useRef<THREE.Mesh[]>([]);
-  const isMobile = isMobileDevice();
 
   useEffect(() => {
     if (!firefliesRef.current) return;
 
     const fireflyGroup = firefliesRef.current;
     const firefliesArray: THREE.Mesh[] = [];
-    const fireflyCount = isMobile ? params.fireflyCount : 20;
+    const fireflyCount = params.fireflyCount;
 
     for (let i = 0; i < fireflyCount; i++) {
       const fireflyGeometry = new THREE.SphereGeometry(0.02, 2, 2);
@@ -553,17 +544,15 @@ function Particles() {
 }
 
 export function GhostAnimation() {
-  const isMobile = isMobileDevice();
-  
   return (
     <div className="relative w-full h-full min-h-[500px] lg:min-h-[600px] flex items-center justify-center" style={{ background: "transparent", backgroundColor: "transparent" }}>
       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-muted-foreground">Loading ghost...</div>}>
         <Canvas
-          camera={{ position: [0, 0, 20], fov: isMobile ? 70 : 60 }}
+          camera={{ position: [0, 0, 20], fov: 60 }}
           gl={{
-            antialias: !isMobile, // Disable antialiasing on mobile for performance
+            antialias: true,
             alpha: true,
-            powerPreference: isMobile ? "default" : "high-performance",
+            powerPreference: "high-performance",
             premultipliedAlpha: false,
             preserveDrawingBuffer: false,
           }}
@@ -573,17 +562,12 @@ export function GhostAnimation() {
             height: "100%",
             backgroundColor: "transparent !important"
           }}
-          dpr={isMobile ? 1 : Math.min(window.devicePixelRatio, 2)} // Limit pixel ratio on mobile
+          dpr={Math.min(window.devicePixelRatio, 2)}
           onCreated={({ gl, scene }) => {
             gl.setClearColor(0x000000, 0); // Fully transparent background
             gl.clearColor(); // Clear with transparent
             scene.background = null; // Ensure no background
             scene.fog = null; // Remove any fog
-            // Force transparent on mobile
-            if (isMobile) {
-              gl.domElement.style.backgroundColor = "transparent";
-              gl.domElement.style.background = "transparent";
-            }
           }}
         >
           {/* Lighting - CodePen exact */}
