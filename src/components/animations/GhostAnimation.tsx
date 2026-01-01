@@ -28,32 +28,31 @@ function isMobileDevice(): boolean {
     ('ontouchstart' in window);
 }
 
-// Parameters from CodePen - adjusted for mobile
+// Parameters from CodePen - identical on all devices
 const getParams = () => {
-  const isMobile = isMobileDevice();
   return {
     bodyColor: 0x0f2027,
     glowColor: "orange",
     eyeGlowColor: "green",
     ghostOpacity: 0.88,
-    ghostScale: isMobile ? 1.8 : 2.4,
-    emissiveIntensity: isMobile ? 4.0 : 5.8,
+    ghostScale: 2.4,
+    emissiveIntensity: 5.8,
     pulseSpeed: 1.6,
     pulseIntensity: 0.6,
-    eyeGlowIntensity: isMobile ? 3.0 : 4.5,
+    eyeGlowIntensity: 4.5,
     eyeGlowDecay: 0.95,
     eyeGlowResponse: 0.31,
-    rimLightIntensity: isMobile ? 1.2 : 1.8,
+    rimLightIntensity: 1.8,
     followSpeed: 0.075,
-    wobbleAmount: isMobile ? 0.2 : 0.35,
+    wobbleAmount: 0.35,
     floatSpeed: 1.6,
     movementThreshold: 0.07,
-    particleCount: isMobile ? 100 : 250,
+    particleCount: 250,
     particleDecayRate: 0.005,
     particleColor: "orange",
-    fireflyGlowIntensity: isMobile ? 1.5 : 2.6,
+    fireflyGlowIntensity: 2.6,
     fireflySpeed: 0.04,
-    fireflyCount: isMobile ? 10 : 20,
+    fireflyCount: 20,
   };
 };
 
@@ -68,7 +67,6 @@ function GhostMesh() {
   const [prevPosition] = useState(new THREE.Vector3());
   const [currentMovement, setCurrentMovement] = useState(0);
   const [time, setTime] = useState(0);
-  const isMobile = isMobileDevice();
 
   // Mouse/touch tracking
   useEffect(() => {
