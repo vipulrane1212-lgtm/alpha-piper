@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
@@ -184,41 +184,48 @@ function Particles() {
   );
 }
 
+// Error boundary wrapper
+function ErrorBoundary({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
+}
+
 export function GhostAnimation() {
   return (
     <div className="relative w-full h-full min-h-[500px]">
-      <Canvas
-        camera={{ position: [0, 0, 5], fov: 50 }}
-        gl={{ alpha: true, antialias: true }}
-        style={{ background: "transparent" }}
-      >
-        {/* Lighting */}
-        <ambientLight intensity={0.4} />
-        <pointLight position={[2, 2, 2]} intensity={1.2} color="#b0b0ff" />
-        <pointLight position={[-2, -2, -2]} intensity={0.6} color="#ffb0b0" />
-        <pointLight position={[0, 3, 0]} intensity={0.8} color="#ffffff" />
-        
-        {/* Ghost mesh */}
-        <GhostMesh />
-        
-        {/* Spectral particles */}
-        <Particles />
-        
-        {/* Post-processing effects */}
-        <EffectComposer>
-          <Bloom intensity={1.5} luminanceThreshold={0.5} luminanceSmoothing={0.9} />
-        </EffectComposer>
-        
-        {/* Controls - auto rotate */}
-        <OrbitControls
-          enableZoom={false}
-          enablePan={false}
-          autoRotate
-          autoRotateSpeed={0.3}
-          minPolarAngle={Math.PI / 3}
-          maxPolarAngle={Math.PI / 1.5}
-        />
-      </Canvas>
+      <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-muted-foreground">Loading ghost...</div>}>
+        <Canvas
+          camera={{ position: [0, 0, 5], fov: 50 }}
+          gl={{ alpha: true, antialias: true }}
+          style={{ background: "transparent" }}
+        >
+          {/* Lighting */}
+          <ambientLight intensity={0.4} />
+          <pointLight position={[2, 2, 2]} intensity={1.2} color="#b0b0ff" />
+          <pointLight position={[-2, -2, -2]} intensity={0.6} color="#ffb0b0" />
+          <pointLight position={[0, 3, 0]} intensity={0.8} color="#ffffff" />
+          
+          {/* Ghost mesh */}
+          <GhostMesh />
+          
+          {/* Spectral particles */}
+          <Particles />
+          
+          {/* Post-processing effects */}
+          <EffectComposer>
+            <Bloom intensity={1.5} luminanceThreshold={0.5} luminanceSmoothing={0.9} />
+          </EffectComposer>
+          
+          {/* Controls - auto rotate */}
+          <OrbitControls
+            enableZoom={false}
+            enablePan={false}
+            autoRotate
+            autoRotateSpeed={0.3}
+            minPolarAngle={Math.PI / 3}
+            maxPolarAngle={Math.PI / 1.5}
+          />
+        </Canvas>
+      </Suspense>
     </div>
   );
 }
