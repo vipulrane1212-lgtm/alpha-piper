@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Send, Zap, Bot } from "lucide-react";
+import { Send, Zap, Bot, MessageCircle } from "lucide-react";
 
 export function Footer() {
   return (
@@ -48,9 +48,22 @@ export function Footer() {
         }
         
         @media (max-width: 768px) {
+          .fancy-footer {
+            padding: 4rem 1.5rem 2rem;
+          }
+          
           .fancy-footer-content {
             grid-template-columns: 1fr;
-            gap: 2rem;
+            gap: 2.5rem;
+          }
+          
+          .fancy-footer-col2,
+          .fancy-footer-col3 {
+            text-align: center;
+          }
+          
+          .fancy-footer-social {
+            justify-content: center;
           }
         }
         
@@ -96,10 +109,25 @@ export function Footer() {
         }
         
         .fancy-footer-social a[aria-label="GMGN Bot"],
-        .fancy-footer-social a[aria-label="Maestro Bot"] {
+        .fancy-footer-social a[aria-label="Maestro Bot"],
+        .fancy-footer-social a[aria-label="Telegram Channel"],
+        .fancy-footer-social a[aria-label="Telegram Bot"] {
           width: auto;
           height: auto;
           padding: 0.5rem 0.75rem;
+        }
+        
+        .fancy-footer-telegram-buttons {
+          display: flex;
+          gap: 0.75rem;
+          margin-bottom: 1rem;
+          flex-wrap: wrap;
+        }
+        
+        @media (max-width: 768px) {
+          .fancy-footer-telegram-buttons {
+            justify-content: center;
+          }
         }
         
         .fancy-footer-col1 .copyright {
@@ -151,16 +179,32 @@ export function Footer() {
             <p>
               Eat , Sleep , Trade Memecoin , Repeat
             </p>
-            <div className="fancy-footer-social">
+            
+            {/* Telegram Channel & Bot Buttons */}
+            <div className="fancy-footer-telegram-buttons">
               <a
                 href="https://t.me/solboy_calls"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Telegram"
+                aria-label="Telegram Channel"
+                className="flex items-center gap-2 px-3 py-2 bg-muted hover:bg-primary/10 border border-border hover:border-primary rounded-lg transition-all"
               >
-                <Send className="w-5 h-5" />
+                <MessageCircle className="w-4 h-4" />
+                <span className="text-sm">Channel</span>
+              </a>
+              <a
+                href="https://t.me/Plaguealertbot"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Telegram Bot"
+                className="flex items-center gap-2 px-3 py-2 bg-muted hover:bg-primary/10 border border-border hover:border-primary rounded-lg transition-all"
+              >
+                <Bot className="w-4 h-4" />
+                <span className="text-sm">Bot</span>
               </a>
             </div>
+            
+            {/* GMGN & Maestro Bot Buttons */}
             <div className="fancy-footer-social">
               <a
                 href="https://t.me/gmgnaibot?start=i_drplague"
@@ -181,6 +225,20 @@ export function Footer() {
               >
                 <Bot className="w-4 h-4" />
                 <span className="text-sm">Maestro Bot</span>
+              </a>
+            </div>
+            
+            {/* Admin Contact */}
+            <div className="fancy-footer-social">
+              <a
+                href="https://t.me/dr_plague31"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Contact Admin"
+                className="flex items-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary rounded-lg transition-all text-primary"
+              >
+                <Send className="w-4 h-4" />
+                <span className="text-sm">Contact Admin</span>
               </a>
             </div>
             <p className="copyright">
@@ -208,11 +266,18 @@ export function Footer() {
           
           <div className="fancy-footer-col3">
             <a
-              href="https://t.me/solboy_calls"
+              href="https://t.me/Plaguealertbot"
               target="_blank"
               rel="noopener noreferrer"
             >
               <p>Telegram Bot</p>
+            </a>
+            <a
+              href="https://t.me/dr_plague31"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <p>Contact Admin</p>
             </a>
             <a
               href="https://telegra.ph/Solboy-Alert-Pipeline--Complete-Trading-Guide-12-23"

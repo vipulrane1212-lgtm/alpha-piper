@@ -102,7 +102,7 @@ const FAQ = () => {
 
           <div className="mt-12 text-center">
             <p className="text-muted-foreground mb-4">Still have questions?</p>
-            <a href="https://t.me/solboy_calls" target="_blank" rel="noopener noreferrer">
+            <a href="https://t.me/dr_plague31" target="_blank" rel="noopener noreferrer">
               <GlassButton variant="primary" size="md">
                 Contact Us on Telegram
               </GlassButton>
