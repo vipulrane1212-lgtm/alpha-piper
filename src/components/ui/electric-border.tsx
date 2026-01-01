@@ -211,9 +211,9 @@ const ElectricBorderCard = React.forwardRef<HTMLDivElement, ElectricBorderCardPr
             mix-blend-mode: var(--blend);
             position: relative;
             z-index: 2;
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            backdrop-filter: blur(24px) !important;
+            -webkit-backdrop-filter: blur(24px) !important;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
           }
         `}</style>
       </div>
@@ -223,6 +223,7 @@ const ElectricBorderCard = React.forwardRef<HTMLDivElement, ElectricBorderCardPr
 ElectricBorderCard.displayName = "ElectricBorderCard";
 
 export { ElectricBorderCard };
+
 
 
 
