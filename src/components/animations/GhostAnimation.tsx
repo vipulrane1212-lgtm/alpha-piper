@@ -20,30 +20,44 @@ const fluorescentColors: Record<string, number> = {
   violet: 0x8a2be2,
 };
 
-// Parameters from CodePen
-const params = {
-  bodyColor: 0x0f2027,
-  glowColor: "orange",
-  eyeGlowColor: "green",
-  ghostOpacity: 0.88,
-  ghostScale: 2.4,
-  emissiveIntensity: 5.8,
-  pulseSpeed: 1.6,
-  pulseIntensity: 0.6,
-  eyeGlowIntensity: 4.5,
-  eyeGlowDecay: 0.95,
-  eyeGlowResponse: 0.31,
-  rimLightIntensity: 1.8,
-  followSpeed: 0.075,
-  wobbleAmount: 0.35,
-  floatSpeed: 1.6,
-  movementThreshold: 0.07,
-  particleCount: 250,
-  particleDecayRate: 0.005,
-  particleColor: "orange",
-  fireflyGlowIntensity: 2.6,
-  fireflySpeed: 0.04,
+// Detect mobile device
+function isMobileDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) ||
+    ('ontouchstart' in window);
+}
+
+// Parameters from CodePen - adjusted for mobile
+const getParams = () => {
+  const isMobile = isMobileDevice();
+  return {
+    bodyColor: 0x0f2027,
+    glowColor: "orange",
+    eyeGlowColor: "green",
+    ghostOpacity: 0.88,
+    ghostScale: isMobile ? 1.8 : 2.4,
+    emissiveIntensity: isMobile ? 4.0 : 5.8,
+    pulseSpeed: 1.6,
+    pulseIntensity: 0.6,
+    eyeGlowIntensity: isMobile ? 3.0 : 4.5,
+    eyeGlowDecay: 0.95,
+    eyeGlowResponse: 0.31,
+    rimLightIntensity: isMobile ? 1.2 : 1.8,
+    followSpeed: 0.075,
+    wobbleAmount: isMobile ? 0.2 : 0.35,
+    floatSpeed: 1.6,
+    movementThreshold: 0.07,
+    particleCount: isMobile ? 100 : 250,
+    particleDecayRate: 0.005,
+    particleColor: "orange",
+    fireflyGlowIntensity: isMobile ? 1.5 : 2.6,
+    fireflySpeed: 0.04,
+    fireflyCount: isMobile ? 10 : 20,
+  };
 };
+
+const params = getParams();
 
 // Ghost mesh - CodePen exact implementation
 function GhostMesh() {
@@ -54,15 +68,32 @@ function GhostMesh() {
   const [prevPosition] = useState(new THREE.Vector3());
   const [currentMovement, setCurrentMovement] = useState(0);
   const [time, setTime] = useState(0);
+  const isMobile = isMobileDevice();
 
-  // Mouse tracking
+  // Mouse/touch tracking
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      let clientX = 0;
+      let clientY = 0;
+      
+      if ('touches' in e && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if ('clientX' in e) {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+      
+      mouse.x = (clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(clientY / window.innerHeight) * 2 + 1;
     };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("touchmove", handleMove);
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("touchmove", handleMove);
+    };
   }, [mouse]);
 
   useFrame((state) => {
@@ -279,14 +310,16 @@ function Eyes({ currentMovement }: { currentMovement: number }) {
 function Fireflies() {
   const firefliesRef = useRef<THREE.Group>(null);
   const fireflies = useRef<THREE.Mesh[]>([]);
+  const isMobile = isMobileDevice();
 
   useEffect(() => {
     if (!firefliesRef.current) return;
 
     const fireflyGroup = firefliesRef.current;
     const firefliesArray: THREE.Mesh[] = [];
+    const fireflyCount = isMobile ? params.fireflyCount : 20;
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < fireflyCount; i++) {
       const fireflyGeometry = new THREE.SphereGeometry(0.02, 2, 2);
       const fireflyMaterial = new THREE.MeshBasicMaterial({
         color: 0xffff44,
@@ -516,18 +549,21 @@ function Particles() {
 }
 
 export function GhostAnimation() {
+  const isMobile = isMobileDevice();
+  
   return (
-    <div className="relative w-full h-full min-h-[600px] flex items-center justify-center">
+    <div className="relative w-full h-full min-h-[500px] lg:min-h-[600px] flex items-center justify-center">
       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-muted-foreground">Loading ghost...</div>}>
         <Canvas
-          camera={{ position: [0, 0, 20], fov: 60 }}
+          camera={{ position: [0, 0, 20], fov: isMobile ? 70 : 60 }}
           gl={{
-            antialias: true,
+            antialias: !isMobile, // Disable antialiasing on mobile for performance
             alpha: true,
-            powerPreference: "high-performance",
+            powerPreference: isMobile ? "default" : "high-performance",
             premultipliedAlpha: false,
           }}
           style={{ background: "transparent", width: "100%", height: "100%" }}
+          dpr={isMobile ? 1 : Math.min(window.devicePixelRatio, 2)} // Limit pixel ratio on mobile
         >
           {/* Lighting - CodePen exact */}
           <ambientLight color={0x0a0a2e} intensity={0.08} />

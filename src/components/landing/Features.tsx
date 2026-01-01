@@ -70,8 +70,8 @@ export function Features() {
 
         {/* Two column layout: Animation on left, Content on right */}
         <div className="flex flex-col lg:flex-row gap-12 items-center relative z-10">
-          {/* Left side - Animation - Ghost Animation */}
-          <div className="w-full lg:w-2/5 hidden lg:block relative z-10 h-[600px]">
+          {/* Left side - Animation - Ghost Animation - Visible on all devices */}
+          <div className="w-full lg:w-2/5 relative z-10 h-[500px] lg:h-[600px]">
             <GhostAnimation />
           </div>
 
@@ -107,10 +107,6 @@ export function Features() {
           </div>
         </div>
 
-        {/* Mobile animation - shown only on smaller screens */}
-        <div className="lg:hidden mt-12 max-w-sm mx-auto relative z-10 h-[500px]">
-          <GhostAnimation />
-        </div>
       </div>
     </section>
   );
