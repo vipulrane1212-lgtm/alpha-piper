@@ -87,6 +87,11 @@ export function Footer() {
           flex-wrap: wrap;
         }
         
+        .fancy-footer-social a[aria-label="Contact Admin"] {
+          min-width: fit-content;
+          width: auto;
+        }
+        
         .fancy-footer-social a {
           width: 40px;
           height: 40px;
@@ -235,9 +240,9 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Contact Admin"
-                className="flex items-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary rounded-lg transition-all text-primary"
+                className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary rounded-lg transition-all text-primary whitespace-nowrap"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm">Contact Admin</span>
               </a>
             </div>
