@@ -157,7 +157,7 @@ const ElectricBorderCard = React.forwardRef<HTMLDivElement, ElectricBorderCardPr
           {children}
         </div>
 
-        <style>{
+        <style>{`
           .card {
             --glow-sens: 30;
             --card-bg: linear-gradient(8deg, hsl(var(--card)) 75%, color-mix(in hsl, hsl(var(--card)), white 2.5%) 75.5%);
@@ -222,5 +222,6 @@ const ElectricBorderCard = React.forwardRef<HTMLDivElement, ElectricBorderCardPr
 ElectricBorderCard.displayName = "ElectricBorderCard";
 
 export { ElectricBorderCard };
+
 
 
