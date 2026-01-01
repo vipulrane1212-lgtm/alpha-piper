@@ -178,9 +178,9 @@ const Alerts = () => {
                   </div>
 
                   {/* Matched Signals - Fixed height container */}
-                  <div className="h-[52px] mb-3">
+                  <div className="h-[52px] mb-3 flex items-center">
                     {alert.matchedSignals && alert.matchedSignals.length > 0 ? (
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-1.5 justify-center w-full">
                         {alert.matchedSignals.slice(0, 3).map((signal, idx) => (
                           <span
                             key={idx}
@@ -201,43 +201,43 @@ const Alerts = () => {
                         )}
                       </div>
                     ) : (
-                      <div className="text-xs text-muted-foreground/50 italic">No signals</div>
+                      <div className="text-xs text-muted-foreground/50 italic text-center w-full">No signals</div>
                     )}
                   </div>
 
                   {/* Description - Fixed height */}
-                  <div className="h-[40px] mb-4">
+                  <div className="h-[40px] mb-4 flex items-center">
                     {alert.description ? (
-                      <p className="text-xs text-muted-foreground line-clamp-2 italic">
+                      <p className="text-xs text-muted-foreground line-clamp-2 italic text-center w-full">
                         "{alert.description}"
                       </p>
                     ) : (
-                      <p className="text-xs text-muted-foreground/50 italic">No description</p>
+                      <p className="text-xs text-muted-foreground/50 italic text-center w-full">No description</p>
                     )}
                   </div>
 
                   {/* Stats Grid - Flex grow to push contract to bottom */}
                   <div className="flex-grow">
                   <div className="grid grid-cols-3 gap-2 text-sm mb-3">
-                    <div className="bg-muted/30 rounded-md p-2">
-                      <span className="text-muted-foreground text-xs">📍 Entry</span>
+                    <div className="bg-muted/30 rounded-md p-2 text-center">
+                      <span className="text-muted-foreground text-xs block">📍 Entry</span>
                       <p className="text-foreground font-semibold text-sm">
                         {alert.entryMc != null ? `$${(alert.entryMc / 1000).toFixed(1)}K` : (alert.entry_mcap || "N/A")}
                       </p>
                     </div>
-                    <div className="bg-muted/30 rounded-md p-2">
-                      <span className="text-muted-foreground text-xs">📢 Callers</span>
+                    <div className="bg-muted/30 rounded-md p-2 text-center">
+                      <span className="text-muted-foreground text-xs block">📢 Callers</span>
                       <p className="text-foreground font-semibold">{alert.callers || 0}</p>
                     </div>
-                    <div className="bg-muted/30 rounded-md p-2">
-                      <span className="text-muted-foreground text-xs">👥 Subs</span>
+                    <div className="bg-muted/30 rounded-md p-2 text-center">
+                      <span className="text-muted-foreground text-xs block">👥 Subs</span>
                       <p className="text-foreground font-semibold">{(alert.subs || 0).toLocaleString()}</p>
                     </div>
                   </div>
                   
 
                   {/* Time */}
-                  <div className="flex justify-between text-xs text-muted-foreground mb-3">
+                  <div className="flex justify-between items-center text-xs text-muted-foreground mb-3">
                     <span>⏰ {formatTimeAgo(alert.timestamp)}</span>
                     <span>Score: {alert.score}</span>
                   </div>
@@ -269,34 +269,34 @@ const Alerts = () => {
                       href={`https://dexscreener.com/solana/${alert.contract}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-mono text-[10px] text-primary hover:text-primary/80 transition-colors break-all leading-relaxed"
+                      className="font-mono text-[10px] text-primary hover:text-primary/80 transition-colors break-all leading-relaxed text-center block"
                     >
                       {alert.contract}
                     </a>
                   </div>
 
-                  {/* Swap Buttons with Referral Links - Horizontal Layout */}
+                  {/* Swap Buttons with Referral Links - Perfect 50-50 Layout */}
                   <div className="flex flex-row gap-2">
                     <a
                       href={getGMGNLink(alert.contract)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1"
+                      className="flex-1 min-w-0"
                     >
-                      <GlassButton variant="primary" size="sm" className="w-full text-xs font-semibold">
-                        <Bot className="w-3 h-3 mr-2" />
-                        Swap via GMGN
+                      <GlassButton variant="primary" size="sm" className="w-full text-xs font-semibold flex items-center justify-center">
+                        <Bot className="w-3 h-3 mr-1.5 flex-shrink-0" />
+                        <span className="truncate">Swap via GMGN</span>
                       </GlassButton>
                     </a>
                     <a
                       href={getMaestroLink(alert.contract)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1"
+                      className="flex-1 min-w-0"
                     >
-                      <GlassButton variant="tier2" size="sm" className="w-full text-xs font-semibold">
-                        <Bot className="w-3 h-3 mr-2" />
-                        Swap via Maestro
+                      <GlassButton variant="tier2" size="sm" className="w-full text-xs font-semibold flex items-center justify-center">
+                        <Bot className="w-3 h-3 mr-1.5 flex-shrink-0" />
+                        <span className="truncate">Swap via Maestro</span>
                       </GlassButton>
                     </a>
                   </div>

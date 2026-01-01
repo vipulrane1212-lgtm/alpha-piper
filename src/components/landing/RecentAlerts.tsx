@@ -81,10 +81,10 @@ export function RecentAlerts() {
                 <ElectricBorderCard
                   key={alert.id}
                   variant={cardVariant}
-                  className="animate-fade-in"
+                  className="animate-fade-in h-full flex flex-col"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  <div className="p-5">
+                  <div className="p-5 flex flex-col h-full">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
@@ -116,7 +116,7 @@ export function RecentAlerts() {
 
                     {/* Matched Signals */}
                     {alert.matchedSignals && alert.matchedSignals.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-3">
+                      <div className="flex flex-wrap gap-1.5 justify-center mb-3">
                         {alert.matchedSignals.slice(0, 3).map((signal, idx) => (
                           <span
                             key={idx}
@@ -135,24 +135,24 @@ export function RecentAlerts() {
 
                     {/* Stats Grid */}
                     <div className="grid grid-cols-3 gap-2 text-sm mb-3">
-                      <div className="bg-muted/30 rounded-md p-2">
-                        <span className="text-muted-foreground text-xs">📍 Entry</span>
+                      <div className="bg-muted/30 rounded-md p-2 text-center">
+                        <span className="text-muted-foreground text-xs block">📍 Entry</span>
                         <p className="text-foreground font-semibold text-sm">
                           {alert.entryMc != null ? `$${(alert.entryMc / 1000).toFixed(1)}K` : (alert.entry_mcap || "N/A")}
                         </p>
                       </div>
-                      <div className="bg-muted/30 rounded-md p-2">
-                        <span className="text-muted-foreground text-xs">📢 Callers</span>
+                      <div className="bg-muted/30 rounded-md p-2 text-center">
+                        <span className="text-muted-foreground text-xs block">📢 Callers</span>
                         <p className="text-foreground font-semibold">{alert.callers || 0}</p>
                       </div>
-                      <div className="bg-muted/30 rounded-md p-2">
-                        <span className="text-muted-foreground text-xs">👥 Subs</span>
+                      <div className="bg-muted/30 rounded-md p-2 text-center">
+                        <span className="text-muted-foreground text-xs block">👥 Subs</span>
                         <p className="text-foreground font-semibold">{(alert.subs || 0).toLocaleString()}</p>
                       </div>
                     </div>
 
                     {/* Time */}
-                    <div className="text-xs text-muted-foreground mb-3">
+                    <div className="text-xs text-muted-foreground text-center mb-3">
                       ⏰ {formatTimeAgo(alert.timestamp)}
                     </div>
 
@@ -183,34 +183,34 @@ export function RecentAlerts() {
                         href={`https://dexscreener.com/solana/${alert.contract}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-mono text-[9px] text-primary hover:text-primary/80 transition-colors break-all leading-relaxed"
+                        className="font-mono text-[9px] text-primary hover:text-primary/80 transition-colors break-all leading-relaxed text-center block"
                       >
                         {alert.contract}
                       </a>
                     </div>
 
-                    {/* Swap Buttons with Referral Links - Horizontal Layout */}
-                    <div className="flex flex-row gap-2">
+                    {/* Swap Buttons with Referral Links - Perfect 50-50 Layout */}
+                    <div className="flex flex-row gap-2 mt-auto">
                       <a
                         href={getGMGNLink(alert.contract)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1"
+                        className="flex-1 min-w-0"
                       >
-                        <GlassButton variant="primary" size="sm" className="w-full text-xs font-semibold">
-                          <Bot className="w-3 h-3 mr-2" />
-                          Swap via GMGN
+                        <GlassButton variant="primary" size="sm" className="w-full text-xs font-semibold flex items-center justify-center">
+                          <Bot className="w-3 h-3 mr-1.5 flex-shrink-0" />
+                          <span className="truncate">Swap via GMGN</span>
                         </GlassButton>
                       </a>
                       <a
                         href={getMaestroLink(alert.contract)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1"
+                        className="flex-1 min-w-0"
                       >
-                        <GlassButton variant="tier2" size="sm" className="w-full text-xs font-semibold">
-                          <Bot className="w-3 h-3 mr-2" />
-                          Swap via Maestro
+                        <GlassButton variant="tier2" size="sm" className="w-full text-xs font-semibold flex items-center justify-center">
+                          <Bot className="w-3 h-3 mr-1.5 flex-shrink-0" />
+                          <span className="truncate">Swap via Maestro</span>
                         </GlassButton>
                       </a>
                     </div>

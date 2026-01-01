@@ -161,7 +161,7 @@ const GlassButton = React.forwardRef<HTMLButtonElement, GlassButtonProps>(
     const styles = glassButtonVariants[variant];
     
     return (
-      <div className="relative group inline-block">
+      <div className="relative group w-full">
         {/* Glow effect */}
         <span
           className="absolute left-1/2 -translate-x-1/2 bottom-[-40%] w-[120px] h-[50px] rounded-full blur-[25px] transition-all duration-300 ease-out opacity-0 group-hover:opacity-70 pointer-events-none"
@@ -171,7 +171,7 @@ const GlassButton = React.forwardRef<HTMLButtonElement, GlassButtonProps>(
         <button
           ref={ref}
           className={cn(
-            "relative rounded-xl font-semibold",
+            "relative rounded-xl font-semibold w-full",
             "backdrop-blur-md transition-all duration-300 ease-out",
             "hover:translate-y-[2px] active:translate-y-[4px]",
             "border",
