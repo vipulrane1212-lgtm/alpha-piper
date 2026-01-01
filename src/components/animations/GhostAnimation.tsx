@@ -1,245 +1,518 @@
-import React, { useRef, Suspense } from "react";
+import React, { useRef, Suspense, useEffect, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import * as THREE from "three";
 
-// Ghost mesh component - exact CodePen style
+// Fluorescent color palette from CodePen
+const fluorescentColors: Record<string, number> = {
+  cyan: 0x00ffff,
+  lime: 0x00ff00,
+  magenta: 0xff00ff,
+  yellow: 0xffff00,
+  orange: 0xff4500,
+  pink: 0xff1493,
+  purple: 0x9400d3,
+  blue: 0x0080ff,
+  green: 0x00ff80,
+  red: 0xff0040,
+  teal: 0x00ffaa,
+  violet: 0x8a2be2,
+};
+
+// Parameters from CodePen
+const params = {
+  bodyColor: 0x0f2027,
+  glowColor: "orange",
+  eyeGlowColor: "green",
+  ghostOpacity: 0.88,
+  ghostScale: 2.4,
+  emissiveIntensity: 5.8,
+  pulseSpeed: 1.6,
+  pulseIntensity: 0.6,
+  eyeGlowIntensity: 4.5,
+  eyeGlowDecay: 0.95,
+  eyeGlowResponse: 0.31,
+  rimLightIntensity: 1.8,
+  followSpeed: 0.075,
+  wobbleAmount: 0.35,
+  floatSpeed: 1.6,
+  movementThreshold: 0.07,
+  particleCount: 250,
+  particleDecayRate: 0.005,
+  particleColor: "orange",
+  fireflyGlowIntensity: 2.6,
+  fireflySpeed: 0.04,
+};
+
+// Ghost mesh - CodePen exact implementation
 function GhostMesh() {
-  const meshRef = useRef<THREE.Group>(null);
+  const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.MeshStandardMaterial>(null);
-  const glow1Ref = useRef<THREE.MeshStandardMaterial>(null);
-  const glow2Ref = useRef<THREE.MeshStandardMaterial>(null);
+  const groupRef = useRef<THREE.Group>(null);
+  const [mouse] = useState({ x: 0, y: 0 });
+  const [prevPosition] = useState(new THREE.Vector3());
+  const [currentMovement, setCurrentMovement] = useState(0);
+  const [time, setTime] = useState(0);
+
+  // Mouse tracking
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouse]);
 
   useFrame((state) => {
-    if (meshRef.current) {
-      const time = state.clock.elapsedTime;
-      // Smooth floating like CodePen
-      meshRef.current.position.y = Math.sin(time * 0.6) * 0.5 + Math.cos(time * 0.4) * 0.2;
-      meshRef.current.rotation.y = Math.sin(time * 0.3) * 0.2;
-      meshRef.current.rotation.z = Math.sin(time * 0.5) * 0.15;
-      meshRef.current.rotation.x = Math.sin(time * 0.4) * 0.1;
-    }
+    if (!meshRef.current || !groupRef.current || !materialRef.current) return;
 
-    // Pulsing glow effects
-    if (materialRef.current) {
-      const pulse = Math.sin(state.clock.elapsedTime * 2) * 0.3 + 0.7;
-      materialRef.current.emissiveIntensity = pulse * 1.2;
-      materialRef.current.opacity = 0.92 + Math.sin(state.clock.elapsedTime * 2.5) * 0.08;
-    }
-    if (glow1Ref.current) {
-      const pulse = Math.sin(state.clock.elapsedTime * 1.8) * 0.2 + 0.8;
-      glow1Ref.current.emissiveIntensity = pulse * 0.8;
-      glow1Ref.current.opacity = 0.3 + Math.sin(state.clock.elapsedTime * 1.5) * 0.1;
-    }
-    if (glow2Ref.current) {
-      const pulse = Math.sin(state.clock.elapsedTime * 2.2) * 0.25 + 0.75;
-      glow2Ref.current.emissiveIntensity = pulse * 0.6;
-      glow2Ref.current.opacity = 0.2 + Math.sin(state.clock.elapsedTime * 1.8) * 0.15;
-    }
+    const elapsedTime = state.clock.elapsedTime;
+    setTime(elapsedTime);
+
+    // Ghost follows mouse
+    const targetX = mouse.x * 11;
+    const targetY = mouse.y * 7;
+    const prevPos = groupRef.current.position.clone();
+
+    groupRef.current.position.x += (targetX - groupRef.current.position.x) * params.followSpeed;
+    groupRef.current.position.y += (targetY - groupRef.current.position.y) * params.followSpeed;
+
+    // Calculate movement
+    const movementAmount = prevPos.distanceTo(groupRef.current.position);
+    setCurrentMovement(
+      currentMovement * params.eyeGlowDecay + movementAmount * (1 - params.eyeGlowDecay)
+    );
+
+    // Floating animation
+    const float1 = Math.sin(elapsedTime * params.floatSpeed * 1.5) * 0.03;
+    const float2 = Math.cos(elapsedTime * params.floatSpeed * 0.7) * 0.018;
+    const float3 = Math.sin(elapsedTime * params.floatSpeed * 2.3) * 0.008;
+    groupRef.current.position.y += float1 + float2 + float3;
+
+    // Pulsing effects
+    const pulse1 = Math.sin(elapsedTime * params.pulseSpeed) * params.pulseIntensity;
+    const pulse2 = Math.cos(elapsedTime * params.pulseSpeed * 1.4) * params.pulseIntensity * 0.6;
+    const breathe = Math.sin(elapsedTime * 0.6) * 0.12;
+    materialRef.current.emissiveIntensity = params.emissiveIntensity + pulse1 + breathe;
+
+    // Body animations
+    const mouseDirection = new THREE.Vector2(
+      targetX - groupRef.current.position.x,
+      targetY - groupRef.current.position.y
+    ).normalize();
+
+    const tiltStrength = 0.1 * params.wobbleAmount;
+    const tiltDecay = 0.95;
+    meshRef.current.rotation.z =
+      meshRef.current.rotation.z * tiltDecay + -mouseDirection.x * tiltStrength * (1 - tiltDecay);
+    meshRef.current.rotation.x =
+      meshRef.current.rotation.x * tiltDecay + mouseDirection.y * tiltStrength * (1 - tiltDecay);
+    meshRef.current.rotation.y = Math.sin(elapsedTime * 1.4) * 0.05 * params.wobbleAmount;
+
+    // Scale variations
+    const scaleVariation =
+      1 + Math.sin(elapsedTime * 2.1) * 0.025 * params.wobbleAmount + pulse1 * 0.015;
+    const scaleBreath = 1 + Math.sin(elapsedTime * 0.8) * 0.012;
+    const finalScale = scaleVariation * scaleBreath;
+    meshRef.current.scale.set(finalScale, finalScale, finalScale);
   });
 
-  // Create ghost shape - CodePen style
-  const ghostShape = new THREE.Shape();
-  ghostShape.moveTo(0, 2.2);
-  ghostShape.quadraticCurveTo(0.7, 2, 1, 1.5);
-  ghostShape.quadraticCurveTo(1.2, 0.8, 1.1, 0.2);
-  ghostShape.lineTo(0.9, -0.8);
-  ghostShape.lineTo(0.6, -1.8);
-  ghostShape.lineTo(0.3, -2.2);
-  ghostShape.lineTo(0, -2.4);
-  ghostShape.lineTo(-0.3, -2.2);
-  ghostShape.lineTo(-0.6, -1.8);
-  ghostShape.lineTo(-0.9, -0.8);
-  ghostShape.lineTo(-1.1, 0.2);
-  ghostShape.quadraticCurveTo(-1.2, 0.8, -1, 1.5);
-  ghostShape.quadraticCurveTo(-0.7, 2, 0, 2.2);
-
-  const extrudeSettings = {
-    depth: 0.5,
-    bevelEnabled: true,
-    bevelThickness: 0.2,
-    bevelSize: 0.15,
-    bevelSegments: 16,
-  };
-
-  return (
-    <group ref={meshRef}>
-      {/* Outer glow layer */}
-      <mesh scale={1.25} position={[0, 0, -0.1]}>
-        <extrudeGeometry args={[ghostShape, extrudeSettings]} />
-        <meshStandardMaterial
-          ref={glow2Ref}
-          color="#a0a0ff"
-          emissive="#6060ff"
-          emissiveIntensity={0.6}
-          transparent
-          opacity={0.2}
-        />
-      </mesh>
-
-      {/* Middle glow layer */}
-      <mesh scale={1.15} position={[0, 0, -0.05]}>
-        <extrudeGeometry args={[ghostShape, extrudeSettings]} />
-        <meshStandardMaterial
-          ref={glow1Ref}
-          color="#b0b0ff"
-          emissive="#7070ff"
-          emissiveIntensity={0.7}
-          transparent
-          opacity={0.3}
-        />
-      </mesh>
-
-      {/* Main ghost body */}
-      <mesh>
-        <extrudeGeometry args={[ghostShape, extrudeSettings]} />
-        <meshStandardMaterial
-          ref={materialRef}
-          color="#ffffff"
-          emissive="#b0b0ff"
-          emissiveIntensity={1.2}
-          transparent
-          opacity={0.95}
-          roughness={0.1}
-          metalness={0.1}
-        />
-      </mesh>
-
-      {/* Eyes */}
-      <PulsingEye position={[-0.4, 0.3, 0.6]} />
-      <PulsingEye position={[0.4, 0.3, 0.6]} />
-    </group>
-  );
-}
-
-// Pulsing eye component
-function PulsingEye({ position }: { position: [number, number, number] }) {
-  const eyeRef = useRef<THREE.Mesh>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (eyeRef.current && glowRef.current) {
-      const pulse = 1 + Math.sin(state.clock.elapsedTime * 4) * 0.15;
-      const glowPulse = 1 + Math.sin(state.clock.elapsedTime * 5) * 0.3;
-      eyeRef.current.scale.set(pulse, pulse, pulse);
-      glowRef.current.scale.set(glowPulse * 1.5, glowPulse * 1.5, glowPulse * 1.5);
-
-      // Occasional blink
-      const blink = Math.sin(state.clock.elapsedTime * 0.5);
-      if (blink > 0.9) {
-        eyeRef.current.scale.y = 0.1;
+  // Create ghost geometry - CodePen uses SphereGeometry with modified vertices
+  const ghostGeometry = useRef<THREE.SphereGeometry | null>(null);
+  if (!ghostGeometry.current) {
+    ghostGeometry.current = new THREE.SphereGeometry(2, 40, 40);
+    // Create organic wavy bottom
+    const positionAttribute = ghostGeometry.current.getAttribute("position");
+    const positions = positionAttribute.array;
+    for (let i = 0; i < positions.length; i += 3) {
+      if (positions[i + 1] < -0.2) {
+        const x = positions[i];
+        const z = positions[i + 2];
+        const noise1 = Math.sin(x * 5) * 0.35;
+        const noise2 = Math.cos(z * 4) * 0.25;
+        const noise3 = Math.sin((x + z) * 3) * 0.15;
+        const combinedNoise = noise1 + noise2 + noise3;
+        positions[i + 1] = -2.0 + combinedNoise;
       }
     }
-  });
-
-  return (
-    <group position={position}>
-      <mesh ref={glowRef}>
-        <sphereGeometry args={[0.18, 16, 16]} />
-        <meshStandardMaterial
-          color="#ff0000"
-          emissive="#ff3333"
-          emissiveIntensity={0.8}
-          transparent
-          opacity={0.4}
-        />
-      </mesh>
-      <mesh ref={eyeRef}>
-        <sphereGeometry args={[0.15, 16, 16]} />
-        <meshStandardMaterial
-          color="#000000"
-          emissive="#ff0000"
-          emissiveIntensity={0.5}
-        />
-      </mesh>
-    </group>
-  );
-}
-
-// Particle system - CodePen style
-function Particles() {
-  const particlesRef = useRef<THREE.Points>(null);
-  const particleCount = 500;
-
-  const positions = new Float32Array(particleCount * 3);
-  const colors = new Float32Array(particleCount * 3);
-  const sizes = new Float32Array(particleCount);
-
-  for (let i = 0; i < particleCount; i++) {
-    const i3 = i * 3;
-    const radius = 2 + Math.random() * 5;
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.random() * Math.PI;
-
-    positions[i3] = radius * Math.sin(phi) * Math.cos(theta);
-    positions[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-    positions[i3 + 2] = radius * Math.cos(phi);
-
-    const hue = Math.random() * 0.3 + 0.55;
-    colors[i3] = hue;
-    colors[i3 + 1] = hue * 0.7 + 0.2;
-    colors[i3 + 2] = 0.9 + Math.random() * 0.1;
-
-    sizes[i] = 0.05 + Math.random() * 0.1;
+    ghostGeometry.current.computeVertexNormals();
   }
 
+  return (
+    <group ref={groupRef}>
+      <mesh ref={meshRef} geometry={ghostGeometry.current}>
+        <meshStandardMaterial
+          ref={materialRef}
+          color={params.bodyColor}
+          transparent
+          opacity={params.ghostOpacity}
+          emissive={fluorescentColors[params.glowColor]}
+          emissiveIntensity={params.emissiveIntensity}
+          roughness={0.02}
+          metalness={0.0}
+          side={THREE.DoubleSide}
+          alphaTest={0.1}
+        />
+      </mesh>
+      <Eyes currentMovement={currentMovement} />
+    </group>
+  );
+}
+
+// Eyes component - CodePen exact implementation
+function Eyes({ currentMovement }: { currentMovement: number }) {
+  const eyeGroupRef = useRef<THREE.Group>(null);
+  const leftEyeRef = useRef<THREE.Mesh>(null);
+  const rightEyeRef = useRef<THREE.Mesh>(null);
+  const leftEyeMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
+  const rightEyeMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
+  const leftOuterGlowRef = useRef<THREE.Mesh>(null);
+  const rightOuterGlowRef = useRef<THREE.Mesh>(null);
+  const leftOuterGlowMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
+  const rightOuterGlowMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
+
+  useFrame(() => {
+    if (
+      !leftEyeMaterialRef.current ||
+      !rightEyeMaterialRef.current ||
+      !leftOuterGlowMaterialRef.current ||
+      !rightOuterGlowMaterialRef.current
+    )
+      return;
+
+    const isMoving = currentMovement > params.movementThreshold;
+    const targetGlow = isMoving ? 1.0 : 0.0;
+    const glowChangeSpeed = isMoving
+      ? params.eyeGlowResponse * 2
+      : params.eyeGlowResponse;
+
+    const newOpacity =
+      (leftEyeMaterialRef.current.opacity || 0) +
+      (targetGlow - (leftEyeMaterialRef.current.opacity || 0)) * glowChangeSpeed;
+
+    leftEyeMaterialRef.current.opacity = newOpacity;
+    rightEyeMaterialRef.current.opacity = newOpacity;
+    leftOuterGlowMaterialRef.current.opacity = newOpacity * 0.3;
+    rightOuterGlowMaterialRef.current.opacity = newOpacity * 0.3;
+  });
+
+  const socketGeometry = new THREE.SphereGeometry(0.45, 16, 16);
+  const socketMaterial = new THREE.MeshBasicMaterial({
+    color: 0x000000,
+    transparent: false,
+  });
+
+  const eyeGeometry = new THREE.SphereGeometry(0.3, 12, 12);
+  const outerGlowGeometry = new THREE.SphereGeometry(0.525, 12, 12);
+
+  const eyeColor = fluorescentColors[params.eyeGlowColor];
+
+  return (
+    <group ref={eyeGroupRef}>
+      {/* Eye sockets */}
+      <mesh geometry={socketGeometry} material={socketMaterial} position={[-0.7, 0.6, 1.9]} scale={[1.1, 1.0, 0.6]} />
+      <mesh geometry={socketGeometry} material={socketMaterial} position={[0.7, 0.6, 1.9]} scale={[1.1, 1.0, 0.6]} />
+
+      {/* Left eye */}
+      <mesh
+        ref={leftEyeRef}
+        geometry={eyeGeometry}
+        position={[-0.7, 0.6, 2.0]}
+      >
+        <meshBasicMaterial
+          ref={leftEyeMaterialRef}
+          color={eyeColor}
+          transparent
+          opacity={0}
+        />
+      </mesh>
+
+      {/* Right eye */}
+      <mesh
+        ref={rightEyeRef}
+        geometry={eyeGeometry}
+        position={[0.7, 0.6, 2.0]}
+      >
+        <meshBasicMaterial
+          ref={rightEyeMaterialRef}
+          color={eyeColor}
+          transparent
+          opacity={0}
+        />
+      </mesh>
+
+      {/* Outer glows */}
+      <mesh
+        ref={leftOuterGlowRef}
+        geometry={outerGlowGeometry}
+        position={[-0.7, 0.6, 1.95]}
+      >
+        <meshBasicMaterial
+          ref={leftOuterGlowMaterialRef}
+          color={eyeColor}
+          transparent
+          opacity={0}
+          side={THREE.BackSide}
+        />
+      </mesh>
+
+      <mesh
+        ref={rightOuterGlowRef}
+        geometry={outerGlowGeometry}
+        position={[0.7, 0.6, 1.95]}
+      >
+        <meshBasicMaterial
+          ref={rightOuterGlowMaterialRef}
+          color={eyeColor}
+          transparent
+          opacity={0}
+          side={THREE.BackSide}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+// Fireflies - CodePen exact implementation
+function Fireflies() {
+  const firefliesRef = useRef<THREE.Group>(null);
+  const fireflies = useRef<THREE.Mesh[]>([]);
+
+  useEffect(() => {
+    if (!firefliesRef.current) return;
+
+    const fireflyGroup = firefliesRef.current;
+    const firefliesArray: THREE.Mesh[] = [];
+
+    for (let i = 0; i < 20; i++) {
+      const fireflyGeometry = new THREE.SphereGeometry(0.02, 2, 2);
+      const fireflyMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffff44,
+        transparent: true,
+        opacity: 0.9,
+      });
+
+      const firefly = new THREE.Mesh(fireflyGeometry, fireflyMaterial);
+      firefly.position.set(
+        (Math.random() - 0.5) * 40,
+        (Math.random() - 0.5) * 30,
+        (Math.random() - 0.5) * 20
+      );
+
+      const glowGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+      const glowMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffff88,
+        transparent: true,
+        opacity: 0.4,
+        side: THREE.BackSide,
+      });
+      const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+      firefly.add(glow);
+
+      const fireflyLight = new THREE.PointLight(0xffff44, 0.8, 3, 2);
+      firefly.add(fireflyLight);
+
+      (firefly as any).userData = {
+        velocity: new THREE.Vector3(
+          (Math.random() - 0.5) * params.fireflySpeed,
+          (Math.random() - 0.5) * params.fireflySpeed,
+          (Math.random() - 0.5) * params.fireflySpeed
+        ),
+        phase: Math.random() * Math.PI * 2,
+        pulseSpeed: 2 + Math.random() * 3,
+        glow,
+        glowMaterial,
+        fireflyMaterial,
+        light: fireflyLight,
+      };
+
+      fireflyGroup.add(firefly);
+      firefliesArray.push(firefly);
+    }
+
+    fireflies.current = firefliesArray;
+
+    return () => {
+      firefliesArray.forEach((firefly) => {
+        firefly.geometry.dispose();
+        (firefly.material as THREE.Material).dispose();
+      });
+    };
+  }, []);
+
   useFrame((state) => {
-    if (particlesRef.current) {
-      particlesRef.current.rotation.y = state.clock.elapsedTime * 0.03;
-      particlesRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.02) * 0.1;
+    const elapsedTime = state.clock.elapsedTime;
+    fireflies.current.forEach((firefly) => {
+      const userData = (firefly as any).userData;
+      const pulsePhase = elapsedTime + userData.phase;
+      const pulse = Math.sin(pulsePhase * userData.pulseSpeed) * 0.4 + 0.6;
 
-      const positions = particlesRef.current.geometry.attributes.position.array as Float32Array;
-      const sizes = particlesRef.current.geometry.attributes.size.array as Float32Array;
+      userData.glowMaterial.opacity = params.fireflyGlowIntensity * 0.4 * pulse;
+      userData.fireflyMaterial.opacity = params.fireflyGlowIntensity * 0.9 * pulse;
+      userData.light.intensity = params.fireflyGlowIntensity * 0.8 * pulse;
 
-      for (let i = 0; i < particleCount; i++) {
-        const i3 = i * 3;
-        const time = state.clock.elapsedTime;
+      userData.velocity.x += (Math.random() - 0.5) * 0.001;
+      userData.velocity.y += (Math.random() - 0.5) * 0.001;
+      userData.velocity.z += (Math.random() - 0.5) * 0.001;
+      userData.velocity.clampLength(0, params.fireflySpeed);
 
-        positions[i3] += Math.sin(time * 0.5 + i) * 0.008;
-        positions[i3 + 1] += Math.cos(time * 0.7 + i) * 0.008;
-        positions[i3 + 2] += Math.sin(time * 0.6 + i) * 0.005;
+      firefly.position.add(userData.velocity);
 
-        sizes[i] = (0.05 + Math.random() * 0.1) * (1 + Math.sin(time * 2 + i) * 0.3);
+      if (Math.abs(firefly.position.x) > 30) userData.velocity.x *= -0.5;
+      if (Math.abs(firefly.position.y) > 20) userData.velocity.y *= -0.5;
+      if (Math.abs(firefly.position.z) > 15) userData.velocity.z *= -0.5;
+    });
+  });
+
+  return <group ref={firefliesRef} />;
+}
+
+// Particles - CodePen exact implementation
+function Particles() {
+  const particlesRef = useRef<THREE.Group>(null);
+  const particles = useRef<THREE.Mesh[]>([]);
+  const particlePool = useRef<THREE.Mesh[]>([]);
+  const lastParticleTime = useRef(0);
+
+  const particleGeometries = [
+    new THREE.SphereGeometry(0.05, 6, 6),
+    new THREE.TetrahedronGeometry(0.04, 0),
+    new THREE.OctahedronGeometry(0.045, 0),
+  ];
+
+  const particleBaseMaterial = new THREE.MeshBasicMaterial({
+    color: fluorescentColors[params.particleColor],
+    transparent: true,
+    opacity: 0,
+    alphaTest: 0.1,
+  });
+
+  useEffect(() => {
+    if (!particlesRef.current) return;
+
+    // Initialize particle pool
+    for (let i = 0; i < 100; i++) {
+      const geomIndex = Math.floor(Math.random() * particleGeometries.length);
+      const geometry = particleGeometries[geomIndex];
+      const material = particleBaseMaterial.clone();
+      const particle = new THREE.Mesh(geometry, material);
+      particle.visible = false;
+      particlesRef.current.add(particle);
+      particlePool.current.push(particle);
+    }
+
+    return () => {
+      particleGeometries.forEach((geom) => geom.dispose());
+      particleBaseMaterial.dispose();
+    };
+  }, []);
+
+  const createParticle = (ghostPosition: THREE.Vector3) => {
+    if (!particlesRef.current) return null;
+
+    let particle: THREE.Mesh | null = null;
+    if (particlePool.current.length > 0) {
+      particle = particlePool.current.pop()!;
+      particle.visible = true;
+    } else if (particles.current.length < params.particleCount) {
+      const geomIndex = Math.floor(Math.random() * particleGeometries.length);
+      const geometry = particleGeometries[geomIndex];
+      const material = particleBaseMaterial.clone();
+      particle = new THREE.Mesh(geometry, material);
+      particlesRef.current.add(particle);
+    } else {
+      return null;
+    }
+
+    const particleColor = new THREE.Color(fluorescentColors[params.particleColor]);
+    const hue = Math.random() * 0.1 - 0.05;
+    particleColor.offsetHSL(hue, 0, 0);
+    particle.material.color = particleColor;
+
+    particle.position.copy(ghostPosition);
+    particle.position.z -= 0.8 + Math.random() * 0.6;
+    const scatterRange = 3.5;
+    particle.position.x += (Math.random() - 0.5) * scatterRange;
+    particle.position.y += (Math.random() - 0.5) * scatterRange - 0.8;
+
+    const sizeVariation = 0.6 + Math.random() * 0.7;
+    particle.scale.set(sizeVariation, sizeVariation, sizeVariation);
+    particle.rotation.set(
+      Math.random() * Math.PI * 2,
+      Math.random() * Math.PI * 2,
+      Math.random() * Math.PI * 2
+    );
+
+    (particle as any).userData = {
+      life: 1.0,
+      decay: Math.random() * 0.003 + params.particleDecayRate,
+      rotationSpeed: {
+        x: (Math.random() - 0.5) * 0.015,
+        y: (Math.random() - 0.5) * 0.015,
+        z: (Math.random() - 0.5) * 0.015,
+      },
+      velocity: {
+        x: (Math.random() - 0.5) * 0.012,
+        y: (Math.random() - 0.5) * 0.012 - 0.002,
+        z: (Math.random() - 0.5) * 0.012 - 0.006,
+      },
+    };
+
+    particle.material.opacity = Math.random() * 0.9;
+    particles.current.push(particle);
+    return particle;
+  };
+
+  useFrame((state, delta) => {
+    if (!particlesRef.current) return;
+
+    const elapsedTime = state.clock.elapsedTime;
+    const timestamp = elapsedTime * 1000;
+
+    // Create particles periodically
+    if (timestamp - lastParticleTime.current > 100) {
+      const ghostPosition = new THREE.Vector3(0, 0, 0); // Get from ghost if needed
+      for (let i = 0; i < 5; i++) {
+        createParticle(ghostPosition);
+      }
+      lastParticleTime.current = timestamp;
+    }
+
+    // Update particles
+    for (let i = particles.current.length - 1; i >= 0; i--) {
+      const particle = particles.current[i];
+      const userData = (particle as any).userData;
+
+      userData.life -= userData.decay;
+      particle.material.opacity = userData.life * 0.85;
+
+      if (userData.velocity) {
+        particle.position.x += userData.velocity.x;
+        particle.position.y += userData.velocity.y;
+        particle.position.z += userData.velocity.z;
+
+        const swirl = Math.cos(elapsedTime * 1.8 + particle.position.y) * 0.0008;
+        particle.position.x += swirl;
       }
 
-      particlesRef.current.geometry.attributes.position.needsUpdate = true;
-      particlesRef.current.geometry.attributes.size.needsUpdate = true;
+      if (userData.rotationSpeed) {
+        particle.rotation.x += userData.rotationSpeed.x;
+        particle.rotation.y += userData.rotationSpeed.y;
+        particle.rotation.z += userData.rotationSpeed.z;
+      }
+
+      if (userData.life <= 0) {
+        particle.visible = false;
+        particle.material.opacity = 0;
+        particlePool.current.push(particle);
+        particles.current.splice(i, 1);
+      }
     }
   });
 
-  return (
-    <points ref={particlesRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={particleCount}
-          array={positions}
-          itemSize={3}
-        />
-        <bufferAttribute
-          attach="attributes-color"
-          count={particleCount}
-          array={colors}
-          itemSize={3}
-        />
-        <bufferAttribute
-          attach="attributes-size"
-          count={particleCount}
-          array={sizes}
-          itemSize={1}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.1}
-        vertexColors
-        transparent
-        opacity={0.8}
-        blending={THREE.AdditiveBlending}
-        sizeAttenuation={true}
-      />
-    </points>
-  );
+  return <group ref={particlesRef} />;
 }
 
 export function GhostAnimation() {
@@ -247,26 +520,32 @@ export function GhostAnimation() {
     <div className="relative w-full h-full min-h-[500px]">
       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-muted-foreground">Loading ghost...</div>}>
         <Canvas
-          camera={{ position: [0, 0, 6], fov: 45 }}
-          gl={{ alpha: true, antialias: true }}
+          camera={{ position: [0, 0, 20], fov: 75 }}
+          gl={{
+            antialias: true,
+            alpha: true,
+            powerPreference: "high-performance",
+            premultipliedAlpha: false,
+          }}
           style={{ background: "transparent" }}
         >
-          {/* Lighting - CodePen style */}
-          <ambientLight intensity={0.5} />
-          <pointLight position={[3, 3, 3]} intensity={1.5} color="#b0b0ff" />
-          <pointLight position={[-3, -3, -3]} intensity={0.8} color="#ffb0b0" />
-          <pointLight position={[0, 4, 0]} intensity={1.2} color="#ffffff" />
-          <pointLight position={[-2, 2, 2]} intensity={0.6} color="#c0c0ff" />
+          {/* Lighting - CodePen exact */}
+          <ambientLight color={0x0a0a2e} intensity={0.08} />
+          <directionalLight color={0x4a90e2} intensity={params.rimLightIntensity} position={[-8, 6, -4]} />
+          <directionalLight color={0x50e3c2} intensity={params.rimLightIntensity * 0.7} position={[8, -4, -6]} />
 
-          {/* Ghost mesh */}
+          {/* Ghost */}
           <GhostMesh />
+
+          {/* Fireflies */}
+          <Fireflies />
 
           {/* Particles */}
           <Particles />
 
           {/* Post-processing - Strong bloom like CodePen */}
           <EffectComposer>
-            <Bloom intensity={2.5} luminanceThreshold={0.3} luminanceSmoothing={0.9} />
+            <Bloom intensity={0.3} luminanceThreshold={0.0} luminanceSmoothing={1.25} />
           </EffectComposer>
 
           {/* Auto rotate */}
