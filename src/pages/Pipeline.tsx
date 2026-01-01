@@ -1,6 +1,7 @@
 import { Layout } from "@/components/layout/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AnimatedHeading } from "@/components/ui/animated-text";
 import { 
   Zap, 
   Target, 
@@ -25,9 +26,9 @@ const Pipeline = () => {
             <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
               Complete Trading Guide
             </Badge>
-            <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-4">
+            <AnimatedHeading level={1} className="text-5xl md:text-6xl font-bold mb-4">
               🚀 Alert Pipeline
-            </h1>
+            </AnimatedHeading>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               A tiered strategy system for Solana memecoin trading
             </p>

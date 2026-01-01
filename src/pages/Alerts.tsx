@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Check, X, ExternalLink, Copy, Search, Bot } from "lucide-react";
 import { toast } from "sonner";
 import { GlassButton } from "@/components/ui/glass-tabs";
+import { AnimatedHeading } from "@/components/ui/animated-text";
 
 const tierColors: Record<number, string> = {
   1: "bg-tier-1/20 text-tier-1 border-tier-1/30",
@@ -72,7 +73,7 @@ const Alerts = () => {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h1 className="text-5xl font-bold text-foreground mb-4">Recent Alerts</h1>
+            <AnimatedHeading level={1} className="text-5xl font-bold mb-4">Recent Alerts</AnimatedHeading>
             <p className="text-xl text-muted-foreground">Latest trading signals from SolBoy</p>
           </div>
 

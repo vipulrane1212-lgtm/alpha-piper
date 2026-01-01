@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { ChevronDown } from "lucide-react";
 import { GlassButton, GlassCard } from "@/components/ui/glass-tabs";
+import { AnimatedHeading } from "@/components/ui/animated-text";
 
 const faqs = [
   {
@@ -64,7 +65,7 @@ const FAQ = () => {
       <section className="py-20">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="text-center mb-12">
-            <h1 className="text-5xl font-bold text-foreground mb-4">Frequently Asked Questions</h1>
+            <AnimatedHeading level={1} className="text-5xl font-bold mb-4">Frequently Asked Questions</AnimatedHeading>
             <p className="text-xl text-muted-foreground">
               Everything you need to know about SolBoy Alerts
             </p>
