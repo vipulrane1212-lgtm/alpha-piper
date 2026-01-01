@@ -59,7 +59,7 @@ export function Hero() {
             </GlassCard>
             <GlassCard variant="tier2" className="p-6 text-center animate-fade-in" style={{ animationDelay: "0.8s" }}>
               <Shield className="w-8 h-8 text-tier-2 mb-2 mx-auto" />
-              <div className="text-3xl font-bold text-foreground mb-1">32%</div>
+              <div className="text-3xl font-bold text-foreground mb-1">91%</div>
               <div className="text-muted-foreground text-sm">Quality Filter</div>
             </GlassCard>
           </div>
