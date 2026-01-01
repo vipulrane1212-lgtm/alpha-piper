@@ -70,7 +70,7 @@ export function Features() {
 
         {/* Two column layout: Animation on left, Content on right */}
         <div className="flex flex-col lg:flex-row gap-12 items-center relative z-10">
-          {/* Left side - Animation */}
+          {/* Left side - Animation - Ghost Animation */}
           <div className="w-full lg:w-2/5 hidden lg:block relative z-10">
             <GhostAnimation />
           </div>
