@@ -123,3 +123,88 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-foreground to-primary;
   }
 }
+
+/* Performance optimizations for mobile devices */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  /* Reduce backdrop blur on mobile for better performance */
+  .backdrop-blur-md,
+  .backdrop-blur-xl {
+    backdrop-filter: blur(4px) !important;
+  }
+  
+  /* Optimize glassmorphism effects on mobile */
+  .glass-card,
+  [class*="glass"] {
+    backdrop-filter: blur(4px) !important;
+  }
+  
+  /* Reduce animation complexity on mobile */
+  .animate-fade-in {
+    animation-duration: 0.3s !important;
+  }
+  
+  /* Optimize text shadows on mobile */
+  [class*="drop-shadow"] {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3)) !important;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Disable hover effects on touch devices */
+  *:hover {
+    transform: none !important;
+  }
+  
+  /* Reduce transition effects */
+  * {
+    transition-duration: 0.15s !important;
+  }
+}
+
+/* Cursor over glassmorphism cards - reduce cursor brightness and increase card opacity */
+body.cursor-over-glass-card #tubes-container,
+body.cursor-over-glass-card #canvas {
+  opacity: 0.25 !important;
+  filter: blur(3px);
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+
+/* Increase glassmorphism card background opacity when cursor is over them for better readability */
+body.cursor-over-glass-card .testimonial-card > div.glass-card-content,
+body.cursor-over-glass-card .testimonial-card > div[class*="backdrop-blur"],
+body.cursor-over-glass-card [class*="backdrop-blur-xl"][style*="rgba(0, 0, 0"] {
+  background-color: rgba(0, 0, 0, 0.55) !important;
+  transition: background-color 0.4s ease;
+}
+
+/* Also target GlassCard components */
+body.cursor-over-glass-card .glass-card,
+body.cursor-over-glass-card [data-glass-card="true"] {
+  background-color: hsl(var(--card) / 0.85) !important;
+  transition: background-color 0.4s ease;
+}
+
+/* Target electric border cards */
+body.cursor-over-glass-card [class*="bg-card/40"] {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  transition: background-color 0.4s ease;
+}
+
+/* Ensure text remains readable with stronger shadows when cursor is over */
+body.cursor-over-glass-card .testimonial-card .drop-shadow,
+body.cursor-over-glass-card [data-glass-card="true"] .drop-shadow {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8)) !important;
+}
