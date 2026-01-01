@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Send, Zap } from "lucide-react";
+import { Send, Zap, Bot } from "lucide-react";
 
 export function Footer() {
   return (
@@ -71,6 +71,7 @@ export function Footer() {
           display: flex;
           gap: 1rem;
           margin-bottom: 1.5rem;
+          flex-wrap: wrap;
         }
         
         .fancy-footer-social a {
@@ -92,6 +93,13 @@ export function Footer() {
           border-color: hsl(var(--primary));
           color: hsl(var(--primary));
           transform: translateY(-2px);
+        }
+        
+        .fancy-footer-social a[aria-label="GMGN Bot"],
+        .fancy-footer-social a[aria-label="Maestro Bot"] {
+          width: auto;
+          height: auto;
+          padding: 0.5rem 0.75rem;
         }
         
         .fancy-footer-col1 .copyright {
@@ -151,6 +159,28 @@ export function Footer() {
                 aria-label="Telegram"
               >
                 <Send className="w-5 h-5" />
+              </a>
+            </div>
+            <div className="fancy-footer-social">
+              <a
+                href="https://t.me/gmgnaibot?start=i_drplague"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GMGN Bot"
+                className="flex items-center gap-2 px-3 py-2 bg-muted hover:bg-primary/10 border border-border hover:border-primary rounded-lg transition-all"
+              >
+                <Bot className="w-4 h-4" />
+                <span className="text-sm">GMGN Bot</span>
+              </a>
+              <a
+                href="https://t.me/maestro?start=r-degendartadmin"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Maestro Bot"
+                className="flex items-center gap-2 px-3 py-2 bg-muted hover:bg-primary/10 border border-border hover:border-primary rounded-lg transition-all"
+              >
+                <Bot className="w-4 h-4" />
+                <span className="text-sm">Maestro Bot</span>
               </a>
             </div>
             <p className="copyright">
