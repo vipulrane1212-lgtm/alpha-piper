@@ -184,7 +184,9 @@ function GhostMesh() {
           roughness={0.02}
           metalness={0.0}
           side={THREE.DoubleSide}
-          alphaTest={0.1}
+          alphaTest={0.05}
+          depthWrite={false}
+          blending={THREE.NormalBlending}
         />
       </mesh>
       <Eyes currentMovement={currentMovement} />
@@ -321,8 +323,9 @@ function Fireflies() {
 
     for (let i = 0; i < fireflyCount; i++) {
       const fireflyGeometry = new THREE.SphereGeometry(0.02, 2, 2);
+      // Use orange glow instead of yellow to match ghost theme
       const fireflyMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffff44,
+        color: 0xff6600,
         transparent: true,
         opacity: 0.9,
       });
@@ -335,8 +338,9 @@ function Fireflies() {
       );
 
       const glowGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+      // Use orange glow instead of yellow
       const glowMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffff88,
+        color: 0xff8800,
         transparent: true,
         opacity: 0.4,
         side: THREE.BackSide,
@@ -344,7 +348,8 @@ function Fireflies() {
       const glow = new THREE.Mesh(glowGeometry, glowMaterial);
       firefly.add(glow);
 
-      const fireflyLight = new THREE.PointLight(0xffff44, 0.8, 3, 2);
+      // Use orange light instead of yellow
+      const fireflyLight = new THREE.PointLight(0xff6600, 0.8, 3, 2);
       firefly.add(fireflyLight);
 
       (firefly as any).userData = {
@@ -561,9 +566,15 @@ export function GhostAnimation() {
             alpha: true,
             powerPreference: isMobile ? "default" : "high-performance",
             premultipliedAlpha: false,
+            preserveDrawingBuffer: false,
           }}
           style={{ background: "transparent", width: "100%", height: "100%" }}
           dpr={isMobile ? 1 : Math.min(window.devicePixelRatio, 2)} // Limit pixel ratio on mobile
+          onCreated={({ gl, scene }) => {
+            gl.setClearColor(0x000000, 0); // Fully transparent background
+            gl.clearColor(); // Clear with transparent
+            scene.background = null; // Ensure no background
+          }}
         >
           {/* Lighting - CodePen exact */}
           <ambientLight color={0x0a0a2e} intensity={0.08} />

@@ -8,58 +8,82 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  // Neon cursor effect
+  // Neon cursor effect - works on desktop and touch devices
   useEffect(() => {
+    // Create cursor element
+    const cursorEl = document.createElement('div');
+    cursorEl.id = 'neon-cursor';
+    cursorEl.style.cssText = `
+      position: fixed;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 217, 255, 0.9) 0%, rgba(0, 217, 255, 0.5) 50%, transparent 100%);
+      pointer-events: none;
+      z-index: 99999;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 20px rgba(0, 217, 255, 0.9), 0 0 40px rgba(0, 217, 255, 0.5), 0 0 60px rgba(0, 217, 255, 0.3);
+      transition: opacity 0.15s ease, transform 0.1s ease;
+      opacity: 0;
+      left: -100px;
+      top: -100px;
+    `;
+    document.body.appendChild(cursorEl);
+
+    const updateCursorPosition = (x: number, y: number) => {
+      cursorEl.style.left = x + 'px';
+      cursorEl.style.top = y + 'px';
+      cursorEl.style.opacity = '1';
+    };
+
+    const hideCursor = () => {
+      cursorEl.style.opacity = '0';
+    };
+
+    // Mouse events (desktop)
     const handleMouseMove = (e: MouseEvent) => {
-      const cursor = document.querySelector('body::before') as HTMLElement;
-      if (!cursor) {
-        // Create cursor element if it doesn't exist
-        const cursorEl = document.createElement('div');
-        cursorEl.id = 'neon-cursor';
-        cursorEl.style.cssText = `
-          position: fixed;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(0, 217, 255, 0.8) 0%, rgba(0, 217, 255, 0.4) 50%, transparent 100%);
-          pointer-events: none;
-          z-index: 9999;
-          transform: translate(-50%, -50%);
-          box-shadow: 0 0 20px rgba(0, 217, 255, 0.8), 0 0 40px rgba(0, 217, 255, 0.4);
-          transition: opacity 0.2s ease;
-        `;
-        document.body.appendChild(cursorEl);
-      }
-      
-      const cursorEl = document.getElementById('neon-cursor');
-      if (cursorEl) {
-        cursorEl.style.left = e.clientX + 'px';
-        cursorEl.style.top = e.clientY + 'px';
-        cursorEl.style.opacity = '1';
-      }
-      
-      document.body.classList.add('neon-cursor-active');
+      updateCursorPosition(e.clientX, e.clientY);
     };
 
     const handleMouseLeave = () => {
-      const cursorEl = document.getElementById('neon-cursor');
-      if (cursorEl) {
-        cursorEl.style.opacity = '0';
-      }
-      document.body.classList.remove('neon-cursor-active');
+      hideCursor();
     };
 
-    // Only add cursor on desktop
-    if (window.matchMedia('(min-width: 768px)').matches) {
-      window.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseleave', handleMouseLeave);
-    }
+    // Touch events (mobile/tablet)
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        updateCursorPosition(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        updateCursorPosition(e.touches[0].clientX, e.touches[0].clientY);
+        e.preventDefault(); // Prevent scrolling while showing cursor
+      }
+    };
+
+    const handleTouchEnd = () => {
+      // Keep cursor visible briefly on touch end
+      setTimeout(() => {
+        hideCursor();
+      }, 200);
+    };
+
+    // Add event listeners
+    window.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseleave', handleMouseLeave);
+    window.addEventListener('touchstart', handleTouchStart);
+    window.addEventListener('touchmove', handleTouchMove);
+    window.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseleave', handleMouseLeave);
-      const cursorEl = document.getElementById('neon-cursor');
-      if (cursorEl) {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      if (cursorEl.parentNode) {
         cursorEl.remove();
       }
     };
