@@ -5,8 +5,9 @@ import { formatTimeAgo } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedHeading } from "@/components/ui/animated-text";
 import { ElectricBorderCard } from "@/components/ui/electric-border";
-import { Check, X, ExternalLink, Copy } from "lucide-react";
+import { Check, X, ExternalLink, Copy, Bot } from "lucide-react";
 import { toast } from "sonner";
+import { GlassButton } from "@/components/ui/glass-tabs";
 
 const tierColors: Record<number, string> = {
   1: "bg-tier-1/20 text-tier-1 border-tier-1/30",
@@ -33,6 +34,15 @@ export function RecentAlerts() {
   const copyContract = (contract: string) => {
     navigator.clipboard.writeText(contract);
     toast.success("Contract copied!");
+  };
+
+  // Generate referral links with contract address
+  const getGMGNLink = (contract: string) => {
+    return `https://t.me/gmgnaibot?start=i_drplague_sol_${contract}`;
+  };
+
+  const getMaestroLink = (contract: string) => {
+    return `https://t.me/maestro?start=${contract}-degendartadmin`;
   };
 
 
@@ -147,7 +157,7 @@ export function RecentAlerts() {
                     </div>
 
                     {/* Contract - Eye-catching */}
-                    <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/30 rounded-lg p-2.5">
+                    <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/30 rounded-lg p-2.5 mb-3">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[10px] text-muted-foreground font-medium">Contract</span>
                         <div className="flex items-center gap-1">
@@ -176,6 +186,32 @@ export function RecentAlerts() {
                         className="font-mono text-[9px] text-primary hover:text-primary/80 transition-colors break-all leading-relaxed"
                       >
                         {alert.contract}
+                      </a>
+                    </div>
+
+                    {/* Swap Buttons with Referral Links - Horizontal Layout */}
+                    <div className="flex flex-row gap-2">
+                      <a
+                        href={getGMGNLink(alert.contract)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1"
+                      >
+                        <GlassButton variant="primary" size="sm" className="w-full text-xs font-semibold">
+                          <Bot className="w-3 h-3 mr-2" />
+                          Swap via GMGN
+                        </GlassButton>
+                      </a>
+                      <a
+                        href={getMaestroLink(alert.contract)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1"
+                      >
+                        <GlassButton variant="tier2" size="sm" className="w-full text-xs font-semibold">
+                          <Bot className="w-3 h-3 mr-2" />
+                          Swap via Maestro
+                        </GlassButton>
                       </a>
                     </div>
                   </div>

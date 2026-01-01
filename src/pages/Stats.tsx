@@ -3,6 +3,7 @@ import { Users, Bell, TrendingUp, Target } from "lucide-react";
 import { useStats } from "@/hooks/useData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedHeading } from "@/components/ui/animated-text";
+import { GlassCard } from "@/components/ui/glass-tabs";
 
 const Stats = () => {
   const { data: stats, isLoading } = useStats();
@@ -51,11 +52,16 @@ const Stats = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {statCards.map((stat, index) => {
               const Icon = stat.icon;
+              const variant = stat.colorClass.includes("tier-1") ? "tier1" : 
+                             stat.colorClass.includes("tier-2") ? "tier2" : 
+                             stat.colorClass.includes("success") ? "tier1" : "primary";
               return (
-                <div
+                <GlassCard
                   key={stat.label}
-                  className="bg-card rounded-lg p-6 border border-border animate-fade-in"
+                  variant={variant}
+                  className="p-6 animate-fade-in"
                   style={{ animationDelay: `${index * 0.1}s` }}
+                  data-glass-card="true"
                 >
                   <Icon className={`w-10 h-10 ${stat.colorClass} mb-4`} />
                   {isLoading ? (
@@ -64,13 +70,13 @@ const Stats = () => {
                     <div className="text-4xl font-bold text-foreground mb-2">{stat.value}</div>
                   )}
                   <div className="text-muted-foreground">{stat.label}</div>
-                </div>
+                </GlassCard>
               );
             })}
           </div>
 
           {/* Tier Distribution */}
-          <div className="bg-card rounded-lg p-8 border border-border mb-12">
+          <GlassCard variant="default" className="p-8 mb-12" data-glass-card="true">
             <h2 className="text-2xl font-bold text-foreground mb-6">Alert Distribution by Tier</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
@@ -122,20 +128,20 @@ const Stats = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </GlassCard>
 
           {/* Additional Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-card rounded-lg p-6 border border-border">
+            <GlassCard variant="primary" className="p-6" data-glass-card="true">
               <h3 className="text-lg font-semibold text-foreground mb-4">Average Daily Alerts</h3>
               <div className="text-4xl font-bold text-primary">15</div>
               <p className="text-muted-foreground mt-2">Quality signals per day</p>
-            </div>
-            <div className="bg-card rounded-lg p-6 border border-border">
+            </GlassCard>
+            <GlassCard variant="tier1" className="p-6" data-glass-card="true">
               <h3 className="text-lg font-semibold text-foreground mb-4">Active Since</h3>
               <div className="text-4xl font-bold text-tier-1">Oct 2023</div>
               <p className="text-muted-foreground mt-2">Delivering consistent results</p>
-            </div>
+            </GlassCard>
           </div>
         </div>
       </section>
