@@ -184,7 +184,7 @@ function GhostMesh() {
           roughness={0.02}
           metalness={0.0}
           side={THREE.DoubleSide}
-          alphaTest={0.05}
+          alphaTest={0.01}
           depthWrite={false}
           blending={THREE.NormalBlending}
         />
@@ -557,7 +557,7 @@ export function GhostAnimation() {
   const isMobile = isMobileDevice();
   
   return (
-    <div className="relative w-full h-full min-h-[500px] lg:min-h-[600px] flex items-center justify-center">
+    <div className="relative w-full h-full min-h-[500px] lg:min-h-[600px] flex items-center justify-center bg-transparent">
       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-muted-foreground">Loading ghost...</div>}>
         <Canvas
           camera={{ position: [0, 0, 20], fov: isMobile ? 70 : 60 }}
@@ -568,12 +568,18 @@ export function GhostAnimation() {
             premultipliedAlpha: false,
             preserveDrawingBuffer: false,
           }}
-          style={{ background: "transparent", width: "100%", height: "100%" }}
+          style={{ 
+            background: "transparent", 
+            width: "100%", 
+            height: "100%",
+            backgroundColor: "transparent"
+          }}
           dpr={isMobile ? 1 : Math.min(window.devicePixelRatio, 2)} // Limit pixel ratio on mobile
           onCreated={({ gl, scene }) => {
             gl.setClearColor(0x000000, 0); // Fully transparent background
             gl.clearColor(); // Clear with transparent
             scene.background = null; // Ensure no background
+            scene.fog = null; // Remove any fog
           }}
         >
           {/* Lighting - CodePen exact */}
@@ -584,16 +590,18 @@ export function GhostAnimation() {
           {/* Ghost */}
           <GhostMesh />
 
-          {/* Fireflies */}
-          <Fireflies />
+          {/* Fireflies - Only on desktop */}
+          {!isMobile && <Fireflies />}
 
-          {/* Particles */}
-          <Particles />
+          {/* Particles - Only on desktop */}
+          {!isMobile && <Particles />}
 
-          {/* Post-processing - Strong bloom like CodePen */}
-          <EffectComposer>
-            <Bloom intensity={0.3} luminanceThreshold={0.0} luminanceSmoothing={1.25} />
-          </EffectComposer>
+          {/* Post-processing - Strong bloom like CodePen - Only on desktop */}
+          {!isMobile && (
+            <EffectComposer>
+              <Bloom intensity={0.3} luminanceThreshold={0.0} luminanceSmoothing={1.25} />
+            </EffectComposer>
+          )}
 
           {/* Auto rotate - wider vertical angle to show full ghost */}
           <OrbitControls

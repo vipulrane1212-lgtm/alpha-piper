@@ -10,7 +10,11 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   // Neon cursor effect - works on desktop and touch devices
   useEffect(() => {
-    // Create cursor element
+    // Only create cursor on desktop (not mobile)
+    const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+    if (!isDesktop) return;
+
+    // Create cursor element - exact web version styling
     const cursorEl = document.createElement('div');
     cursorEl.id = 'neon-cursor';
     cursorEl.style.cssText = `
@@ -18,12 +22,12 @@ export function Layout({ children }: LayoutProps) {
       width: 20px;
       height: 20px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(0, 217, 255, 0.9) 0%, rgba(0, 217, 255, 0.5) 50%, transparent 100%);
+      background: radial-gradient(circle, rgba(0, 217, 255, 0.8) 0%, rgba(0, 217, 255, 0.4) 50%, transparent 100%);
       pointer-events: none;
       z-index: 99999;
       transform: translate(-50%, -50%);
-      box-shadow: 0 0 20px rgba(0, 217, 255, 0.9), 0 0 40px rgba(0, 217, 255, 0.5), 0 0 60px rgba(0, 217, 255, 0.3);
-      transition: opacity 0.15s ease, transform 0.1s ease;
+      box-shadow: 0 0 20px rgba(0, 217, 255, 0.8), 0 0 40px rgba(0, 217, 255, 0.4);
+      transition: opacity 0.2s ease;
       opacity: 0;
       left: -100px;
       top: -100px;
@@ -40,7 +44,7 @@ export function Layout({ children }: LayoutProps) {
       cursorEl.style.opacity = '0';
     };
 
-    // Mouse events (desktop)
+    // Mouse events (desktop only)
     const handleMouseMove = (e: MouseEvent) => {
       updateCursorPosition(e.clientX, e.clientY);
     };
@@ -49,40 +53,13 @@ export function Layout({ children }: LayoutProps) {
       hideCursor();
     };
 
-    // Touch events (mobile/tablet)
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
-        updateCursorPosition(e.touches[0].clientX, e.touches[0].clientY);
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
-        updateCursorPosition(e.touches[0].clientX, e.touches[0].clientY);
-        e.preventDefault(); // Prevent scrolling while showing cursor
-      }
-    };
-
-    const handleTouchEnd = () => {
-      // Keep cursor visible briefly on touch end
-      setTimeout(() => {
-        hideCursor();
-      }, 200);
-    };
-
-    // Add event listeners
+    // Add event listeners (desktop only)
     window.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseleave', handleMouseLeave);
-    window.addEventListener('touchstart', handleTouchStart);
-    window.addEventListener('touchmove', handleTouchMove);
-    window.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseleave', handleMouseLeave);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
       if (cursorEl.parentNode) {
         cursorEl.remove();
       }
