@@ -177,8 +177,8 @@
 /* Cursor over glassmorphism cards - reduce cursor brightness and increase card opacity */
 body.cursor-over-glass-card #tubes-container,
 body.cursor-over-glass-card #canvas {
-  opacity: 0.25 !important;
-  filter: blur(3px);
+  opacity: 0.5 !important;
+  filter: blur(2px);
   transition: opacity 0.4s ease, filter 0.4s ease;
 }
 
