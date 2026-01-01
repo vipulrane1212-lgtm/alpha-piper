@@ -174,12 +174,13 @@
   }
 }
 
-/* Cursor over glassmorphism cards - reduce cursor brightness and increase card opacity */
+/* Keep canvas opacity constant - background effects stay constant at all times */
 body.cursor-over-glass-card #tubes-container,
-body.cursor-over-glass-card #canvas {
-  opacity: 0.5 !important;
-  filter: blur(2px);
-  transition: opacity 0.4s ease, filter 0.4s ease;
+body.cursor-over-glass-card #canvas,
+#tubes-container,
+#canvas {
+  opacity: 1 !important;
+  filter: none !important;
 }
 
 /* Increase glassmorphism card background opacity when cursor is over them for better readability */

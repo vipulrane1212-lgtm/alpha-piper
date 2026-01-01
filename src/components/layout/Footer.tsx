@@ -141,7 +141,7 @@ export function Footer() {
               SolBoy Alerts
             </h3>
             <p>
-              Made with <span style={{ color: 'hsl(var(--primary))' }}>❤</span> for Solana traders
+              Eat , Sleep , Trade Memecoin , Repeat
             </p>
             <div className="fancy-footer-social">
               <a
