@@ -1,4 +1,4 @@
-﻿import * as React from "react";
+import * as React from "react";
 import { cn } from "@/lib/utils";
 
 interface ElectricBorderCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -151,7 +151,7 @@ const ElectricBorderCard = React.forwardRef<HTMLDivElement, ElectricBorderCardPr
           className="glow absolute inset-0 rounded-xl pointer-events-none"
         />
 
-        <div className="inner relative bg-card/40 backdrop-blur-xl rounded-xl overflow-hidden border border-white/10 z-10">
+        <div className="inner relative bg-card/30 backdrop-blur-2xl rounded-xl overflow-hidden border border-white/20 shadow-lg z-10">
           {children}
         </div>
 
@@ -210,8 +210,7 @@ const ElectricBorderCard = React.forwardRef<HTMLDivElement, ElectricBorderCardPr
             background: var(--card-bg);
             mix-blend-mode: var(--blend);
             position: relative;
-            z-index: 2;
-          }
+            z-index: 2;`n            backdrop-filter: blur(24px);`n            -webkit-backdrop-filter: blur(24px);`n            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);`n          }
         `}</style>
       </div>
     );
@@ -220,3 +219,5 @@ const ElectricBorderCard = React.forwardRef<HTMLDivElement, ElectricBorderCardPr
 ElectricBorderCard.displayName = "ElectricBorderCard";
 
 export { ElectricBorderCard };
+
+
