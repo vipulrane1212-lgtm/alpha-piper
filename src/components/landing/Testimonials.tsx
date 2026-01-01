@@ -1,4 +1,4 @@
-﻿import { Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { AnimatedSection, AnimatedCard } from "@/components/ui/animated-section";
 import { AnimatedHeading } from "@/components/ui/animated-text";
 
