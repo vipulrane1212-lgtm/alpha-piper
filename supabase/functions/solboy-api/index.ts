@@ -276,6 +276,13 @@ serve(async (req) => {
     let data = await response.json();
     
     if (endpoint === 'alerts' && data.alerts && Array.isArray(data.alerts)) {
+      // Log matchedSignals before processing to debug
+      if (data.alerts.length > 0) {
+        const sampleAlert = data.alerts[0];
+        console.log(`[solboy-api] Sample alert matchedSignals:`, sampleAlert.matchedSignals);
+        console.log(`[solboy-api] Sample alert keys:`, Object.keys(sampleAlert));
+      }
+      
       // Only deduplicate if API didn't already do it (when dedupe=false or not specified and API doesn't dedupe)
       // The API's dedupe parameter defaults to true, so we only do our own deduplication as a safety net
       // Our deduplication is by contract+tier, which is more specific than the API's token-based deduplication
@@ -291,8 +298,14 @@ serve(async (req) => {
       
       console.log(`[solboy-api] Enriching ${data.alerts.length} alerts`);
       
-      // Enrich with Current Mcap from DexScreener
+      // Enrich with Current Mcap from DexScreener (preserves all original fields including matchedSignals)
       data.alerts = await enrichAlerts(data.alerts);
+      
+      // Verify matchedSignals are preserved after enrichment
+      if (data.alerts.length > 0) {
+        const sampleAfter = data.alerts[0];
+        console.log(`[solboy-api] After enrichment matchedSignals:`, sampleAfter.matchedSignals);
+      }
     }
     
     console.log(`[solboy-api] Success, returning data`);

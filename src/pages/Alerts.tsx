@@ -178,28 +178,23 @@ const Alerts = () => {
                     </div>
                   </div>
 
-                  {/* Matched Signals - Fixed height container */}
+                  {/* Matched Signals - Show all signals */}
                   <div className="min-h-[52px] mb-3 flex items-start">
                     {alert.matchedSignals && alert.matchedSignals.length > 0 ? (
                       <div className="flex flex-wrap gap-1.5 justify-start items-center w-full">
-                        {alert.matchedSignals.slice(0, 3).map((signal, idx) => (
+                        {alert.matchedSignals.map((signal, idx) => (
                           <span
                             key={idx}
                             className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${
-                              idx === 0 ? "bg-primary/20 text-primary border-primary/40" :
-                              idx === 1 ? "bg-tier-1/20 text-tier-1 border-tier-1/40" :
-                              idx === 2 ? "bg-tier-2/20 text-tier-2 border-tier-2/40" :
+                              idx % 4 === 0 ? "bg-primary/20 text-primary border-primary/40" :
+                              idx % 4 === 1 ? "bg-tier-1/20 text-tier-1 border-tier-1/40" :
+                              idx % 4 === 2 ? "bg-tier-2/20 text-tier-2 border-tier-2/40" :
                               "bg-success/20 text-success border-success/40"
                             }`}
                           >
                             {signal}
                           </span>
                         ))}
-                        {alert.matchedSignals.length > 3 && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full border border-border bg-muted/30 text-muted-foreground">
-                            +{alert.matchedSignals.length - 3} more
-                          </span>
-                        )}
                       </div>
                     ) : (
                       <div className="text-xs text-muted-foreground/50 italic text-center w-full">No signals</div>

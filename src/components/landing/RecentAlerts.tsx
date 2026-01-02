@@ -114,10 +114,10 @@ export function RecentAlerts() {
                       </div>
                     </div>
 
-                    {/* Matched Signals */}
+                    {/* Matched Signals - Show all signals */}
                     {alert.matchedSignals && alert.matchedSignals.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 justify-start mb-3">
-                        {alert.matchedSignals.slice(0, 3).map((signal, idx) => (
+                        {alert.matchedSignals.map((signal, idx) => (
                           <span
                             key={idx}
                             className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${signalColors[idx % signalColors.length]}`}
@@ -125,11 +125,6 @@ export function RecentAlerts() {
                             {signal}
                           </span>
                         ))}
-                        {alert.matchedSignals.length > 3 && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full border border-border bg-muted/30 text-muted-foreground">
-                            +{alert.matchedSignals.length - 3} more
-                          </span>
-                        )}
                       </div>
                     )}
 
