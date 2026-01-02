@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { AnimatedSection } from "@/components/ui/animated-section";
 import { useAlerts } from "@/hooks/useData";
 import { formatTimeAgo } from "@/lib/formatters";
+import { normalizeSignals } from "@/lib/signalUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedHeading } from "@/components/ui/animated-text";
 import { MagicCard } from "@/components/ui/magic-card";
@@ -114,19 +115,22 @@ export function RecentAlerts() {
                       </div>
                     </div>
 
-                    {/* Matched Signals - Show all signals */}
-                    {alert.matchedSignals && alert.matchedSignals.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 justify-start mb-3">
-                        {alert.matchedSignals.map((signal, idx) => (
-                          <span
-                            key={idx}
-                            className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${signalColors[idx % signalColors.length]}`}
-                          >
-                            {signal}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    {/* Matched Signals - Show all normalized signals */}
+                    {(() => {
+                      const normalizedSignals = normalizeSignals(alert.matchedSignals);
+                      return normalizedSignals.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 justify-start mb-3">
+                          {normalizedSignals.map((signal, idx) => (
+                            <span
+                              key={idx}
+                              className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${signalColors[idx % signalColors.length]}`}
+                            >
+                              {signal}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })()}
 
                     {/* Stats Grid */}
                     <div className="grid grid-cols-3 gap-2 text-sm mb-3">

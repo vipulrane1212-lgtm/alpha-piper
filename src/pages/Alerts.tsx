@@ -6,6 +6,7 @@ import { GlassTab, GlassTabsContainer } from "@/components/ui/glass-tabs";
 import { MagicCard } from "@/components/ui/magic-card";
 import { useAlerts } from "@/hooks/useData";
 import { formatTimeAgo } from "@/lib/formatters";
+import { normalizeSignals } from "@/lib/signalUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Check, X, ExternalLink, Copy, Search, Bot } from "lucide-react";
 import { toast } from "sonner";
@@ -178,27 +179,30 @@ const Alerts = () => {
                     </div>
                   </div>
 
-                  {/* Matched Signals - Show all signals */}
+                  {/* Matched Signals - Show all normalized signals */}
                   <div className="min-h-[52px] mb-3 flex items-start">
-                    {alert.matchedSignals && alert.matchedSignals.length > 0 ? (
-                      <div className="flex flex-wrap gap-1.5 justify-start items-center w-full">
-                        {alert.matchedSignals.map((signal, idx) => (
-                          <span
-                            key={idx}
-                            className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${
-                              idx % 4 === 0 ? "bg-primary/20 text-primary border-primary/40" :
-                              idx % 4 === 1 ? "bg-tier-1/20 text-tier-1 border-tier-1/40" :
-                              idx % 4 === 2 ? "bg-tier-2/20 text-tier-2 border-tier-2/40" :
-                              "bg-success/20 text-success border-success/40"
-                            }`}
-                          >
-                            {signal}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-xs text-muted-foreground/50 italic text-center w-full">No signals</div>
-                    )}
+                    {(() => {
+                      const normalizedSignals = normalizeSignals(alert.matchedSignals);
+                      return normalizedSignals.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5 justify-start items-center w-full">
+                          {normalizedSignals.map((signal, idx) => (
+                            <span
+                              key={idx}
+                              className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${
+                                idx % 4 === 0 ? "bg-primary/20 text-primary border-primary/40" :
+                                idx % 4 === 1 ? "bg-tier-1/20 text-tier-1 border-tier-1/40" :
+                                idx % 4 === 2 ? "bg-tier-2/20 text-tier-2 border-tier-2/40" :
+                                "bg-success/20 text-success border-success/40"
+                              }`}
+                            >
+                              {signal}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-muted-foreground/50 italic text-center w-full">No signals</div>
+                      );
+                    })()}
                   </div>
 
                   {/* Description - Fixed height */}
