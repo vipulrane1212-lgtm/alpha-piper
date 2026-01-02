@@ -43,16 +43,28 @@ export function ParticleNetworkBackground() {
       });
     }
 
-    // Mouse tracking
-    const handleMouseMove = (e: MouseEvent) => {
+    // Mouse and touch tracking
+    const updateMousePosition = (clientX: number, clientY: number) => {
       const rect = canvas.getBoundingClientRect();
       mouseRef.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x: clientX - rect.left,
+        y: clientY - rect.top,
       };
     };
 
+    const handleMouseMove = (e: MouseEvent) => {
+      updateMousePosition(e.clientX, e.clientY);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        updateMousePosition(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
+
     canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("touchmove", handleTouchMove, { passive: true });
+    canvas.addEventListener("touchstart", handleTouchMove, { passive: true });
 
     // Animation loop
     const animate = () => {
@@ -142,6 +154,8 @@ export function ParticleNetworkBackground() {
     return () => {
       window.removeEventListener("resize", resizeCanvas);
       canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchstart", handleTouchMove);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }

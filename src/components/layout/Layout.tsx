@@ -8,8 +8,9 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  // Neon cursor effect - works on all devices (desktop + mobile)
+  // Neon cursor effect - works on all devices (mobile matches web)
   useEffect(() => {
+
     // Create cursor element - exact web version styling
     const cursorEl = document.createElement('div');
     cursorEl.id = 'neon-cursor';
@@ -45,41 +46,40 @@ export function Layout({ children }: LayoutProps) {
       updateCursorPosition(e.clientX, e.clientY);
     };
 
-    const handleMouseLeave = () => {
-      hideCursor();
-    };
-
-    // Touch events (mobile/tablet)
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
-        updateCursorPosition(e.touches[0].clientX, e.touches[0].clientY);
-      }
-    };
-
+    // Touch events (mobile)
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length > 0) {
         updateCursorPosition(e.touches[0].clientX, e.touches[0].clientY);
       }
     };
 
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        updateCursorPosition(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
+
+    const handleMouseLeave = () => {
+      hideCursor();
+    };
+
     const handleTouchEnd = () => {
-      // Hide cursor on touch end
       hideCursor();
     };
 
     // Add event listeners (all devices)
     window.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseleave', handleMouseLeave);
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('mouseleave', handleMouseLeave);
+    document.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseleave', handleMouseLeave);
-      window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      document.removeEventListener('touchend', handleTouchEnd);
       if (cursorEl.parentNode) {
         cursorEl.remove();
       }

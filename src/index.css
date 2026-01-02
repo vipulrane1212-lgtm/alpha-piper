@@ -136,7 +136,11 @@
   }
 }
 
-/* Mobile-specific optimizations - REMOVED: All effects identical to web version */
+/* Mobile-specific optimizations - REMOVED: Mobile now matches web exactly */
+/* All effects are now identical on mobile and desktop */
+
+/* Touch device optimizations - REMOVED: Mobile now matches web exactly */
+/* All hover and transition effects work the same on mobile and desktop */
 
 /* Keep canvas opacity constant - background effects stay constant at all times */
 body.cursor-over-glass-card #tubes-container,
@@ -162,7 +166,14 @@ body.cursor-over-glass-card [data-glass-card="true"] {
   transition: background-color 0.4s ease;
 }
 
-/* Target electric border cards */
+/* Target electric border cards - ensure glassmorphism is visible */
+body.cursor-over-glass-card [class*="bg-card/30"],
+body.cursor-over-glass-card [class*="bg-card/40"],
+.card .inner {
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+}
+body.cursor-over-glass-card [class*="bg-card/30"],
 body.cursor-over-glass-card [class*="bg-card/40"] {
   background-color: rgba(0, 0, 0, 0.6) !important;
   transition: background-color 0.4s ease;
@@ -174,12 +185,12 @@ body.cursor-over-glass-card [data-glass-card="true"] .drop-shadow {
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8)) !important;
 }
 
-/* Neon Cursor - Glowing cyan cursor (all devices) - exact web version */
+/* Neon cursor + custom cursor icon - applies on all devices (mobile matches web) */
 * {
   cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='8' fill='none' stroke='%2300D9FF' stroke-width='2' opacity='0.9'/%3E%3Ccircle cx='12' cy='12' r='4' fill='%2300D9FF' opacity='0.6'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%2300D9FF'/%3E%3C/svg%3E") 12 12, auto !important;
 }
 
-/* Neon cursor glow trail - exact web version styling with strong glow */
+/* Neon cursor glow trail - works on all devices */
 #neon-cursor {
   position: fixed;
   width: 20px;
@@ -189,81 +200,7 @@ body.cursor-over-glass-card [data-glass-card="true"] .drop-shadow {
   pointer-events: none;
   z-index: 99999;
   transform: translate(-50%, -50%);
-  box-shadow: 
-    0 0 10px rgba(0, 217, 255, 1),
-    0 0 20px rgba(0, 217, 255, 0.9),
-    0 0 30px rgba(0, 217, 255, 0.7),
-    0 0 40px rgba(0, 217, 255, 0.5),
-    0 0 60px rgba(0, 217, 255, 0.3);
-  transition: opacity 0.2s ease, transform 0.05s ease;
-  will-change: transform, opacity;
-}
-/* Performance optimizations for mobile devices */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* Mobile-specific optimizations - REMOVED: All effects identical to web version */
-
-/* Keep canvas opacity constant - background effects stay constant at all times */
-body.cursor-over-glass-card #tubes-container,
-body.cursor-over-glass-card #canvas,
-#tubes-container,
-#canvas {
-  opacity: 1 !important;
-  filter: none !important;
-}
-
-/* Increase glassmorphism card background opacity when cursor is over them for better readability */
-body.cursor-over-glass-card .testimonial-card > div.glass-card-content,
-body.cursor-over-glass-card .testimonial-card > div[class*="backdrop-blur"],
-body.cursor-over-glass-card [class*="backdrop-blur-xl"][style*="rgba(0, 0, 0"] {
-  background-color: rgba(0, 0, 0, 0.55) !important;
-  transition: background-color 0.4s ease;
-}
-
-/* Also target GlassCard components */
-body.cursor-over-glass-card .glass-card,
-body.cursor-over-glass-card [data-glass-card="true"] {
-  background-color: hsl(var(--card) / 0.85) !important;
-  transition: background-color 0.4s ease;
-}
-
-/* Target electric border cards */
-body.cursor-over-glass-card [class*="bg-card/40"] {
-  background-color: rgba(0, 0, 0, 0.6) !important;
-  transition: background-color 0.4s ease;
-}
-
-/* Ensure text remains readable with stronger shadows when cursor is over */
-body.cursor-over-glass-card .testimonial-card .drop-shadow,
-body.cursor-over-glass-card [data-glass-card="true"] .drop-shadow {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8)) !important;
-}
-
-/* Neon Cursor - Glowing cyan cursor (all devices) - exact web version */
-* {
-  cursor: url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='8' fill='none' stroke='%2300D9FF' stroke-width='2' opacity='0.9'/%3E%3Ccircle cx='12' cy='12' r='4' fill='%2300D9FF' opacity='0.6'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%2300D9FF'/%3E%3C/svg%3E") 12 12, auto !important;
-}
-
-/* Neon cursor glow trail - exact web version styling with strong glow */
-#neon-cursor {
-  position: fixed;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(0, 217, 255, 0.9) 0%, rgba(0, 217, 255, 0.6) 40%, rgba(0, 217, 255, 0.3) 70%, transparent 100%);
-  pointer-events: none;
-  z-index: 99999;
-  transform: translate(-50%, -50%);
-  box-shadow: 
+  box-shadow:
     0 0 10px rgba(0, 217, 255, 1),
     0 0 20px rgba(0, 217, 255, 0.9),
     0 0 30px rgba(0, 217, 255, 0.7),

@@ -3,7 +3,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { GlassTab, GlassTabsContainer } from "@/components/ui/glass-tabs";
-import { ElectricBorderCard } from "@/components/ui/electric-border";
+import { MagicCard } from "@/components/ui/magic-card";
 import { useAlerts } from "@/hooks/useData";
 import { formatTimeAgo } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -142,7 +142,7 @@ const Alerts = () => {
                 const cardVariant = alert.tier === 1 ? "tier1" : alert.tier === 2 ? "tier2" : "tier3";
                 
                 return (
-                <ElectricBorderCard
+                <MagicCard
                   key={alert.id}
                   variant={cardVariant}
                   className="animate-fade-in hover:scale-[1.02] hover:-translate-y-1 transition-transform duration-300 h-full flex flex-col"
@@ -179,9 +179,9 @@ const Alerts = () => {
                   </div>
 
                   {/* Matched Signals - Fixed height container */}
-                  <div className="h-[52px] mb-3 flex items-center">
+                  <div className="min-h-[52px] mb-3 flex items-start">
                     {alert.matchedSignals && alert.matchedSignals.length > 0 ? (
-                      <div className="flex flex-wrap gap-1.5 justify-center w-full">
+                      <div className="flex flex-wrap gap-1.5 justify-start items-center w-full">
                         {alert.matchedSignals.slice(0, 3).map((signal, idx) => (
                           <span
                             key={idx}
@@ -303,7 +303,7 @@ const Alerts = () => {
                   </div>
                   </div>
                   </div>
-                </ElectricBorderCard>
+                </MagicCard>
               )})
             )}
           </div>

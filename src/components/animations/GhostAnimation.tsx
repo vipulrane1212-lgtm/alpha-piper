@@ -20,35 +20,39 @@ const fluorescentColors: Record<string, number> = {
   violet: 0x8a2be2,
 };
 
-// Parameters from CodePen - identical on all devices
-const getParams = () => {
-  return {
-    bodyColor: 0x0f2027,
-    glowColor: "orange",
-    eyeGlowColor: "green",
-    ghostOpacity: 0.88,
-    ghostScale: 2.4,
-    emissiveIntensity: 5.8,
-    pulseSpeed: 1.6,
-    pulseIntensity: 0.6,
-    eyeGlowIntensity: 4.5,
-    eyeGlowDecay: 0.95,
-    eyeGlowResponse: 0.31,
-    rimLightIntensity: 1.8,
-    followSpeed: 0.075,
-    wobbleAmount: 0.35,
-    floatSpeed: 1.6,
-    movementThreshold: 0.07,
-    particleCount: 250,
-    particleDecayRate: 0.005,
-    particleColor: "orange",
-    fireflyGlowIntensity: 2.6,
-    fireflySpeed: 0.04,
-    fireflyCount: 20,
-  };
-};
+// Detect mobile device
+function isMobileDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) ||
+    ('ontouchstart' in window);
+}
 
-const params = getParams();
+// Parameters from CodePen - same on all devices (mobile = web)
+const params = {
+  bodyColor: 0x0f2027,
+  glowColor: "orange",
+  eyeGlowColor: "green",
+  ghostOpacity: 0.88,
+  ghostScale: 2.4,
+  emissiveIntensity: 5.8,
+  pulseSpeed: 1.6,
+  pulseIntensity: 0.6,
+  eyeGlowIntensity: 4.5,
+  eyeGlowDecay: 0.95,
+  eyeGlowResponse: 0.31,
+  rimLightIntensity: 1.8,
+  followSpeed: 0.075,
+  wobbleAmount: 0.35,
+  floatSpeed: 1.6,
+  movementThreshold: 0.07,
+  particleCount: 250,
+  particleDecayRate: 0.005,
+  particleColor: "orange",
+  fireflyGlowIntensity: 2.6,
+  fireflySpeed: 0.04,
+  fireflyCount: 20,
+};
 
 // Ghost mesh - CodePen exact implementation
 function GhostMesh() {
@@ -309,7 +313,7 @@ function Fireflies() {
 
     const fireflyGroup = firefliesRef.current;
     const firefliesArray: THREE.Mesh[] = [];
-    const fireflyCount = params.fireflyCount;
+    const fireflyCount = params.fireflyCount; // Same count on all devices
 
     for (let i = 0; i < fireflyCount; i++) {
       const fireflyGeometry = new THREE.SphereGeometry(0.02, 2, 2);
@@ -544,6 +548,8 @@ function Particles() {
 }
 
 export function GhostAnimation() {
+  const isMobile = isMobileDevice();
+  
   return (
     <div className="relative w-full h-full min-h-[500px] lg:min-h-[600px] flex items-center justify-center" style={{ background: "transparent", backgroundColor: "transparent" }}>
       <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-muted-foreground">Loading ghost...</div>}>
@@ -568,26 +574,42 @@ export function GhostAnimation() {
             gl.clearColor(); // Clear with transparent
             scene.background = null; // Ensure no background
             scene.fog = null; // Remove any fog
+            // Force transparent on all devices
+            gl.domElement.style.backgroundColor = "transparent";
+            gl.domElement.style.background = "transparent";
           }}
+          frameloop="always"
         >
-          {/* Lighting - CodePen exact */}
-          <ambientLight color={0x0a0a2e} intensity={0.08} />
-          <directionalLight color={0x4a90e2} intensity={params.rimLightIntensity} position={[-8, 6, -4]} />
-          <directionalLight color={0x50e3c2} intensity={params.rimLightIntensity * 0.7} position={[8, -4, -6]} />
+          {/* Minimal lighting on mobile - only subtle ambient for ghost visibility, no directional lights */}
+          {isMobile ? (
+            <ambientLight color={0x0a0a2e} intensity={0.12} />
+          ) : (
+            <>
+              <ambientLight color={0x0a0a2e} intensity={0.08} />
+              <directionalLight color={0x4a90e2} intensity={params.rimLightIntensity} position={[-8, 6, -4]} />
+              <directionalLight color={0x50e3c2} intensity={params.rimLightIntensity * 0.7} position={[8, -4, -6]} />
+            </>
+          )}
 
-          {/* Ghost */}
+          {/* Ghost - always visible */}
           <GhostMesh />
 
-          {/* Fireflies - Live animation on all devices */}
-          <Fireflies />
+          {/* Fireflies - only on desktop to avoid creepy lights on mobile */}
+          {!isMobile && <Fireflies />}
 
-          {/* Particles - Live animation on all devices */}
-          <Particles />
+          {/* Particles - only on desktop to avoid creepy lights on mobile */}
+          {!isMobile && <Particles />}
 
-          {/* Post-processing - Strong bloom like CodePen - Live animation on all devices */}
-          <EffectComposer>
-            <Bloom intensity={0.3} luminanceThreshold={0.0} luminanceSmoothing={1.25} />
-          </EffectComposer>
+          {/* Post-processing - minimal bloom on mobile to avoid creepy lights */}
+          {!isMobile && (
+            <EffectComposer>
+              <Bloom 
+                intensity={0.3} 
+                luminanceThreshold={0.0} 
+                luminanceSmoothing={1.25} 
+              />
+            </EffectComposer>
+          )}
 
           {/* Auto rotate - wider vertical angle to show full ghost */}
           <OrbitControls

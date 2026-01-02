@@ -4,7 +4,7 @@ import { useAlerts } from "@/hooks/useData";
 import { formatTimeAgo } from "@/lib/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedHeading } from "@/components/ui/animated-text";
-import { ElectricBorderCard } from "@/components/ui/electric-border";
+import { MagicCard } from "@/components/ui/magic-card";
 import { Check, X, ExternalLink, Copy, Bot } from "lucide-react";
 import { toast } from "sonner";
 import { GlassButton } from "@/components/ui/glass-tabs";
@@ -78,7 +78,7 @@ export function RecentAlerts() {
               const cardVariant = alert.tier === 1 ? "tier1" : alert.tier === 2 ? "tier2" : "tier3";
               
               return (
-                <ElectricBorderCard
+                <MagicCard
                   key={alert.id}
                   variant={cardVariant}
                   className="animate-fade-in h-full flex flex-col"
@@ -116,7 +116,7 @@ export function RecentAlerts() {
 
                     {/* Matched Signals */}
                     {alert.matchedSignals && alert.matchedSignals.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 justify-center mb-3">
+                      <div className="flex flex-wrap gap-1.5 justify-start mb-3">
                         {alert.matchedSignals.slice(0, 3).map((signal, idx) => (
                           <span
                             key={idx}
@@ -215,7 +215,7 @@ export function RecentAlerts() {
                       </a>
                     </div>
                   </div>
-                </ElectricBorderCard>
+                </MagicCard>
               );
             })
           )}

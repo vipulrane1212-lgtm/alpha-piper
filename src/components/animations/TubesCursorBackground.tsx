@@ -8,70 +8,97 @@ interface TubesApp {
   dispose?: () => void;
 }
 
-// Detect mobile/touch devices
-function isMobileDevice(): boolean {
-  if (typeof window === 'undefined') return false;
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-    (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) ||
-    ('ontouchstart' in window);
-}
-
 export function TubesCursorBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const appRef = useRef<TubesApp | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const scriptLoadedRef = useRef(false);
-  const isMobile = isMobileDevice();
   const isOverCardRef = useRef(false);
 
   useEffect(() => {
-    // Skip on mobile devices for performance - cursor doesn't work anyway
-    if (isMobile || !canvasRef.current) return;
+    if (!canvasRef.current) return;
 
+    const canvas = canvasRef.current;
     let isDisposed = false;
-    let clickHandler: (() => void) | null = null;
+    let rafId: number | null = null;
+    let lastUpdateTime = 0;
+    const UPDATE_THROTTLE = 16; // ~60fps
     
-    // Track mouse position to detect when cursor is over glassmorphism cards
-    const handleMouseMove = (e: MouseEvent) => {
+    // Track mouse/touch position to detect when cursor is over glassmorphism cards
+    const handleMove = (e: MouseEvent | TouchEvent) => {
       if (isDisposed) return;
       
-      // Check if cursor is over any glassmorphism card
-      const elements = document.elementsFromPoint(e.clientX, e.clientY);
-      const isOverCard = elements.some(el => {
-        // Check for glassmorphism cards (testimonial cards, glass cards, etc.)
-        const hasGlassCard = el.classList.contains('testimonial-card') ||
-               el.closest('.testimonial-card') !== null ||
-               el.classList.contains('glass-card') ||
-               el.getAttribute('data-glass-card') === 'true' ||
-               el.closest('[data-glass-card="true"]') !== null ||
-               el.closest('[class*="backdrop-blur"]') !== null ||
-               (el as HTMLElement).style?.backdropFilter?.includes('blur');
-        
-        // Also check if element contains text content (to avoid false positives)
-        if (hasGlassCard) {
-          const textContent = el.textContent || '';
-          // Only consider it a card if it has meaningful text content
-          return textContent.trim().length > 10;
-        }
-        
-        return false;
-      });
+      const now = performance.now();
+      if (now - lastUpdateTime < UPDATE_THROTTLE) return;
+      lastUpdateTime = now;
       
-      isOverCardRef.current = isOverCard;
+      let clientX = 0;
+      let clientY = 0;
       
-      // Add/remove class to body for CSS targeting (CSS will handle opacity changes)
-      if (isOverCard) {
-        document.body.classList.add('cursor-over-glass-card');
-      } else {
-        document.body.classList.remove('cursor-over-glass-card');
+      if ('touches' in e && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if ('clientX' in e) {
+        clientX = e.clientX;
+        clientY = e.clientY;
       }
+      
+      // Use requestAnimationFrame for smooth updates
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        if (isDisposed) return;
+        
+        // Check if cursor is over any glassmorphism card
+        try {
+          const elements = document.elementsFromPoint(clientX, clientY);
+          const isOverCard = elements.some(el => {
+            // Check for glassmorphism cards (testimonial cards, glass cards, etc.)
+            const hasGlassCard = el.classList.contains('testimonial-card') ||
+                   el.closest('.testimonial-card') !== null ||
+                   el.classList.contains('glass-card') ||
+                   el.getAttribute('data-glass-card') === 'true' ||
+                   el.closest('[data-glass-card="true"]') !== null ||
+                   el.closest('[class*="backdrop-blur"]') !== null ||
+                   (el as HTMLElement).style?.backdropFilter?.includes('blur');
+            
+            // Also check if element contains text content (to avoid false positives)
+            if (hasGlassCard) {
+              const textContent = el.textContent || '';
+              // Only consider it a card if it has meaningful text content
+              return textContent.trim().length > 10;
+            }
+            
+            return false;
+          });
+          
+          isOverCardRef.current = isOverCard;
+          
+          // Add/remove class to body for CSS targeting (CSS will handle opacity changes)
+          if (isOverCard) {
+            document.body.classList.add('cursor-over-glass-card');
+          } else {
+            document.body.classList.remove('cursor-over-glass-card');
+          }
+        } catch (error) {
+          // Silently handle errors (e.g., elementsFromPoint can fail in some edge cases)
+          console.debug('Error checking cursor position:', error);
+        }
+      });
     };
     
-    document.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMove, { passive: true });
+    window.addEventListener('touchmove', handleMove, { passive: true });
 
     const loadScript = (): Promise<void> => {
       return new Promise((resolve, reject) => {
         if (scriptLoadedRef.current) {
+          resolve();
+          return;
+        }
+
+        // Check if already loaded
+        if ((window as any).__TubesCursor) {
+          scriptLoadedRef.current = true;
           resolve();
           return;
         }
@@ -84,9 +111,15 @@ export function TubesCursorBackground() {
           window.dispatchEvent(new Event('tubesCursorLoaded'));
         `;
         
+        script.onerror = () => {
+          window.removeEventListener('tubesCursorLoaded', handleLoad);
+          reject(new Error("Failed to load TubesCursor script"));
+        };
+        
         const handleLoad = () => {
           scriptLoadedRef.current = true;
           window.removeEventListener('tubesCursorLoaded', handleLoad);
+          clearTimeout(timeoutId);
           resolve();
         };
         
@@ -94,11 +127,12 @@ export function TubesCursorBackground() {
         document.head.appendChild(script);
         
         // Timeout fallback
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           if (!scriptLoadedRef.current) {
-            reject(new Error("Script load timeout"));
+            window.removeEventListener('tubesCursorLoaded', handleLoad);
+            reject(new Error("TubesCursor script load timeout"));
           }
-        }, 10000);
+        }, 15000);
       });
     };
 
@@ -106,63 +140,173 @@ export function TubesCursorBackground() {
       try {
         await loadScript();
         
-        if (isDisposed || !canvasRef.current) return;
-
-        const TubesCursor = (window as any).__TubesCursor;
-        if (!TubesCursor) {
-          console.error("TubesCursor not loaded");
+        if (isDisposed || !canvas) {
+          console.warn("TubesCursor: Canvas not available or disposed");
           return;
         }
 
+        const TubesCursor = (window as any).__TubesCursor;
+        if (!TubesCursor) {
+          console.error("TubesCursor library not loaded");
+          return;
+        }
+
+        // Ensure canvas has proper dimensions
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) {
+          // Wait a bit for canvas to be sized
+          setTimeout(() => initTubes(), 100);
+          return;
+        }
+
+        // Set canvas dimensions explicitly
+        canvas.width = rect.width * (window.devicePixelRatio || 1);
+        canvas.height = rect.height * (window.devicePixelRatio || 1);
+
         // Solana-themed colors: green, purple, cyan
-        // Lower base intensity to reduce glare
         const options = {
           tubes: {
             colors: ["#14F195", "#9945FF", "#00D9FF"],
             lights: {
-              intensity: 80, // Further reduced base intensity
+              intensity: 80,
               colors: ["#14F195", "#9945FF", "#00D9FF", "#19FB9B"]
             }
           }
         };
 
-        appRef.current = TubesCursor(canvasRef.current, options);
-
-        // Removed click handler - keep Solana colors constant
+        appRef.current = TubesCursor(canvas, options);
+        
+        // Verify initialization
+        if (appRef.current) {
+          console.debug("TubesCursor initialized successfully");
+        }
       } catch (error) {
-        console.error("Failed to load TubesCursor:", error);
+        console.error("Failed to initialize TubesCursor:", error);
       }
     };
 
-    initTubes();
+    // Convert touch events to mouse events for TubesCursor library
+    // The library listens to mouse events, so we need to simulate them from touch
+    let lastTouchTime = 0;
+    const TOUCH_THROTTLE = 16; // ~60fps
+    
+    const handleTouchForTubesCursor = (e: TouchEvent) => {
+      if (isDisposed || !canvas) return;
+      
+      const touch = e.touches[0] || e.changedTouches[0];
+      if (!touch) return;
+
+      const now = performance.now();
+      if (now - lastTouchTime < TOUCH_THROTTLE) return;
+      lastTouchTime = now;
+
+      try {
+        // Create and dispatch synthetic mouse events
+        const mouseEventOptions: MouseEventInit = {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+          screenX: touch.screenX,
+          screenY: touch.screenY,
+          button: 0,
+          buttons: 0,
+        };
+
+        // Dispatch mousemove event to multiple targets
+        const mouseMoveEvent = new MouseEvent('mousemove', mouseEventOptions);
+        window.dispatchEvent(mouseMoveEvent);
+        document.dispatchEvent(mouseMoveEvent);
+        canvas.dispatchEvent(mouseMoveEvent);
+        
+        // Also try pointer events as some libraries use those
+        if ('PointerEvent' in window) {
+          const pointerEvent = new PointerEvent('pointermove', {
+            ...mouseEventOptions,
+            pointerId: 1,
+            pointerType: 'touch',
+            isPrimary: true,
+          });
+          window.dispatchEvent(pointerEvent);
+          canvas.dispatchEvent(pointerEvent);
+        }
+      } catch (error) {
+        console.debug('Error dispatching touch-to-mouse event:', error);
+      }
+    };
+
+    // Add touch event listeners - use capture phase to catch events early
+    const touchOptions = { passive: true, capture: true };
+    window.addEventListener('touchmove', handleTouchForTubesCursor, touchOptions);
+    window.addEventListener('touchstart', handleTouchForTubesCursor, touchOptions);
+    canvas.addEventListener('touchmove', handleTouchForTubesCursor, touchOptions);
+    canvas.addEventListener('touchstart', handleTouchForTubesCursor, touchOptions);
+
+    // Handle window resize to update canvas
+    const handleResize = () => {
+      if (!canvas || isDisposed) return;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * (window.devicePixelRatio || 1);
+      canvas.height = rect.height * (window.devicePixelRatio || 1);
+    };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+
+    // Initialize after a short delay to ensure canvas is ready
+    setTimeout(() => {
+      initTubes();
+    }, 100);
 
     return () => {
       isDisposed = true;
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.body.classList.remove('cursor-over-glass-card');
-      if (clickHandler) {
-        document.body.removeEventListener('click', clickHandler);
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+      const touchOptions = { passive: true, capture: true };
+      window.removeEventListener('touchmove', handleTouchForTubesCursor, touchOptions);
+      window.removeEventListener('touchstart', handleTouchForTubesCursor, touchOptions);
+      if (canvas) {
+        canvas.removeEventListener('touchmove', handleTouchForTubesCursor, touchOptions);
+        canvas.removeEventListener('touchstart', handleTouchForTubesCursor, touchOptions);
       }
+      document.body.classList.remove('cursor-over-glass-card');
       if (appRef.current?.dispose) {
-        appRef.current.dispose();
+        try {
+          appRef.current.dispose();
+        } catch (error) {
+          console.debug('Error disposing TubesCursor:', error);
+        }
       }
     };
-  }, [isMobile]);
+  }, []);
 
-  // Don't render on mobile - saves performance and battery
-  if (isMobile) return null;
-
+  // Render on all devices (mobile matches web)
   return (
     <div 
       ref={containerRef}
       id="tubes-container"
       className="fixed inset-0 w-full h-full overflow-hidden z-0"
-      style={{ touchAction: "none" }}
+      style={{ 
+        touchAction: "none", // Prevent default touch behaviors
+        pointerEvents: "none", // Container doesn't block, but canvas will receive events
+        width: "100%",
+        height: "100%",
+      }}
     >
       <canvas
         ref={canvasRef}
         id="canvas"
         className="w-full h-full"
+        style={{ 
+          touchAction: "none", // Allow touch events for animation
+          pointerEvents: "auto", // Canvas receives pointer events
+          display: "block", // Ensure canvas is displayed
+          width: "100%",
+          height: "100%",
+        }}
       />
     </div>
   );
