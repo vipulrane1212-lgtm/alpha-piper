@@ -182,45 +182,32 @@ const Alerts = () => {
                   {/* Matched Signals - Always reserve space to keep cards aligned */}
                   <div className="min-h-[52px] mb-3 flex items-start">
                     {(() => {
-                      // Handle different possible field names
+                      // Handle different possible field names - check all variations
                       const signals = alert.matchedSignals || (alert as any).matched_signals || [];
-                      const normalizedSignals = normalizeSignals(signals);
                       
                       // Production-safe debug logging
                       if (signals && signals.length > 0) {
                         console.log(`[Alert ${alert.token}] Raw signals:`, signals);
-                        console.log(`[Alert ${alert.token}] Normalized signals:`, normalizedSignals);
                       } else {
                         console.warn(`[Alert ${alert.token}] No signals found. Alert keys:`, Object.keys(alert));
+                        console.warn(`[Alert ${alert.token}] matchedSignals:`, alert.matchedSignals);
+                        console.warn(`[Alert ${alert.token}] matched_signals:`, (alert as any).matched_signals);
                       }
                       
-                      // Debug: Log if we have signals but they're not showing
-                      if (signals && signals.length > 0 && normalizedSignals.length === 0) {
-                        console.warn(`[Alert ${alert.token}] Signals exist but normalization failed:`, signals);
+                      // If we have signals, normalize them
+                      let normalizedSignals: string[] = [];
+                      if (signals && signals.length > 0) {
+                        normalizedSignals = normalizeSignals(signals);
+                        console.log(`[Alert ${alert.token}] Normalized signals:`, normalizedSignals);
+                        
+                        // If normalization failed but we have raw signals, use raw as fallback
+                        if (normalizedSignals.length === 0) {
+                          console.warn(`[Alert ${alert.token}] Normalization failed, using raw signals`);
+                          normalizedSignals = signals.map(s => String(s));
+                        }
                       }
                       
-                      // If we have raw signals but normalization failed, show raw as fallback
-                      if (signals && signals.length > 0 && normalizedSignals.length === 0) {
-                        return (
-                          <div className="flex flex-wrap gap-1.5 justify-start items-center w-full">
-                            {signals.map((signal: string, idx: number) => (
-                              <span
-                                key={idx}
-                                className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${
-                                  idx % 4 === 0 ? "bg-primary/20 text-primary border-primary/40" :
-                                  idx % 4 === 1 ? "bg-tier-1/20 text-tier-1 border-tier-1/40" :
-                                  idx % 4 === 2 ? "bg-tier-2/20 text-tier-2 border-tier-2/40" :
-                                  "bg-success/20 text-success border-success/40"
-                                }`}
-                              >
-                                {String(signal)}
-                              </span>
-                            ))}
-                          </div>
-                        );
-                      }
-                      
-                      // Show normalized signals if available
+                      // Show signals (normalized or raw fallback)
                       if (normalizedSignals.length > 0) {
                         return (
                           <div className="flex flex-wrap gap-1.5 justify-start items-center w-full">
