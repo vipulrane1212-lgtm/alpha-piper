@@ -115,31 +115,49 @@ export function RecentAlerts() {
                       </div>
                     </div>
 
-                    {/* Matched Signals - Show all normalized signals, hide if empty */}
-                    {(() => {
-                      // Handle different possible field names
-                      const signals = alert.matchedSignals || (alert as any).matched_signals || [];
-                      const normalizedSignals = normalizeSignals(signals);
-                      
-                      // Only show if we have signals
-                      if (normalizedSignals.length > 0) {
-                        return (
-                          <div className="flex flex-wrap gap-1.5 justify-start mb-3">
-                            {normalizedSignals.map((signal, idx) => (
-                              <span
-                                key={idx}
-                                className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${signalColors[idx % signalColors.length]}`}
-                              >
-                                {signal}
-                              </span>
-                            ))}
-                          </div>
-                        );
-                      }
-                      
-                      // No signals - return null to hide section
-                      return null;
-                    })()}
+                    {/* Matched Signals - Always reserve space to keep cards aligned */}
+                    <div className="min-h-[40px] mb-3 flex items-start">
+                      {(() => {
+                        // Handle different possible field names
+                        const signals = alert.matchedSignals || (alert as any).matched_signals || [];
+                        const normalizedSignals = normalizeSignals(signals);
+                        
+                        // Show normalized signals if available
+                        if (normalizedSignals.length > 0) {
+                          return (
+                            <div className="flex flex-wrap gap-1.5 justify-start items-center w-full">
+                              {normalizedSignals.map((signal, idx) => (
+                                <span
+                                  key={idx}
+                                  className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${signalColors[idx % signalColors.length]}`}
+                                >
+                                  {signal}
+                                </span>
+                              ))}
+                            </div>
+                          );
+                        }
+                        
+                        // If we have raw signals but normalization failed, show raw as fallback
+                        if (signals && signals.length > 0) {
+                          return (
+                            <div className="flex flex-wrap gap-1.5 justify-start items-center w-full">
+                              {signals.map((signal: string, idx: number) => (
+                                <span
+                                  key={idx}
+                                  className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${signalColors[idx % signalColors.length]}`}
+                                >
+                                  {String(signal)}
+                                </span>
+                              ))}
+                            </div>
+                          );
+                        }
+                        
+                        // No signals - show empty space to keep card height consistent
+                        return <div className="w-full" />;
+                      })()}
+                    </div>
 
                     {/* Stats Grid */}
                     <div className="grid grid-cols-3 gap-2 text-sm mb-3">

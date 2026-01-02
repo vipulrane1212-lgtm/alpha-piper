@@ -285,7 +285,7 @@ serve(async (req) => {
       // Log matchedSignals before processing to debug
       if (data.alerts.length > 0) {
         const sampleAlert = data.alerts[0];
-        console.log(`[solboy-api] Sample alert matchedSignals:`, sampleAlert.matchedSignals);
+        console.log(`[solboy-api] Sample alert matchedSignals (before):`, sampleAlert.matchedSignals);
         console.log(`[solboy-api] Sample alert keys:`, Object.keys(sampleAlert));
       }
       
@@ -311,6 +311,11 @@ serve(async (req) => {
       if (data.alerts.length > 0) {
         const sampleAfter = data.alerts[0];
         console.log(`[solboy-api] After enrichment matchedSignals:`, sampleAfter.matchedSignals);
+        console.log(`[solboy-api] After enrichment matched_signals:`, sampleAfter.matched_signals);
+        
+        // Check if any alerts lost their signals
+        const alertsWithSignals = data.alerts.filter(a => (a.matchedSignals && a.matchedSignals.length > 0) || (a.matched_signals && a.matched_signals.length > 0));
+        console.log(`[solboy-api] Alerts with signals: ${alertsWithSignals.length}/${data.alerts.length}`);
       }
     }
     
