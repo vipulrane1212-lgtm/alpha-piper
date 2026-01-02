@@ -83,6 +83,6 @@ export function useAlerts(limit?: number, tier?: number) {
       const data = await response.json();
       return data.alerts || [];
     },
-    refetchInterval: 10000, // Refetch every 10 seconds for live updates
+    refetchInterval: false, // No auto-refresh - keep initial display static
   });
 }

@@ -240,7 +240,7 @@ const Alerts = () => {
                   {/* Time */}
                   <div className="flex justify-between items-center text-xs text-muted-foreground mb-3">
                     <span>⏰ {formatTimeAgo(alert.timestamp)}</span>
-                    <span>Score: {alert.score}</span>
+
                   </div>
 
                   {/* Contract - Eye-catching */}
