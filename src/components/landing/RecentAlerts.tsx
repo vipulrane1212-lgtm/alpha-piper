@@ -118,11 +118,21 @@ export function RecentAlerts() {
                     {/* Matched Signals - Always reserve space to keep cards aligned */}
                     <div className="min-h-[40px] mb-3 flex items-start">
                       {(() => {
-                        // Handle different possible field names
+                        // Handle different possible field names - check all variations
                         const signals = alert.matchedSignals || (alert as any).matched_signals || [];
-                        const normalizedSignals = normalizeSignals(signals);
                         
-                        // Show normalized signals if available
+                        // If we have signals, normalize them
+                        let normalizedSignals: string[] = [];
+                        if (signals && signals.length > 0) {
+                          normalizedSignals = normalizeSignals(signals);
+                          
+                          // If normalization failed but we have raw signals, use raw as fallback
+                          if (normalizedSignals.length === 0) {
+                            normalizedSignals = signals.map(s => String(s));
+                          }
+                        }
+                        
+                        // Show signals (normalized or raw fallback)
                         if (normalizedSignals.length > 0) {
                           return (
                             <div className="flex flex-wrap gap-1.5 justify-start items-center w-full">
@@ -132,22 +142,6 @@ export function RecentAlerts() {
                                   className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${signalColors[idx % signalColors.length]}`}
                                 >
                                   {signal}
-                                </span>
-                              ))}
-                            </div>
-                          );
-                        }
-                        
-                        // If we have raw signals but normalization failed, show raw as fallback
-                        if (signals && signals.length > 0) {
-                          return (
-                            <div className="flex flex-wrap gap-1.5 justify-start items-center w-full">
-                              {signals.map((signal: string, idx: number) => (
-                                <span
-                                  key={idx}
-                                  className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${signalColors[idx % signalColors.length]}`}
-                                >
-                                  {String(signal)}
                                 </span>
                               ))}
                             </div>
