@@ -19,11 +19,18 @@ const SIGNAL_NAME_MAP: Record<string, string> = {
   "pfbf_volume": "Volume",
   "volume": "Volume",
   
-  // Display names (already formatted, keep as-is)
+  // Display names from diagnostic report (already formatted, keep as-is)
   "Early trending": "Early Trending",
+  "Early Trending": "Early Trending",
   "PFBF volume alert": "Volume",
   "Whale buy": "Whalebuy",
+  "Whale Buy": "Whalebuy",
   "Momentum spike": "Momentum",
+  "Momentum": "Momentum",
+  
+  // Handle variations with amounts
+  "Large buy": "Large Buy",
+  "Large Buy": "Large Buy",
 };
 
 /**
@@ -55,6 +62,26 @@ export function normalizeSignalName(signal: string): string | null {
   // Handle "Large buy: X Sol" format (case variations)
   if (signal.toLowerCase().match(/^large buy:\s*\d+\.?\d*\s*sol/i)) {
     return "Large Buy";
+  }
+  
+  // Handle "Early trending" variations
+  if (signal.toLowerCase().includes('early trending') || signal.toLowerCase().includes('early trend')) {
+    return "Early Trending";
+  }
+  
+  // Handle "PFBF volume" variations
+  if (signal.toLowerCase().includes('pfbf') || signal.toLowerCase().includes('volume alert')) {
+    return "Volume";
+  }
+  
+  // Handle "Momentum spike" variations
+  if (signal.toLowerCase().includes('momentum')) {
+    return "Momentum";
+  }
+  
+  // Handle "Whale buy" variations
+  if (signal.toLowerCase().includes('whale buy') || signal.toLowerCase().includes('whalebuy')) {
+    return "Whalebuy";
   }
 
   // Handle other patterns with amounts
