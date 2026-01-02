@@ -1,7 +1,7 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Send, Zap, Bot, MessageCircle } from "lucide-react";
 
-export function Footer() {
+function Footer() {
   return (
     <>
       <style>{`
@@ -269,7 +269,7 @@ export function Footer() {
             </div>
             
             <p className="fancy-footer-copyright">
-              {new Date().getFullYear()} Â© All Rights Reserved
+              {new Date().getFullYear()} © All Rights Reserved
             </p>
           </div>
           
