@@ -217,6 +217,7 @@ serve(async (req) => {
     console.log(`[solboy-api] Using API base: ${API_BASE_URL}`);
 
     let apiUrl: string;
+    let dedupeParam: string | null = null;
     
     switch (endpoint) {
       case 'health':
@@ -228,8 +229,10 @@ serve(async (req) => {
       case 'alerts':
         const limit = url.searchParams.get('limit') || '20';
         const tier = url.searchParams.get('tier');
+        dedupeParam = url.searchParams.get('dedupe');
         apiUrl = `${API_BASE_URL}/api/alerts/recent?limit=${limit}`;
         if (tier) apiUrl += `&tier=${tier}`;
+        if (dedupeParam !== null) apiUrl += `&dedupe=${dedupeParam}`;
         break;
       case 'daily':
         const days = url.searchParams.get('days') || '7';
@@ -273,8 +276,18 @@ serve(async (req) => {
     let data = await response.json();
     
     if (endpoint === 'alerts' && data.alerts && Array.isArray(data.alerts)) {
-      // Deduplicate first
-      data.alerts = deduplicateAlerts(data.alerts);
+      // Only deduplicate if API didn't already do it (when dedupe=false or not specified and API doesn't dedupe)
+      // The API's dedupe parameter defaults to true, so we only do our own deduplication as a safety net
+      // Our deduplication is by contract+tier, which is more specific than the API's token-based deduplication
+      const shouldDedupe = dedupeParam === null || dedupeParam === 'true';
+      if (shouldDedupe) {
+        // API should have already deduplicated, but do our own as safety net
+        const beforeCount = data.alerts.length;
+        data.alerts = deduplicateAlerts(data.alerts);
+        if (data.alerts.length < beforeCount) {
+          console.log(`[solboy-api] Additional deduplication: ${beforeCount} -> ${data.alerts.length} alerts`);
+        }
+      }
       
       console.log(`[solboy-api] Enriching ${data.alerts.length} alerts`);
       
