@@ -36,6 +36,7 @@ export interface Alert {
 }
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://uzalzrrvwrxhszznlcgy.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6YWx6cnJ2d3J4aHN6em5sY2d5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0NzA3MTMsImV4cCI6MjA3OTA0NjcxM30.CVozu1QqVifg4UCaFqodtqgw1A8rA99cDbCaOW8wUJE';
 
 export function useStats() {
   return useQuery({
@@ -46,6 +47,8 @@ export function useStats() {
         {
           headers: {
             "Content-Type": "application/json",
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
           },
         }
       );
@@ -72,6 +75,8 @@ export function useAlerts(limit?: number, tier?: number) {
       const response = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
         },
       });
 
