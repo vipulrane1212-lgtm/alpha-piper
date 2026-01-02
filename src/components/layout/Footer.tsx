@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 import { Send, Zap, Bot, MessageCircle } from "lucide-react";
 
 export function Footer() {
@@ -247,7 +247,7 @@ export function Footer() {
               </a>
             </div>
             <p className="copyright">
-              {new Date().getFullYear()} © All Rights Reserved
+              {new Date().getFullYear()} Â© All Rights Reserved
             </p>
             <p className="copyright" style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>
               Not financial advice. Trade at your own risk.
