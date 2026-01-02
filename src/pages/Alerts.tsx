@@ -182,7 +182,19 @@ const Alerts = () => {
                   {/* Matched Signals - Show all normalized signals */}
                   <div className="min-h-[52px] mb-3 flex items-start">
                     {(() => {
-                      const normalizedSignals = normalizeSignals(alert.matchedSignals);
+                      // Debug: Log the raw matchedSignals
+                      if (process.env.NODE_ENV === 'development') {
+                        console.log('Alert matchedSignals:', alert.matchedSignals, 'Type:', typeof alert.matchedSignals, 'Is Array:', Array.isArray(alert.matchedSignals));
+                      }
+                      
+                      // Handle different possible field names
+                      const signals = alert.matchedSignals || (alert as any).matched_signals || [];
+                      const normalizedSignals = normalizeSignals(signals);
+                      
+                      if (process.env.NODE_ENV === 'development') {
+                        console.log('Normalized signals:', normalizedSignals);
+                      }
+                      
                       return normalizedSignals.length > 0 ? (
                         <div className="flex flex-wrap gap-1.5 justify-start items-center w-full">
                           {normalizedSignals.map((signal, idx) => (
@@ -200,7 +212,9 @@ const Alerts = () => {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-xs text-muted-foreground/50 italic text-center w-full">No signals</div>
+                        <div className="text-xs text-muted-foreground/50 italic text-center w-full">
+                          {signals && signals.length > 0 ? `Raw signals: ${JSON.stringify(signals)}` : 'No signals'}
+                        </div>
                       );
                     })()}
                   </div>

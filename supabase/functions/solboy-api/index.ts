@@ -122,8 +122,14 @@ async function enrichAlerts(alerts: any[]): Promise<any[]> {
     const mcapData = mcapMap.get(alert.contract);
     const liveCurrentMcap = mcapData?.market_cap || null;
 
+    // Explicitly preserve matchedSignals (handle both camelCase and snake_case)
+    const matchedSignals = alert.matchedSignals || alert.matched_signals || [];
+
     return {
       ...alert,
+      // Explicitly preserve matchedSignals to ensure it's not lost
+      matchedSignals: matchedSignals,
+      matched_signals: matchedSignals, // Also keep snake_case version for compatibility
       // Keep original API fields
       entryMc: entryMcapNum,
       entry_mcap: entryMcapDisplay,

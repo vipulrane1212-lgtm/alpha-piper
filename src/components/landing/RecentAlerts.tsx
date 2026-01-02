@@ -117,7 +117,9 @@ export function RecentAlerts() {
 
                     {/* Matched Signals - Show all normalized signals */}
                     {(() => {
-                      const normalizedSignals = normalizeSignals(alert.matchedSignals);
+                      // Handle different possible field names
+                      const signals = alert.matchedSignals || (alert as any).matched_signals || [];
+                      const normalizedSignals = normalizeSignals(signals);
                       return normalizedSignals.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 justify-start mb-3">
                           {normalizedSignals.map((signal, idx) => (

@@ -33,3 +33,4 @@ magick solboy-banner.jpg -resize 512x512 android-chrome-512x512.png
 
 The HTML is already configured to use these files once they're created.
 
+

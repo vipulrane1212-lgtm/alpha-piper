@@ -29,13 +29,18 @@ const SIGNAL_NAME_MAP: Record<string, string> = {
 /**
  * Normalize a single signal name to a display-friendly format
  */
-export function normalizeSignalName(signal: string): string {
+export function normalizeSignalName(signal: string): string | null {
   if (!signal || typeof signal !== 'string') {
-    return signal;
+    return null;
   }
 
   // Trim whitespace
   signal = signal.trim();
+  
+  // Return null for empty strings
+  if (signal.length === 0) {
+    return null;
+  }
 
   // Check if it's already in the map
   if (SIGNAL_NAME_MAP[signal]) {
@@ -91,7 +96,7 @@ export function normalizeSignals(signals: string[] | null | undefined): string[]
   // Normalize each signal
   const normalized = signals
     .map(signal => normalizeSignalName(signal))
-    .filter(signal => signal && signal.length > 0); // Remove empty strings
+    .filter((signal): signal is string => signal !== null && signal.length > 0); // Remove null and empty strings
 
   // Deduplicate while preserving order
   const seen = new Set<string>();

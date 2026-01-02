@@ -81,7 +81,16 @@ export function useAlerts(limit?: number, tier?: number) {
       }
 
       const data = await response.json();
-      return data.alerts || [];
+      const alerts = data.alerts || [];
+      
+      // Debug: Log first alert to see structure
+      if (process.env.NODE_ENV === 'development' && alerts.length > 0) {
+        console.log('First alert from API:', alerts[0]);
+        console.log('matchedSignals:', alerts[0].matchedSignals);
+        console.log('All keys:', Object.keys(alerts[0]));
+      }
+      
+      return alerts;
     },
     refetchInterval: false, // No auto-refresh - keep initial display static
   });
