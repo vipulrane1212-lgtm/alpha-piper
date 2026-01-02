@@ -6,7 +6,14 @@ const corsHeaders = {
 };
 
 const rawApiBaseUrl = Deno.env.get('SOLBOY_API_URL') || 'https://my-project-production-3d70.up.railway.app';
-const API_BASE_URL = rawApiBaseUrl.replace(/\/+$/, '');
+// Validate that the secret is not a placeholder value
+const API_BASE_URL = (rawApiBaseUrl && !rawApiBaseUrl.includes('my-secret') && rawApiBaseUrl.startsWith('http'))
+  ? rawApiBaseUrl.replace(/\/+$/, '')
+  : 'https://my-project-production-3d70.up.railway.app';
+
+if (rawApiBaseUrl && rawApiBaseUrl.includes('my-secret')) {
+  console.warn('[solboy-api] WARNING: SOLBOY_API_URL secret appears to be a placeholder. Using fallback URL.');
+}
 
 // Validate Solana address (base58, 32-44 chars)
 function isValidSolanaAddress(address: string): boolean {
@@ -123,7 +130,18 @@ async function enrichAlerts(alerts: any[]): Promise<any[]> {
     const liveCurrentMcap = mcapData?.market_cap || null;
 
     // Explicitly preserve matchedSignals (handle both camelCase and snake_case)
-    const matchedSignals = alert.matchedSignals || alert.matched_signals || [];
+    // Also check for array-like strings or other formats
+    let matchedSignals: string[] = [];
+    if (Array.isArray(alert.matchedSignals)) {
+      matchedSignals = alert.matchedSignals;
+    } else if (Array.isArray(alert.matched_signals)) {
+      matchedSignals = alert.matched_signals;
+    } else if (typeof alert.matchedSignals === 'string') {
+      // Handle string format (comma-separated)
+      matchedSignals = alert.matchedSignals.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    } else if (typeof alert.matched_signals === 'string') {
+      matchedSignals = alert.matched_signals.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    }
 
     return {
       ...alert,
