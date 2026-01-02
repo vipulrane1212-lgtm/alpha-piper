@@ -20,6 +20,12 @@ const SIGNAL_NAME_MAP: Record<string, string> = {
   "pfbf_volume": "Volume",
   "volume": "Volume",
   
+  // Additional snake_case variations
+  "early_trending": "Early Trending",
+  "pfbf_volume_alert": "Volume",
+  "whale_buy": "Whalebuy",
+  "momentum_spike": "Momentum",
+  
   // Display names from diagnostic report (Top signal types found)
   "Early trending": "Early Trending",
   "Early Trending": "Early Trending",
@@ -30,13 +36,6 @@ const SIGNAL_NAME_MAP: Record<string, string> = {
   "Momentum": "Momentum",
   "Large buy": "Large Buy",
   "Large Buy": "Large Buy",
-  
-  // Additional variations found in data
-  "early_trending": "Early Trending",
-  "pfbf_volume_alert": "Volume",
-  "whale_buy": "Whalebuy",
-  "momentum_spike": "Momentum",
-  "large_buy": "Large Buy",
 };
 
 /**
