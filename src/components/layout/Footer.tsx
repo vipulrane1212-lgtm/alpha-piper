@@ -247,7 +247,7 @@ export function Footer() {
               </a>
             </div>
             <p className="copyright">
-              {new Date().getFullYear()} â”œÃ©â”¬âŒ All Rights Reserved
+              {new Date().getFullYear()} Ã¢â€Å“ÃƒÂ©Ã¢â€Â¬Ã¢Å’Â All Rights Reserved
             </p>
             <p className="copyright" style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>
               Not financial advice. Trade at your own risk.
