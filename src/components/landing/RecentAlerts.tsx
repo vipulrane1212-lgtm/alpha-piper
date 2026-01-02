@@ -115,23 +115,30 @@ export function RecentAlerts() {
                       </div>
                     </div>
 
-                    {/* Matched Signals - Show all normalized signals */}
+                    {/* Matched Signals - Show all normalized signals, hide if empty */}
                     {(() => {
                       // Handle different possible field names
                       const signals = alert.matchedSignals || (alert as any).matched_signals || [];
                       const normalizedSignals = normalizeSignals(signals);
-                      return normalizedSignals.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 justify-start mb-3">
-                          {normalizedSignals.map((signal, idx) => (
-                            <span
-                              key={idx}
-                              className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${signalColors[idx % signalColors.length]}`}
-                            >
-                              {signal}
-                            </span>
-                          ))}
-                        </div>
-                      );
+                      
+                      // Only show if we have signals
+                      if (normalizedSignals.length > 0) {
+                        return (
+                          <div className="flex flex-wrap gap-1.5 justify-start mb-3">
+                            {normalizedSignals.map((signal, idx) => (
+                              <span
+                                key={idx}
+                                className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${signalColors[idx % signalColors.length]}`}
+                              >
+                                {signal}
+                              </span>
+                            ))}
+                          </div>
+                        );
+                      }
+                      
+                      // No signals - return null to hide section
+                      return null;
                     })()}
 
                     {/* Stats Grid */}

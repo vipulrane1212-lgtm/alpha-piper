@@ -4,8 +4,9 @@
  */
 
 // Signal name mapping: internal names -> display names
+// Based on diagnostic report: https://github.com/.../MATCHED_SIGNALS_DIAGNOSTIC_REPORT.md
 const SIGNAL_NAME_MAP: Record<string, string> = {
-  // Internal names
+  // Internal names (snake_case)
   "glydo": "Glydo",
   "smart_money": "Smart Money",
   "sol_sb1": "Birdeye",
@@ -19,7 +20,7 @@ const SIGNAL_NAME_MAP: Record<string, string> = {
   "pfbf_volume": "Volume",
   "volume": "Volume",
   
-  // Display names from diagnostic report (already formatted, keep as-is)
+  // Display names from diagnostic report (Top signal types found)
   "Early trending": "Early Trending",
   "Early Trending": "Early Trending",
   "PFBF volume alert": "Volume",
@@ -27,10 +28,15 @@ const SIGNAL_NAME_MAP: Record<string, string> = {
   "Whale Buy": "Whalebuy",
   "Momentum spike": "Momentum",
   "Momentum": "Momentum",
-  
-  // Handle variations with amounts
   "Large buy": "Large Buy",
   "Large Buy": "Large Buy",
+  
+  // Additional variations found in data
+  "early_trending": "Early Trending",
+  "pfbf_volume_alert": "Volume",
+  "whale_buy": "Whalebuy",
+  "momentum_spike": "Momentum",
+  "large_buy": "Large Buy",
 };
 
 /**

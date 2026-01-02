@@ -83,14 +83,10 @@ export function useAlerts(limit?: number, tier?: number) {
       const data = await response.json();
       const alerts = data.alerts || [];
       
-      // Always log for debugging (works in production too)
-      if (alerts.length > 0) {
+      // Debug logging (only in development)
+      if (process.env.NODE_ENV === 'development' && alerts.length > 0) {
         console.log('[useAlerts] First alert from API:', alerts[0]);
         console.log('[useAlerts] matchedSignals:', alerts[0].matchedSignals);
-        console.log('[useAlerts] matched_signals:', (alerts[0] as any).matched_signals);
-        console.log('[useAlerts] All keys:', Object.keys(alerts[0]));
-      } else {
-        console.warn('[useAlerts] No alerts returned from API');
       }
       
       return alerts;
