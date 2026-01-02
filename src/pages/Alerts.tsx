@@ -182,17 +182,36 @@ const Alerts = () => {
                   {/* Matched Signals - Show all normalized signals */}
                   <div className="min-h-[52px] mb-3 flex items-start">
                     {(() => {
-                      // Debug: Log the raw matchedSignals
-                      if (process.env.NODE_ENV === 'development') {
-                        console.log('Alert matchedSignals:', alert.matchedSignals, 'Type:', typeof alert.matchedSignals, 'Is Array:', Array.isArray(alert.matchedSignals));
-                      }
-                      
                       // Handle different possible field names
                       const signals = alert.matchedSignals || (alert as any).matched_signals || [];
+                      
+                      // Always log for debugging (works in production too)
+                      console.log(`[Alert ${alert.token}] Raw signals:`, signals, 'Type:', typeof signals, 'Is Array:', Array.isArray(signals));
+                      
                       const normalizedSignals = normalizeSignals(signals);
                       
-                      if (process.env.NODE_ENV === 'development') {
-                        console.log('Normalized signals:', normalizedSignals);
+                      console.log(`[Alert ${alert.token}] Normalized signals:`, normalizedSignals);
+                      
+                      // If we have raw signals but normalization failed, show raw
+                      if (signals && signals.length > 0 && normalizedSignals.length === 0) {
+                        console.warn(`[Alert ${alert.token}] Normalization failed! Raw:`, signals);
+                        return (
+                          <div className="flex flex-wrap gap-1.5 justify-start items-center w-full">
+                            {signals.map((signal: string, idx: number) => (
+                              <span
+                                key={idx}
+                                className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm ${
+                                  idx % 4 === 0 ? "bg-primary/20 text-primary border-primary/40" :
+                                  idx % 4 === 1 ? "bg-tier-1/20 text-tier-1 border-tier-1/40" :
+                                  idx % 4 === 2 ? "bg-tier-2/20 text-tier-2 border-tier-2/40" :
+                                  "bg-success/20 text-success border-success/40"
+                                }`}
+                              >
+                                {String(signal)}
+                              </span>
+                            ))}
+                          </div>
+                        );
                       }
                       
                       return normalizedSignals.length > 0 ? (
@@ -213,7 +232,7 @@ const Alerts = () => {
                         </div>
                       ) : (
                         <div className="text-xs text-muted-foreground/50 italic text-center w-full">
-                          {signals && signals.length > 0 ? `Raw signals: ${JSON.stringify(signals)}` : 'No signals'}
+                          No signals (raw: {JSON.stringify(signals)})
                         </div>
                       );
                     })()}
