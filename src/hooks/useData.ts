@@ -88,10 +88,26 @@ export function useAlerts(limit?: number, tier?: number) {
       const data = await response.json();
       const alerts = data.alerts || [];
       
-      // Debug logging (only in development)
-      if (process.env.NODE_ENV === 'development' && alerts.length > 0) {
-        console.log('[useAlerts] First alert from API:', alerts[0]);
-        console.log('[useAlerts] matchedSignals:', alerts[0].matchedSignals);
+      // Production-safe debug logging - always log to help diagnose
+      if (alerts.length > 0) {
+        const firstAlert = alerts[0];
+        console.log('[useAlerts] API Response received:', {
+          totalAlerts: alerts.length,
+          firstAlertToken: firstAlert.token,
+          firstAlertMatchedSignals: firstAlert.matchedSignals,
+          firstAlertMatched_signals: firstAlert.matched_signals,
+          firstAlertKeys: Object.keys(firstAlert),
+          hasSignals: !!(firstAlert.matchedSignals?.length || firstAlert.matched_signals?.length)
+        });
+        
+        // Count alerts with signals
+        const alertsWithSignals = alerts.filter(a => 
+          (a.matchedSignals && a.matchedSignals.length > 0) || 
+          (a.matched_signals && a.matched_signals.length > 0)
+        );
+        console.log(`[useAlerts] Alerts with signals: ${alertsWithSignals.length}/${alerts.length}`);
+      } else {
+        console.warn('[useAlerts] No alerts received from API');
       }
       
       return alerts;

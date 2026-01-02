@@ -186,6 +186,14 @@ const Alerts = () => {
                       const signals = alert.matchedSignals || (alert as any).matched_signals || [];
                       const normalizedSignals = normalizeSignals(signals);
                       
+                      // Production-safe debug logging
+                      if (signals && signals.length > 0) {
+                        console.log(`[Alert ${alert.token}] Raw signals:`, signals);
+                        console.log(`[Alert ${alert.token}] Normalized signals:`, normalizedSignals);
+                      } else {
+                        console.warn(`[Alert ${alert.token}] No signals found. Alert keys:`, Object.keys(alert));
+                      }
+                      
                       // Debug: Log if we have signals but they're not showing
                       if (signals && signals.length > 0 && normalizedSignals.length === 0) {
                         console.warn(`[Alert ${alert.token}] Signals exist but normalization failed:`, signals);
