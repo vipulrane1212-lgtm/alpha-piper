@@ -1,12 +1,10 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Send, Zap, Bot, MessageCircle } from "lucide-react";
 
 export function Footer() {
   return (
     <>
-      <style>{
-        @import url("https://fonts.googleapis.com/css?family=IBM%20Plex%20Sans:500|IBM%20Plex%20Sans:300");
-        
+      <style>{`
         .fancy-footer {
           position: relative;
           width: 100%;
@@ -272,7 +270,7 @@ export function Footer() {
             </div>
             
             <p className="fancy-footer-copyright">
-              {new Date().getFullYear()} Â© All Rights Reserved
+              {new Date().getFullYear()} © All Rights Reserved
             </p>
           </div>
           
@@ -319,3 +317,4 @@ export function Footer() {
     </>
   );
 }
+export { Footer };
