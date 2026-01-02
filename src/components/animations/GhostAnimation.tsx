@@ -615,10 +615,17 @@ export function GhostAnimation() {
           <OrbitControls
             enableZoom={false}
             enablePan={false}
+            enableRotate={!isMobile}
+            enableDamping={true}
+            dampingFactor={0.05}
             autoRotate
             autoRotateSpeed={0.5}
             minPolarAngle={Math.PI / 6}
             maxPolarAngle={Math.PI / 1.1}
+            touches={{
+              ONE: isMobile ? undefined : THREE.TOUCH.ROTATE,
+              TWO: undefined
+            }}
           />
         </Canvas>
       </Suspense>

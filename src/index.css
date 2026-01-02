@@ -118,6 +118,40 @@
   }
 }
 
+/* Mobile viewport lock - prevent zooming and orientation issues */
+html, body {
+  touch-action: pan-y pinch-zoom;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  overflow-x: hidden;
+}
+
+/* Allow text selection in content areas */
+p, span, a, h1, h2, h3, h4, h5, h6, li, td, th {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Prevent double-tap zoom on buttons and links */
+button, a, [role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Lock canvas and animation containers */
+canvas, #tubes-container, #canvas {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Prevent pull-to-refresh on mobile */
+body {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 @layer utilities {
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-foreground to-primary;
