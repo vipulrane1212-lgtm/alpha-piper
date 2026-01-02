@@ -89,14 +89,14 @@ function Footer() {
         
         .fancy-footer-button-group {
           display: flex;
-          gap: 0.75rem;
-          margin-bottom: 1rem;
+          gap: 0.5rem;
+          margin-bottom: 0.75rem;
           width: 100%;
         }
         
         .fancy-footer-button-group-50-50 {
           display: flex;
-          gap: 0.75rem;
+          gap: 0.5rem;
         }
         
         .fancy-footer-button-group-50-50 a {
@@ -112,15 +112,15 @@ function Footer() {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1rem;
+          gap: 0.375rem;
+          padding: 0.5rem 0.75rem;
           background: hsl(var(--muted));
           border: 1px solid hsl(var(--border));
-          border-radius: 8px;
+          border-radius: 6px;
           color: hsl(var(--muted-foreground));
           text-decoration: none;
-          transition: all 0.3s ease;
-          font-size: 0.875rem;
+          transition: all 0.2s ease;
+          font-size: 0.8125rem;
           white-space: nowrap;
           box-sizing: border-box;
         }
@@ -129,7 +129,7 @@ function Footer() {
           background: hsl(var(--primary) / 0.1);
           border-color: hsl(var(--primary));
           color: hsl(var(--primary));
-          transform: translateY(-2px);
+          transform: translateY(-1px);
         }
         
         .fancy-footer-button-primary {
@@ -217,7 +217,7 @@ function Footer() {
                 aria-label="Telegram Channel"
                 className="fancy-footer-button"
               >
-                <MessageCircle className="w-4 h-4 flex-shrink-0" />
+                <MessageCircle className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>Channel</span>
               </a>
               <a
@@ -227,7 +227,7 @@ function Footer() {
                 aria-label="Telegram Bot"
                 className="fancy-footer-button"
               >
-                <Bot className="w-4 h-4 flex-shrink-0" />
+                <Bot className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>Bot</span>
               </a>
             </div>
@@ -240,7 +240,7 @@ function Footer() {
                 aria-label="GMGN Bot"
                 className="fancy-footer-button"
               >
-                <Bot className="w-4 h-4 flex-shrink-0" />
+                <Bot className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>GMGN Bot</span>
               </a>
               <a
@@ -250,7 +250,7 @@ function Footer() {
                 aria-label="Maestro Bot"
                 className="fancy-footer-button"
               >
-                <Bot className="w-4 h-4 flex-shrink-0" />
+                <Bot className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>Maestro Bot</span>
               </a>
             </div>
@@ -263,7 +263,7 @@ function Footer() {
                 aria-label="Contact Admin"
                 className="fancy-footer-button fancy-footer-button-primary fancy-footer-button-full"
               >
-                <Send className="w-4 h-4 flex-shrink-0" />
+                <Send className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>Contact Admin</span>
               </a>
             </div>
