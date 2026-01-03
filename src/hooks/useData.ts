@@ -64,6 +64,102 @@ export function useStats() {
   });
 }
 
+// LocalStorage cache helpers
+const CACHE_KEY = 'solboy_alerts_cache';
+const CACHE_TIMESTAMP_KEY = 'solboy_alerts_cache_timestamp';
+const CACHE_MAX_AGE = 24 * 60 * 60 * 1000; // 24 hours
+
+interface CachedAlerts {
+  alerts: Alert[];
+  timestamp: number;
+}
+
+function getCachedAlerts(): Alert[] | null {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+    
+    if (!cached || !timestamp) return null;
+    
+    const age = Date.now() - parseInt(timestamp, 10);
+    if (age > CACHE_MAX_AGE) {
+      // Cache expired, clear it
+      localStorage.removeItem(CACHE_KEY);
+      localStorage.removeItem(CACHE_TIMESTAMP_KEY);
+      return null;
+    }
+    
+    const data: CachedAlerts = JSON.parse(cached);
+    console.log(`[useAlerts] Using cached alerts (${data.alerts.length} alerts, ${Math.round(age / 1000 / 60)} minutes old)`);
+    return data.alerts;
+  } catch (error) {
+    console.warn('[useAlerts] Error reading cache:', error);
+    return null;
+  }
+}
+
+function saveAlertsToCache(alerts: Alert[]): void {
+  try {
+    const cacheData: CachedAlerts = {
+      alerts,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+    localStorage.setItem(CACHE_TIMESTAMP_KEY, String(Date.now()));
+    console.log(`[useAlerts] Saved ${alerts.length} alerts to cache`);
+  } catch (error) {
+    console.warn('[useAlerts] Error saving cache:', error);
+  }
+}
+
+function mergeAlerts(newAlerts: Alert[], cachedAlerts: Alert[]): Alert[] {
+  // Create a map of cached alerts by contract+tier for quick lookup
+  const cachedMap = new Map<string, Alert>();
+  cachedAlerts.forEach(alert => {
+    const key = `${alert.contract}_${alert.tier}`;
+    cachedMap.set(key, alert);
+  });
+  
+  // Create a map of new alerts
+  const newMap = new Map<string, Alert>();
+  newAlerts.forEach(alert => {
+    const key = `${alert.contract}_${alert.tier}`;
+    newMap.set(key, alert);
+  });
+  
+  // Merge: prefer new alerts, but keep cached ones that aren't in new data
+  const merged: Alert[] = [];
+  const seen = new Set<string>();
+  
+  // Add all new alerts first (they're more recent)
+  newAlerts.forEach(alert => {
+    const key = `${alert.contract}_${alert.tier}`;
+    if (!seen.has(key)) {
+      merged.push(alert);
+      seen.add(key);
+    }
+  });
+  
+  // Add cached alerts that aren't in new data (preserve old alerts)
+  cachedAlerts.forEach(alert => {
+    const key = `${alert.contract}_${alert.tier}`;
+    if (!seen.has(key)) {
+      merged.push(alert);
+      seen.add(key);
+    }
+  });
+  
+  // Sort by timestamp (most recent first)
+  merged.sort((a, b) => {
+    const timeA = new Date(a.timestamp || 0).getTime();
+    const timeB = new Date(b.timestamp || 0).getTime();
+    return timeB - timeA;
+  });
+  
+  console.log(`[useAlerts] Merged ${newAlerts.length} new + ${cachedAlerts.length} cached = ${merged.length} total alerts`);
+  return merged;
+}
+
 export function useAlerts(limit?: number, tier?: number) {
   return useQuery({
     queryKey: ["alerts", limit, tier],
@@ -72,45 +168,85 @@ export function useAlerts(limit?: number, tier?: number) {
       if (limit) url += `&limit=${limit}`;
       if (tier) url += `&tier=${tier}`;
 
-      const response = await fetch(url, {
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": SUPABASE_ANON_KEY,
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-      });
+      // Get cached alerts as fallback
+      const cachedAlerts = getCachedAlerts();
 
-      if (!response.ok) {
-        console.error("Error fetching alerts:", response.statusText);
-        throw new Error(response.statusText);
-      }
-
-      const data = await response.json();
-      const alerts = data.alerts || [];
-      
-      // Production-safe debug logging - always log to help diagnose
-      if (alerts.length > 0) {
-        const firstAlert = alerts[0];
-        console.log('[useAlerts] API Response received:', {
-          totalAlerts: alerts.length,
-          firstAlertToken: firstAlert.token,
-          firstAlertMatchedSignals: firstAlert.matchedSignals,
-          firstAlertMatched_signals: firstAlert.matched_signals,
-          firstAlertKeys: Object.keys(firstAlert),
-          hasSignals: !!(firstAlert.matchedSignals?.length || firstAlert.matched_signals?.length)
+      try {
+        const response = await fetch(url, {
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          },
         });
+
+        if (!response.ok) {
+          console.warn("Error fetching alerts:", response.statusText);
+          // If we have cached alerts, use them as fallback
+          if (cachedAlerts && cachedAlerts.length > 0) {
+            console.log(`[useAlerts] API failed, using ${cachedAlerts.length} cached alerts as fallback`);
+            return cachedAlerts;
+          }
+          throw new Error(response.statusText);
+        }
+
+        const data = await response.json();
+        const alerts = data.alerts || [];
         
-        // Count alerts with signals
-        const alertsWithSignals = alerts.filter(a => 
-          (a.matchedSignals && a.matchedSignals.length > 0) || 
-          (a.matched_signals && a.matched_signals.length > 0)
-        );
-        console.log(`[useAlerts] Alerts with signals: ${alertsWithSignals.length}/${alerts.length}`);
-      } else {
-        console.warn('[useAlerts] No alerts received from API');
+        // Check if API is offline
+        if (data.apiOffline && cachedAlerts && cachedAlerts.length > 0) {
+          console.log(`[useAlerts] API offline, using ${cachedAlerts.length} cached alerts`);
+          return cachedAlerts;
+        }
+        
+        // Production-safe debug logging - always log to help diagnose
+        if (alerts.length > 0) {
+          const firstAlert = alerts[0];
+          console.log('[useAlerts] API Response received:', {
+            totalAlerts: alerts.length,
+            firstAlertToken: firstAlert.token,
+            firstAlertMatchedSignals: firstAlert.matchedSignals,
+            firstAlertMatched_signals: firstAlert.matched_signals,
+            firstAlertKeys: Object.keys(firstAlert),
+            hasSignals: !!(firstAlert.matchedSignals?.length || firstAlert.matched_signals?.length)
+          });
+          
+          // Count alerts with signals
+          const alertsWithSignals = alerts.filter(a => 
+            (a.matchedSignals && a.matchedSignals.length > 0) || 
+            (a.matched_signals && a.matched_signals.length > 0)
+          );
+          console.log(`[useAlerts] Alerts with signals: ${alertsWithSignals.length}/${alerts.length}`);
+          
+          // Merge with cached alerts to preserve old ones
+          let finalAlerts = alerts;
+          if (cachedAlerts && cachedAlerts.length > 0) {
+            finalAlerts = mergeAlerts(alerts, cachedAlerts);
+          }
+          
+          // Save to cache for future fallback
+          saveAlertsToCache(finalAlerts);
+          
+          return finalAlerts;
+        } else {
+          console.warn('[useAlerts] No alerts received from API');
+          // If API returned empty but we have cache, use cache
+          if (cachedAlerts && cachedAlerts.length > 0) {
+            console.log(`[useAlerts] API returned empty, using ${cachedAlerts.length} cached alerts`);
+            return cachedAlerts;
+          }
+        }
+        
+        return alerts;
+      } catch (error) {
+        console.error('[useAlerts] Fetch error:', error);
+        // If we have cached alerts, use them as fallback
+        if (cachedAlerts && cachedAlerts.length > 0) {
+          console.log(`[useAlerts] Fetch failed, using ${cachedAlerts.length} cached alerts as fallback`);
+          return cachedAlerts;
+        }
+        throw error;
       }
-      
-      return alerts;
     },
     refetchInterval: false, // No auto-refresh - keep initial display static
   });
