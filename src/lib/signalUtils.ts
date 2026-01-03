@@ -4,27 +4,28 @@
  */
 
 // Signal name mapping: internal names -> display names
-// Based on diagnostic report: https://github.com/.../MATCHED_SIGNALS_DIAGNOSTIC_REPORT.md
+// Based on backend signal extraction fix - all signals from Telegram messages
 const SIGNAL_NAME_MAP: Record<string, string> = {
-  // Internal names (snake_case)
+  // Core signals from backend (snake_case) - from fixed backfill script
   "glydo": "Glydo",
   "smart_money": "Smart Money",
+  "large_buy": "Large Buy",
+  "early_trending": "Early Trending",
+  "volume": "Volume",
+  "momentum": "Momentum",
+  "whalebuy": "Whalebuy",
+  "spydefi": "SpyDefi",
+  "kolscope": "KOLscope",
+  
+  // Additional variations and legacy names
   "sol_sb1": "Birdeye",
   "sol_sb_mb": "Birdeye",
-  "kolscope": "KOLscope",
-  "whalebuy": "Whalebuy",
-  "large_buy": "Large Buy",
   "momentum_tracker": "Momentum",
+  "momentum_spike": "Momentum",
   "solana_early_trending": "Early Trending",
-  "spydefi": "SpyDefi",
   "pfbf_volume": "Volume",
-  "volume": "Volume",
-  
-  // Additional snake_case variations
-  "early_trending": "Early Trending",
   "pfbf_volume_alert": "Volume",
   "whale_buy": "Whalebuy",
-  "momentum_spike": "Momentum",
   
   // Display names from diagnostic report (Top signal types found)
   "Early trending": "Early Trending",
