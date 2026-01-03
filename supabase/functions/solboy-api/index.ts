@@ -148,6 +148,9 @@ async function enrichAlerts(alerts: any[]): Promise<any[]> {
       // Explicitly preserve matchedSignals to ensure it's not lost
       matchedSignals: matchedSignals,
       matched_signals: matchedSignals, // Also keep snake_case version for compatibility
+      // Explicitly preserve callers and subs from API
+      callers: alert.callers ?? alert.callers ?? 0,
+      subs: alert.subs ?? alert.subs ?? 0,
       // Keep original API fields
       entryMc: entryMcapNum,
       entry_mcap: entryMcapDisplay,
