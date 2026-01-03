@@ -149,8 +149,8 @@ async function enrichAlerts(alerts: any[]): Promise<any[]> {
       matchedSignals: matchedSignals,
       matched_signals: matchedSignals, // Also keep snake_case version for compatibility
       // Explicitly preserve callers and subs from API
-      callers: alert.callers ?? alert.callers ?? 0,
-      subs: alert.subs ?? alert.subs ?? 0,
+      callers: alert.callers ?? 0,
+      subs: alert.subs ?? 0,
       // Keep original API fields
       entryMc: entryMcapNum,
       entry_mcap: entryMcapDisplay,
@@ -303,10 +303,12 @@ serve(async (req) => {
     let data = await response.json();
     
     if (endpoint === 'alerts' && data.alerts && Array.isArray(data.alerts)) {
-      // Log matchedSignals before processing to debug
+      // Log matchedSignals, callers, and subs before processing to debug
       if (data.alerts.length > 0) {
         const sampleAlert = data.alerts[0];
         console.log(`[solboy-api] Sample alert matchedSignals (before):`, sampleAlert.matchedSignals);
+        console.log(`[solboy-api] Sample alert callers (before):`, sampleAlert.callers);
+        console.log(`[solboy-api] Sample alert subs (before):`, sampleAlert.subs);
         console.log(`[solboy-api] Sample alert keys:`, Object.keys(sampleAlert));
       }
       
