@@ -6,7 +6,8 @@ I have a Solana memecoin alerts website (solboy.in) that displays trading alerts
 ## Current Issues
 1. **Callers and Subs showing as zero** - All alerts display `📢 Callers: 0` and `👥 Subs: 0` even though they should have values
 2. **Missing matched signals** - Alerts should show "matched signals" (like "Glydo", "Smart Money", "Large Buy", "Volume", etc.) but many are missing or incomplete
-3. **No current buys/tracked sources** - The "matched signals" section is not showing all the monitored sources that triggered each alert
+3. **Incomplete signal arrays** - **CRITICAL**: SZN should have 4 signals (`early_trending`, `glydo`, `large_buy`, `volume`) but API only returns 2 (`glydo`, `smart_money`). Backtest verification confirms all 4 signals exist in the data.
+4. **No current buys/tracked sources** - The "matched signals" section is not showing all the monitored sources that triggered each alert
 
 ## What I Need You To Check
 
@@ -17,6 +18,7 @@ I have a Solana memecoin alerts website (solboy.in) that displays trading alerts
 - Does it return alerts?
 - Do the alerts have `callers` and `subs` fields? What are their values?
 - Do the alerts have `matchedSignals` or `matched_signals` fields? What values are in these arrays?
+- **CRITICAL**: For SZN token, does it return all 4 signals (`early_trending`, `glydo`, `large_buy`, `volume`) or only 2?
 - What is the full structure of a sample alert object?
 
 **Expected fields in each alert:**
@@ -51,7 +53,9 @@ I have a Solana memecoin alerts website (solboy.in) that displays trading alerts
 3. **How are `matchedSignals` populated?**
    - Is there a backfill script that extracts signals from Telegram?
    - Are signals being properly parsed and stored?
-   - Check if `backfill_from_json_export.py` or similar script is extracting all signals correctly
+   - **CRITICAL**: Check if `backfill_from_json_export.py` has been updated with the fixed signal extraction logic (parsing confirmation lines with ✓)
+   - **CRITICAL**: Has `backfill_signals_from_telegram.py` been run to update existing alerts in `kpi_logs.json`?
+   - Verify that SZN in `kpi_logs.json` has all 4 signals: `["early_trending", "glydo", "large_buy", "volume"]`
 
 4. **Check the `/api/alerts/recent` endpoint handler:**
    - Does it return all fields including `callers`, `subs`, and `matchedSignals`?
@@ -61,9 +65,11 @@ I have a Solana memecoin alerts website (solboy.in) that displays trading alerts
 ### 3. Check Data Storage
 **If alerts are stored in `kpi_logs.json` or similar file:**
 - Open the file and check a few alert entries
+- **CRITICAL**: Find SZN alert and verify it has `matched_signals: ["early_trending", "glydo", "large_buy", "volume"]` (all 4 signals)
 - Verify that `callers` and `subs` have actual values (not 0 or null)
 - Verify that `matched_signals` or `matchedSignals` arrays contain multiple signal names
 - Check if the data structure matches what the API is returning
+- **If SZN only has 2 signals in storage**: Run `backfill_signals_from_telegram.py` to update it
 
 ### 4. Check Telegram Parsing
 **If there's a Telegram monitor/parser script:**
@@ -92,8 +98,14 @@ I have a Solana memecoin alerts website (solboy.in) that displays trading alerts
 ## What to Fix
 1. **If `callers`/`subs` are 0 in storage**: Fix the Telegram parser to extract these values correctly
 2. **If `callers`/`subs` are in storage but API returns 0**: Fix the API endpoint to return these fields
-3. **If `matchedSignals` are incomplete**: Fix the backfill script to extract ALL signals from Telegram messages (check confirmation lines with ✓)
-4. **If fields are being lost**: Ensure the API response preserves all fields from storage
+3. **If `matchedSignals` are incomplete in storage**: 
+   - Run `backfill_signals_from_telegram.py` to update existing alerts
+   - Verify the script uses the fixed extraction logic (parses confirmation lines with ✓)
+4. **If `matchedSignals` are complete in storage but API returns incomplete**:
+   - Check the `/api/alerts/recent` endpoint code
+   - Ensure it returns the full `matched_signals` array without filtering
+   - Check if there's any `.slice()` or `.filter()` that limits the array
+5. **If fields are being lost**: Ensure the API response preserves all fields from storage
 
 ## Additional Context
 - Frontend expects: `callers` (number), `subs` (number), `matchedSignals` (string array)
@@ -103,8 +115,14 @@ I have a Solana memecoin alerts website (solboy.in) that displays trading alerts
 ---
 
 **Please test the Railway API endpoint and share:**
-1. ✅ Sample API response (full JSON)
-2. ✅ Sample alert from storage (if accessible)
-3. ✅ Code for `/api/alerts/recent` endpoint
-4. ✅ Any issues found and recommended fixes
+1. ✅ Sample API response (full JSON) - **Especially for SZN token**
+2. ✅ SZN alert from storage (`kpi_logs.json`) - **Check if it has all 4 signals**
+3. ✅ Code for `/api/alerts/recent` endpoint - **Check if it filters/limits signals**
+4. ✅ Verification: Does SZN in storage have 4 signals but API returns only 2?
+5. ✅ Any issues found and recommended fixes
+
+**Expected for SZN:**
+- Storage: `matched_signals: ["early_trending", "glydo", "large_buy", "volume"]` (4 signals)
+- API Response: Should return all 4 signals
+- Website: Should display all 4 signals
 
