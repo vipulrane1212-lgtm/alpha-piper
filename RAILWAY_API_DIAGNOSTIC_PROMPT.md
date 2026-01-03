@@ -5,6 +5,8 @@ I have a Solana memecoin alerts website (solboy.in) that displays trading alerts
 
 ## Current Issues
 1. **Callers and Subs showing as zero** - All alerts display `📢 Callers: 0` and `👥 Subs: 0` even though they should have values
+   - **Status**: Code is FIXED (handles XTRACK format: `📢 Callers: 3 | Subs: 12357`)
+   - **Action Needed**: Backfill existing alerts in `kpi_logs.json` using `backfill_callers_subs_from_xtrack.py`
 2. **Missing matched signals** - Alerts should show "matched signals" (like "Glydo", "Smart Money", "Large Buy", "Volume", etc.) but many are missing or incomplete
 3. **Incomplete signal arrays** - **CRITICAL**: SZN should have 4 signals (`early_trending`, `glydo`, `large_buy`, `volume`) but API only returns 2 (`glydo`, `smart_money`). Backtest verification confirms all 4 signals exist in the data.
 4. **No current buys/tracked sources** - The "matched signals" section is not showing all the monitored sources that triggered each alert
@@ -46,7 +48,11 @@ I have a Solana memecoin alerts website (solboy.in) that displays trading alerts
    - How are alerts persisted?
 
 2. **How are `callers` and `subs` populated?**
-   - Are they extracted from Telegram messages?
+   - **Code Status**: ✅ FIXED - `parse_callers_subs()` in `live_monitor_core.py` now handles XTRACK format
+   - **Format**: `📢 Callers: 3 | Subs: 12357` (from XTRACK channel, different from alert channel)
+   - **Action Needed**: 
+     - Export XTRACK channel messages (the one with `🚀 #token did 👉 2x` messages)
+     - Run `backfill_callers_subs_from_xtrack.py` to update existing alerts in `kpi_logs.json`
    - Are they stored in the alert data?
    - Are they being set to 0 by default somewhere?
 
@@ -96,21 +102,32 @@ I have a Solana memecoin alerts website (solboy.in) that displays trading alerts
 4. Telegram parser/monitor script
 
 ## What to Fix
-1. **If `callers`/`subs` are 0 in storage**: Fix the Telegram parser to extract these values correctly
-2. **If `callers`/`subs` are in storage but API returns 0**: Fix the API endpoint to return these fields
-3. **If `matchedSignals` are incomplete in storage**: 
+
+### For Callers/Subs:
+1. **Code is FIXED** ✅ - `parse_callers_subs()` handles XTRACK format
+2. **If `callers`/`subs` are 0 in storage**: 
+   - Export XTRACK channel messages (JSON format)
+   - Run `backfill_callers_subs_from_xtrack.py` to update `kpi_logs.json`
+   - Script matches alerts by contract address and updates callers/subs
+3. **If `callers`/`subs` are in storage but API returns 0**: Fix the API endpoint to return these fields
+
+### For Matched Signals:
+4. **If `matchedSignals` are incomplete in storage**: 
    - Run `backfill_signals_from_telegram.py` to update existing alerts
    - Verify the script uses the fixed extraction logic (parses confirmation lines with ✓)
-4. **If `matchedSignals` are complete in storage but API returns incomplete**:
+5. **If `matchedSignals` are complete in storage but API returns incomplete**:
    - Check the `/api/alerts/recent` endpoint code
    - Ensure it returns the full `matched_signals` array without filtering
    - Check if there's any `.slice()` or `.filter()` that limits the array
-5. **If fields are being lost**: Ensure the API response preserves all fields from storage
+6. **If fields are being lost**: Ensure the API response preserves all fields from storage
 
 ## Additional Context
 - Frontend expects: `callers` (number), `subs` (number), `matchedSignals` (string array)
 - Supabase function proxies the Railway API and should preserve all fields
 - Frontend has localStorage caching to prevent data loss during redeployments
+- **Callers/Subs Code**: ✅ FIXED - Extraction logic updated in `live_monitor_core.py`
+- **Callers/Subs Data**: ⚠️ Needs backfill - Run `backfill_callers_subs_from_xtrack.py` with XTRACK channel export
+- **XTRACK Format**: `📢 Callers: 3 | Subs: 12357` (different channel from alerts)
 
 ---
 
