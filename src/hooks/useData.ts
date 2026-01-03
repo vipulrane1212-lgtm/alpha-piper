@@ -185,6 +185,8 @@ export function useAlerts(limit?: number, tier?: number) {
           // If we have cached alerts, use them as fallback
           if (cachedAlerts && cachedAlerts.length > 0) {
             console.log(`[useAlerts] API failed, using ${cachedAlerts.length} cached alerts as fallback`);
+            // Update cache timestamp to keep it fresh
+            saveAlertsToCache(cachedAlerts);
             return cachedAlerts;
           }
           throw new Error(response.statusText);
@@ -196,6 +198,8 @@ export function useAlerts(limit?: number, tier?: number) {
         // Check if API is offline
         if (data.apiOffline && cachedAlerts && cachedAlerts.length > 0) {
           console.log(`[useAlerts] API offline, using ${cachedAlerts.length} cached alerts`);
+          // Update cache timestamp to keep it fresh
+          saveAlertsToCache(cachedAlerts);
           return cachedAlerts;
         }
         
@@ -218,31 +222,39 @@ export function useAlerts(limit?: number, tier?: number) {
           );
           console.log(`[useAlerts] Alerts with signals: ${alertsWithSignals.length}/${alerts.length}`);
           
-          // Merge with cached alerts to preserve old ones
+          // ALWAYS merge with cached alerts to preserve old ones that were displayed before
           let finalAlerts = alerts;
           if (cachedAlerts && cachedAlerts.length > 0) {
+            console.log(`[useAlerts] Merging ${alerts.length} new alerts with ${cachedAlerts.length} cached alerts`);
             finalAlerts = mergeAlerts(alerts, cachedAlerts);
+            console.log(`[useAlerts] Result: ${finalAlerts.length} total alerts (${alerts.length} new + ${cachedAlerts.length - alerts.filter(a => cachedAlerts.some(c => c.contract === a.contract && c.tier === a.tier)).length} old preserved)`);
           }
           
-          // Save to cache for future fallback
+          // ALWAYS save to cache - this ensures whatever is displayed is saved
           saveAlertsToCache(finalAlerts);
           
           return finalAlerts;
         } else {
           console.warn('[useAlerts] No alerts received from API');
-          // If API returned empty but we have cache, use cache
+          // If API returned empty but we have cache, use cache and save it
           if (cachedAlerts && cachedAlerts.length > 0) {
             console.log(`[useAlerts] API returned empty, using ${cachedAlerts.length} cached alerts`);
+            // Update cache timestamp to keep it fresh
+            saveAlertsToCache(cachedAlerts);
             return cachedAlerts;
           }
         }
         
+        // If we get here, API returned empty and no cache - save empty array to prevent issues
+        saveAlertsToCache([]);
         return alerts;
       } catch (error) {
         console.error('[useAlerts] Fetch error:', error);
         // If we have cached alerts, use them as fallback
         if (cachedAlerts && cachedAlerts.length > 0) {
           console.log(`[useAlerts] Fetch failed, using ${cachedAlerts.length} cached alerts as fallback`);
+          // Update cache timestamp to keep it fresh even when API fails
+          saveAlertsToCache(cachedAlerts);
           return cachedAlerts;
         }
         throw error;
