@@ -20,14 +20,12 @@ const fluorescentColors: Record<string, number> = {
   violet: 0x8a2be2,
 };
 
-// Detect mobile device - Ultra-robust check
+// Detect mobile/touch device - User wants idle floating on all touch devices
 function isMobileDevice(): boolean {
   if (typeof window === 'undefined') return false;
-  const ua = navigator.userAgent || "";
-  const isUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
   const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-  const isSmall = (window.matchMedia && window.matchMedia('(max-width: 1100px)').matches);
-  return isUA || isTouch || isSmall;
+  const isSmall = (window.matchMedia && window.matchMedia('(max-width: 1280px)').matches);
+  return isTouch || isSmall;
 }
 
 // Parameters from CodePen - same on all devices (mobile = web)
@@ -70,8 +68,8 @@ function GhostMesh() {
   useEffect(() => {
     const handleMove = (e: MouseEvent | TouchEvent) => {
       // User requested: "dont respond to touch on mobile let it keep floating"
-      // Skip updates for touch events on mobile
-      if ('touches' in e && isMobileDevice()) return;
+      // COMPLETELY IGNORE touch events to force idle animation
+      if ('touches' in e) return;
 
       let clientX = 0;
       let clientY = 0;

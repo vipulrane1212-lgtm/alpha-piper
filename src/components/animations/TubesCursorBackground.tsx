@@ -185,7 +185,29 @@ export function TubesCursorBackground() {
           }
         };
 
+        // User requested: "dont respond to touch on mobile let it keep floating"
+        // HIJACK: Temporarily disable touch listeners during library initialization
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        const originalAddEventListener = window.addEventListener;
+        
+        if (isTouchDevice) {
+          (window as any).addEventListener = function(type: string, listener: any, options: any) {
+            // Block all touch and pointer events that the library tries to attach
+            if (type.includes('touch') || type.includes('pointer')) {
+              console.debug(`TubesCursor Hijack: Blocked ${type} listener`);
+              return;
+            }
+            return originalAddEventListener.apply(this, [type, listener, options]);
+          };
+        }
+
+        // Initialize the library
         appRef.current = TubesCursor(canvas, options);
+        
+        // Restore original listener immediately
+        if (isTouchDevice) {
+          window.addEventListener = originalAddEventListener;
+        }
         
         // Verify initialization
         if (appRef.current) {
