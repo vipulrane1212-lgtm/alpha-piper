@@ -67,12 +67,21 @@ export function Layout({ children }: LayoutProps) {
       hideCursor();
     };
 
-    // Add event listeners (all devices)
+    // Detect mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                    (window.matchMedia && window.matchMedia('(max-width: 1024px)').matches) ||
+                    (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+
+    // Add event listeners (Mouse only for cursor, skip touch on mobile)
     window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    
+    if (!isMobile) {
+      window.addEventListener('touchmove', handleTouchMove, { passive: true });
+      window.addEventListener('touchstart', handleTouchStart, { passive: true });
+      document.addEventListener('touchend', handleTouchEnd);
+    }
+    
     document.addEventListener('mouseleave', handleMouseLeave);
-    document.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
