@@ -8,6 +8,14 @@ interface TubesApp {
   dispose?: () => void;
 }
 
+// Detect mobile device - Robust check
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+         (window.matchMedia && window.matchMedia('(max-width: 1024px)').matches) ||
+         (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+};
+
 export function TubesCursorBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const appRef = useRef<TubesApp | null>(null);
@@ -27,6 +35,9 @@ export function TubesCursorBackground() {
     // Track mouse/touch position to detect when cursor is over glassmorphism cards
     const handleMove = (e: MouseEvent | TouchEvent) => {
       if (isDisposed) return;
+      
+      // Block touch interaction on mobile
+      if ('touches' in e && isMobileDevice()) return;
       
       const now = performance.now();
       if (now - lastUpdateTime < UPDATE_THROTTLE) return;
@@ -238,10 +249,7 @@ export function TubesCursorBackground() {
 
     // Add touch event listeners - ONLY on non-mobile devices or if you want touch response
     // User requested: "dont respond to touch on mobile let it keep floating"
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                    (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
-
-    if (!isMobile) {
+    if (!isMobileDevice()) {
       const touchOptions = { passive: true, capture: true };
       window.addEventListener('touchmove', handleTouchForTubesCursor, touchOptions);
       window.addEventListener('touchstart', handleTouchForTubesCursor, touchOptions);
@@ -290,9 +298,7 @@ export function TubesCursorBackground() {
   }, []);
 
   // Render on all devices (mobile matches web)
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                  (window.matchMedia && window.matchMedia('(max-width: 1024px)').matches) ||
-                  (typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0));
+  const isMobile = isMobileDevice();
 
   return (
     <div 
