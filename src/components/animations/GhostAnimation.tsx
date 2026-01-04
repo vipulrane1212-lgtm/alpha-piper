@@ -67,6 +67,10 @@ function GhostMesh() {
   // Mouse/touch tracking
   useEffect(() => {
     const handleMove = (e: MouseEvent | TouchEvent) => {
+      // User requested: "dont respond to touch on mobile let it keep floating"
+      // Skip updates for touch events on mobile
+      if ('touches' in e && isMobileDevice()) return;
+
       let clientX = 0;
       let clientY = 0;
       

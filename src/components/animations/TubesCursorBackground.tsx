@@ -236,12 +236,18 @@ export function TubesCursorBackground() {
       }
     };
 
-    // Add touch event listeners - use capture phase to catch events early
-    const touchOptions = { passive: true, capture: true };
-    window.addEventListener('touchmove', handleTouchForTubesCursor, touchOptions);
-    window.addEventListener('touchstart', handleTouchForTubesCursor, touchOptions);
-    canvas.addEventListener('touchmove', handleTouchForTubesCursor, touchOptions);
-    canvas.addEventListener('touchstart', handleTouchForTubesCursor, touchOptions);
+    // Add touch event listeners - ONLY on non-mobile devices or if you want touch response
+    // User requested: "dont respond to touch on mobile let it keep floating"
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                    (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+
+    if (!isMobile) {
+      const touchOptions = { passive: true, capture: true };
+      window.addEventListener('touchmove', handleTouchForTubesCursor, touchOptions);
+      window.addEventListener('touchstart', handleTouchForTubesCursor, touchOptions);
+      canvas.addEventListener('touchmove', handleTouchForTubesCursor, touchOptions);
+      canvas.addEventListener('touchstart', handleTouchForTubesCursor, touchOptions);
+    }
 
     // Handle window resize to update canvas
     const handleResize = () => {
