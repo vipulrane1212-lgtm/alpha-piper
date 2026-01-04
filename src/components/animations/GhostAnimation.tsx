@@ -570,7 +570,8 @@ export function GhostAnimation() {
             background: "transparent !important", 
             width: "100%", 
             height: "100%",
-            backgroundColor: "transparent !important"
+            backgroundColor: "transparent !important",
+            pointerEvents: isMobile ? "none" : "auto"
           }}
           dpr={Math.min(window.devicePixelRatio, 2)}
           onCreated={({ gl, scene }) => {

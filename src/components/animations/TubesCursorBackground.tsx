@@ -290,14 +290,17 @@ export function TubesCursorBackground() {
   }, []);
 
   // Render on all devices (mobile matches web)
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                  (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+
   return (
     <div 
       ref={containerRef}
       id="tubes-container"
       className="fixed inset-0 w-full h-full overflow-hidden z-0"
       style={{ 
-        touchAction: "none", // Prevent default touch behaviors
-        pointerEvents: "none", // Container doesn't block, but canvas will receive events
+        touchAction: "none", 
+        pointerEvents: "none", 
         width: "100%",
         height: "100%",
       }}
@@ -307,9 +310,9 @@ export function TubesCursorBackground() {
         id="canvas"
         className="w-full h-full"
         style={{ 
-          touchAction: "none", // Allow touch events for animation
-          pointerEvents: "auto", // Canvas receives pointer events
-          display: "block", // Ensure canvas is displayed
+          touchAction: isMobile ? "auto" : "none", 
+          pointerEvents: isMobile ? "none" : "auto", 
+          display: "block",
           width: "100%",
           height: "100%",
         }}
