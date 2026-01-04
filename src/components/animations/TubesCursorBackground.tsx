@@ -185,25 +185,7 @@ export function TubesCursorBackground() {
           }
         };
 
-        // Aggressive touch-disabling for mobile: "Blind" the library
-        if (isMobileDevice()) {
-          console.debug("TubesCursor: Mobile detected, blinding library to touch events");
-          const proxyCanvas = new Proxy(canvas, {
-            get(target, prop) {
-              if (prop === 'addEventListener') {
-                // Return a fake function that does nothing
-                return () => {
-                  console.debug(`TubesCursor: Blocked internal addEventListener for ${arguments[0]}`);
-                };
-              }
-              const val = (target as any)[prop];
-              return typeof val === 'function' ? val.bind(target) : val;
-            }
-          });
-          appRef.current = TubesCursor(proxyCanvas, options);
-        } else {
-          appRef.current = TubesCursor(canvas, options);
-        }
+        appRef.current = TubesCursor(canvas, options);
         
         // Verify initialization
         if (appRef.current) {
@@ -335,13 +317,25 @@ export function TubesCursorBackground() {
         id="canvas"
         className="w-full h-full"
         style={{ 
-          touchAction: isMobile ? "auto" : "none", 
-          pointerEvents: isMobile ? "none" : "auto", 
+          touchAction: "none",
+          pointerEvents: "auto",
           display: "block",
           width: "100%",
           height: "100%",
         }}
       />
+      {/* Mobile Touch Shield - Captures touch events so background stays idle */}
+      {isMobile && (
+        <div 
+          className="absolute inset-0 z-10" 
+          style={{ 
+            touchAction: "none",
+            pointerEvents: "auto",
+            background: "transparent"
+          }}
+          onContextMenu={(e) => e.preventDefault()}
+        />
+      )}
     </div>
   );
 }
