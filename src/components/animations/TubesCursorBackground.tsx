@@ -185,7 +185,25 @@ export function TubesCursorBackground() {
           }
         };
 
-        appRef.current = TubesCursor(canvas, options);
+        // Aggressive touch-disabling for mobile: "Blind" the library
+        if (isMobileDevice()) {
+          console.debug("TubesCursor: Mobile detected, blinding library to touch events");
+          const proxyCanvas = new Proxy(canvas, {
+            get(target, prop) {
+              if (prop === 'addEventListener') {
+                // Return a fake function that does nothing
+                return () => {
+                  console.debug(`TubesCursor: Blocked internal addEventListener for ${arguments[0]}`);
+                };
+              }
+              const val = (target as any)[prop];
+              return typeof val === 'function' ? val.bind(target) : val;
+            }
+          });
+          appRef.current = TubesCursor(proxyCanvas, options);
+        } else {
+          appRef.current = TubesCursor(canvas, options);
+        }
         
         // Verify initialization
         if (appRef.current) {

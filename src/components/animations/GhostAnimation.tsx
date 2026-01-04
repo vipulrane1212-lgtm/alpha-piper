@@ -20,13 +20,14 @@ const fluorescentColors: Record<string, number> = {
   violet: 0x8a2be2,
 };
 
-// Detect mobile device - More robust check
+// Detect mobile device - Ultra-robust check
 function isMobileDevice(): boolean {
   if (typeof window === 'undefined') return false;
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-    (window.matchMedia && window.matchMedia('(max-width: 1024px)').matches) ||
-    ('ontouchstart' in window) ||
-    (navigator.maxTouchPoints > 0);
+  const ua = navigator.userAgent || "";
+  const isUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  const isSmall = (window.matchMedia && window.matchMedia('(max-width: 1100px)').matches);
+  return isUA || isTouch || isSmall;
 }
 
 // Parameters from CodePen - same on all devices (mobile = web)
