@@ -186,27 +186,43 @@ export function TubesCursorBackground() {
         };
 
         // User requested: "dont respond to touch on mobile let it keep floating"
-        // HIJACK: Temporarily disable touch listeners during library initialization
+        // HIJACK: Temporarily disable touch/mouse listeners during library initialization
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-        const originalAddEventListener = window.addEventListener;
         
         if (isTouchDevice) {
-          (window as any).addEventListener = function(type: string, listener: any, options: any) {
-            // Block all touch and pointer events that the library tries to attach
-            if (type.includes('touch') || type.includes('pointer')) {
-              console.debug(`TubesCursor Hijack: Blocked ${type} listener`);
+          const originalWindowAdd = window.addEventListener;
+          const originalDocAdd = document.addEventListener;
+          const originalCanvasAdd = canvas.addEventListener;
+          
+          // A "Deafener" function that ignores all movement events
+          const hijackedAdd = function(this: any, type: string, listener: any, options: any) {
+            if (type.match(/^(mouse|touch|pointer|MSPointer|gesture)/i)) {
+              console.debug(`TubesCursor Hijack: Blocked ${type} listener on mobile`);
               return;
             }
-            return originalAddEventListener.apply(this, [type, listener, options]);
+            
+            if (this === window) return originalWindowAdd.apply(this, [type, listener, options]);
+            if (this === document) return originalDocAdd.apply(this, [type, listener, options]);
+            return originalCanvasAdd.apply(this, [type, listener, options]);
           };
-        }
 
-        // Initialize the library
-        appRef.current = TubesCursor(canvas, options);
-        
-        // Restore original listener immediately
-        if (isTouchDevice) {
-          window.addEventListener = originalAddEventListener;
+          // Apply the hijack to everything the library might touch
+          window.addEventListener = hijackedAdd as any;
+          document.addEventListener = hijackedAdd as any;
+          canvas.addEventListener = hijackedAdd as any;
+
+          // Initialize the library while it's "blindfolded"
+          appRef.current = TubesCursor(canvas, options);
+          
+          // Keep it hijacked for 1 second to catch any delayed/async listeners
+          setTimeout(() => {
+            window.addEventListener = originalWindowAdd;
+            document.addEventListener = originalDocAdd;
+            canvas.addEventListener = originalCanvasAdd;
+            console.debug("TubesCursor Hijack: Restored original listeners");
+          }, 1000);
+        } else {
+          appRef.current = TubesCursor(canvas, options);
         }
         
         // Verify initialization
