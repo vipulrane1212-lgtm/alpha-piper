@@ -302,6 +302,12 @@ serve(async (req) => {
 
     let data = await response.json();
     
+    // Override subscriber count to 3126 for stats endpoint
+    if (endpoint === 'stats' && data) {
+      data.totalSubscribers = 3126;
+      console.log(`[solboy-api] Overriding totalSubscribers to 3126`);
+    }
+    
     if (endpoint === 'alerts' && data.alerts && Array.isArray(data.alerts)) {
       // Log matchedSignals, callers, and subs before processing to debug
       if (data.alerts.length > 0) {
