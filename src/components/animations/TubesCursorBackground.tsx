@@ -251,11 +251,13 @@ export function TubesCursorBackground() {
 
     // Convert touch events to mouse events for TubesCursor library
     // The library listens to mouse events, so we need to simulate them from touch
+    // User requested: "dont respond to touch on mobile let it keep floating"
+    // DISABLE simulation on mobile
     let lastTouchTime = 0;
     const TOUCH_THROTTLE = 16; // ~60fps
     
     const handleTouchForTubesCursor = (e: TouchEvent) => {
-      if (isDisposed || !canvas) return;
+      if (isDisposed || !canvas || isMobileDevice()) return;
       
       const touch = e.touches[0] || e.changedTouches[0];
       if (!touch) return;

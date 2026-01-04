@@ -8,8 +8,14 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  // Neon cursor effect - works on all devices (mobile matches web)
+  // Neon cursor effect - ONLY on desktop
   useEffect(() => {
+    // Detect mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                    (window.matchMedia && window.matchMedia('(max-width: 1024px)').matches) ||
+                    (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+
+    if (isMobile) return;
 
     // Create cursor element - exact web version styling
     const cursorEl = document.createElement('div');
