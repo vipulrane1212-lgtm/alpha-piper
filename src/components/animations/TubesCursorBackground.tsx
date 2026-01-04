@@ -186,41 +186,56 @@ export function TubesCursorBackground() {
         };
 
         // User requested: "dont respond to touch on mobile let it keep floating"
-        // HIJACK: Temporarily disable touch/mouse listeners during library initialization
-        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        // HIJACK: Ultra-aggressive silencing of all interaction listeners
+        const isMobile = isMobileDevice();
         
-        if (isTouchDevice) {
+        if (isMobile) {
+          console.debug("TubesCursor: Entering Ultra-Silence Zone for mobile");
           const originalWindowAdd = window.addEventListener;
           const originalDocAdd = document.addEventListener;
-          const originalCanvasAdd = canvas.addEventListener;
           
-          // A "Deafener" function that ignores all movement events
-          const hijackedAdd = function(this: any, type: string, listener: any, options: any) {
-            if (type.match(/^(mouse|touch|pointer|MSPointer|gesture)/i)) {
-              console.debug(`TubesCursor Hijack: Blocked ${type} listener on mobile`);
+          // 1. Block addEventListener
+          const silencedAdd = function(this: any, type: string, listener: any, options: any) {
+            if (type.match(/^(mouse|touch|pointer|wheel|scroll|gesture)/i)) {
+              console.debug(`TubesCursor Silenced: Blocked ${type}`);
               return;
             }
-            
             if (this === window) return originalWindowAdd.apply(this, [type, listener, options]);
-            if (this === document) return originalDocAdd.apply(this, [type, listener, options]);
-            return originalCanvasAdd.apply(this, [type, listener, options]);
+            return originalDocAdd.apply(this, [type, listener, options]);
           };
 
-          // Apply the hijack to everything the library might touch
-          window.addEventListener = hijackedAdd as any;
-          document.addEventListener = hijackedAdd as any;
-          canvas.addEventListener = hijackedAdd as any;
+          window.addEventListener = silencedAdd as any;
+          document.addEventListener = silencedAdd as any;
 
-          // Initialize the library while it's "blindfolded"
+          // 2. Block direct "on" properties
+          const noop = () => {};
+          const blockedProps = ['onmousemove', 'ontouchmove', 'onpointermove', 'onwheel', 'onmousewheel', 'onmousedown', 'ontouchstart'];
+          
+          blockedProps.forEach(prop => {
+            try {
+              Object.defineProperty(window, prop, {
+                get: () => noop,
+                set: () => {},
+                configurable: true
+              });
+              Object.defineProperty(document, prop, {
+                get: () => noop,
+                set: () => {},
+                configurable: true
+              });
+            } catch (e) {}
+          });
+
+          // 3. Initialize the library while it's "deaf and blind"
           appRef.current = TubesCursor(canvas, options);
           
-          // Keep it hijacked for 1 second to catch any delayed/async listeners
+          // 4. Keep the silence for 5 seconds to catch delayed listeners
           setTimeout(() => {
             window.addEventListener = originalWindowAdd;
             document.addEventListener = originalDocAdd;
-            canvas.addEventListener = originalCanvasAdd;
-            console.debug("TubesCursor Hijack: Restored original listeners");
-          }, 1000);
+            // We don't restore the "on" properties to keep it idle
+            console.debug("TubesCursor: Restored basic window listeners, kept interaction blocked");
+          }, 5000);
         } else {
           appRef.current = TubesCursor(canvas, options);
         }
@@ -356,24 +371,12 @@ export function TubesCursorBackground() {
         className="w-full h-full"
         style={{ 
           touchAction: "none",
-          pointerEvents: "auto",
+          pointerEvents: isMobile ? "none" : "auto",
           display: "block",
           width: "100%",
           height: "100%",
         }}
       />
-      {/* Mobile Touch Shield - Captures touch events so background stays idle */}
-      {isMobile && (
-        <div 
-          className="absolute inset-0 z-10" 
-          style={{ 
-            touchAction: "none",
-            pointerEvents: "auto",
-            background: "transparent"
-          }}
-          onContextMenu={(e) => e.preventDefault()}
-        />
-      )}
     </div>
   );
 }
