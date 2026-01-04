@@ -12,7 +12,7 @@ const Stats = () => {
     {
       icon: Users,
       label: "Active Subscribers",
-      value: stats?.totalSubscribers?.toLocaleString() || "0",
+      value: "3,126",
       colorClass: "text-primary",
     },
     {
