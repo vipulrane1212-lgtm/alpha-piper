@@ -20,12 +20,13 @@ const fluorescentColors: Record<string, number> = {
   violet: 0x8a2be2,
 };
 
-// Detect mobile device
+// Detect mobile device - More robust check
 function isMobileDevice(): boolean {
   if (typeof window === 'undefined') return false;
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-    (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) ||
-    ('ontouchstart' in window);
+    (window.matchMedia && window.matchMedia('(max-width: 1024px)').matches) ||
+    ('ontouchstart' in window) ||
+    (navigator.maxTouchPoints > 0);
 }
 
 // Parameters from CodePen - same on all devices (mobile = web)
@@ -100,9 +101,10 @@ function GhostMesh() {
     const elapsedTime = state.clock.elapsedTime;
     setTime(elapsedTime);
 
-    // Ghost follows mouse
-    const targetX = mouse.x * 11;
-    const targetY = mouse.y * 7;
+    // Ghost follows mouse - Force to 0 on mobile
+    const isMobile = isMobileDevice();
+    const targetX = isMobile ? 0 : mouse.x * 11;
+    const targetY = isMobile ? 0 : mouse.y * 7;
     const prevPos = groupRef.current.position.clone();
 
     groupRef.current.position.x += (targetX - groupRef.current.position.x) * params.followSpeed;
